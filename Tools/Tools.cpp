@@ -25,7 +25,7 @@ TPZCompMesh* CreatePressureMesh(const ProblemConfig& problem) {
         cmesh->InsertMaterialObject(mix);
     }
     
-    cmesh->SetDefaultOrder(problem.porder + problem.hdivmais);
+    cmesh->SetDefaultOrder(problem.k+problem.n);
     //cmesh->SetDefaultOrder(problem.porder);
     cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
     cmesh->ApproxSpace().CreateDisconnectedElements(true);
@@ -36,7 +36,7 @@ TPZCompMesh* CreatePressureMesh(const ProblemConfig& problem) {
     }
     
     if (problem.prefine) {
-        Prefinamento(cmesh, problem.ndivisions, problem.porder);
+        Prefinamento(cmesh, problem.ndivisions, problem.k);
     }
     
     
@@ -66,12 +66,12 @@ TPZCompMesh* CreateFluxHDivMesh(const ProblemConfig& problem) {
         bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
         cmesh->InsertMaterialObject(bc);
     }
-    cmesh->SetDefaultOrder(problem.porder);
+    cmesh->SetDefaultOrder(problem.k);
     cmesh->ApproxSpace().SetAllCreateFunctionsHDiv(dim);
     cmesh->AutoBuild();
     
     if (problem.prefine) {
-        Prefinamento(cmesh, problem.ndivisions, problem.porder);
+        Prefinamento(cmesh, problem.ndivisions, problem.k);
     }
     
     
@@ -157,7 +157,7 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
     meshvector[0] = CreateFluxHDivMesh(problem);
     meshvector[1] = CreatePressureMesh(problem);
     
-    TPZCompMeshTools::AdjustFluxPolynomialOrders(meshvector[0], problem.hdivmais);
+    TPZCompMeshTools::AdjustFluxPolynomialOrders(meshvector[0], problem.n);
     TPZCompMeshTools::SetPressureOrders(meshvector[0], meshvector[1]);
     
     cmesh->BuildMultiphysicsSpace(active, meshvector);
@@ -561,7 +561,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
         vecnames.Push("Flux");
         
         std::stringstream sout;
-        sout << problem.dir_name << "/" << "OriginalHybrid_Order_" << problem.porder << "Nref_" << problem.ndivisions
+        sout << problem.dir_name << "/" << "OriginalHybrid_Order_" << problem.k << "Nref_" << problem.ndivisions
              << "NAdapStep_" << problem.adaptivityStep << ".vtk";
         an.DefineGraphMesh(2, scalnames, vecnames, sout.str());
         int resolution = 0;
@@ -596,7 +596,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
             myfile << "\n\n Error for Mixed formulation ";
             myfile << "\n-------------------------------------------------- \n";
             myfile << "Ndiv = " << problem.ndivisions
-                   << " Order k = " << problem.porder << " n "<<problem.hdivmais<< " K_R = "<<problem.Km<<" Ndofs = "<<Hybridmesh->NEquations() <<"\n";
+                   << " Order k = " << problem.k << " n "<<problem.n<< " K_R = "<<problem.Km<<" Ndofs = "<<Hybridmesh->NEquations() <<"\n";
             myfile << "L2 pressure = " << errors[0] << "\n";
             myfile << "L2 flux= " << errors[1] << "\n";
             myfile << "L2 div(flux) = " << errors[2] << "\n";
@@ -736,7 +736,7 @@ void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
     sout << config.dir_name
          << "/"
             "OriginalMixed_Order_"
-         << config.problemname << "Order" << config.porder << "NAdapStep_"
+         << config.problemname << "Order" << config.k << "NAdapStep_"
          << config.adaptivityStep << ".vtk";
 
     an.DefineGraphMesh(dim, scalnames, vecnames, sout.str());
@@ -764,7 +764,7 @@ void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
           myfile << "\n\n Error for Mixed formulation ";
           myfile << "\n-------------------------------------------------- \n";
           myfile << "Ndiv = " << config.ndivisions
-                 << " Order k = " << config.porder << " n "<<config.hdivmais<< " K_R = "<<config.Km<<" Ndofs = "<<cmesh_HDiv->NEquations() <<"\n";
+                 << " Order k = " << config.k << " n "<<config.n<< " K_R = "<<config.Km<<" Ndofs = "<<cmesh_HDiv->NEquations() <<"\n";
           myfile << "L2 pressure = " << errors[0] << "\n";
           myfile << "L2 flux= " << errors[1] << "\n";
           myfile << "L2 div(flux) = " << errors[2] << "\n";
@@ -951,7 +951,7 @@ TPZCompMesh* CMeshH1(ProblemConfig problem) {
         cmesh->InsertMaterialObject(bc);
     }
 
-    cmesh->SetDefaultOrder(problem.porder);//ordem
+    cmesh->SetDefaultOrder(problem.k);//ordem
     cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
     
     cmesh->AutoBuild();

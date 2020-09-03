@@ -18,11 +18,9 @@ struct ProblemConfig
     /// geometric mesh on which the computational meshes are based
     TPZGeoMesh *gmesh = 0;
     /// polynomial order of the original mesh
-    int porder = 1;
-    /// increment in internal order of flux and pressure
-    int hdivmais = 1;
-    /// decrement of the order of the lagrangian space (H-1/2)
-    int H1Hybridminus = 1;
+    int k = -1;
+    int n = -1;
+
     /// option to compute the error based on continuous pressures or not
     bool makepressurecontinuous = true;
     
@@ -55,6 +53,31 @@ struct ProblemConfig
     ProblemConfig(const ProblemConfig &cp) = default;
 
     ProblemConfig &operator=(const ProblemConfig &cp) = default;
+};
+
+struct PreConfig{
+    std::ofstream Erro, timer;
+    TPZVec<REAL> *rate, *Log;
+    int refLevel = -1;
+
+    int k = 1;
+    int n = 1;
+    std::string problem;
+    std::string approx;
+
+    REAL perm_Q1 = 5;
+    REAL perm_Q2 = 1;
+
+    REAL hLog = -1, h = -1000;
+    int numErrors = 4;
+
+    std::string plotfile;
+    int mode = -1;           // 0 = "H1"; 1 = "Hybrid"; 2 = "Mixed";
+    int argc = 1;
+    int type= -1;
+
+    bool debugger = true;
+    int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)
 };
 
 #endif /* ProblemConfig_h */
