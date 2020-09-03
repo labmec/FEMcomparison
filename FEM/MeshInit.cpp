@@ -358,8 +358,6 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
                     config.exact.operator*().ForcingFunction());
             material->SetForcingFunctionExact(config.exact.operator*().Exact());
         }
-        //    TPZMaterial * mat(material);
-        //    cmesh->InsertMaterialObject(mat);
 
         // Inserts boundary conditions
         TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
@@ -379,3 +377,93 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
     }
 }
 
+TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
+
+    TPZCompMesh* cmesh = new TPZCompMesh(config.gmesh);
+    TPZMaterial* mat = 0;
+    int matID_Q1 = 2;
+    int matID_Q2 = 3;
+    int dirichlet = 0;
+    int neumann = 1;
+    int dim = config.gmesh->Dimension();
+
+    if(pConfig.type != 2) {
+        for (auto matid : config.materialids) {
+            TPZMatPoisson3d *mix = new TPZMatPoisson3d(matid, cmesh->Dimension());
+            mix->SetForcingFunctionExact(config.exact.operator*().Exact());
+            mix->SetForcingFunction(config.exact.operator*().ForcingFunction());
+
+            if (!mat) mat = mix;
+            cmesh->InsertMaterialObject(mix);
+        }
+
+        for (auto matid : config.bcmaterialids) {
+            TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+            int bctype = 0;
+            val2.Zero();
+            TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+            bc->TPZMaterial::SetForcingFunction(config.exact.operator*().Exact());
+
+            cmesh->InsertMaterialObject(bc);
+        }
+    }
+    else{
+
+        TLaplaceExample1 *mat1 = new TLaplaceExample1,*mat2 = new TLaplaceExample1;
+        SetFExact(mat1,mat2,pConfig);
+
+        TPZFNMatrix<9,REAL> K, invK;
+        K.Resize(3,3); invK.Resize(3,3);
+        K.Identity();invK.Identity();
+        K(0,0) = K(1,1) = pConfig.perm_Q1;
+        invK(0,0) = invK(1,1) = 1./pConfig.perm_Q1;
+        mat1->setPermeabilyTensor(K,invK);
+        K(0,0) = K(1,1) = pConfig.perm_Q2;
+        invK(0,0) = invK(1,1) =  1./pConfig.perm_Q2;
+        mat2->setPermeabilyTensor(K,invK);
+
+        TPZMatPoisson3d *material_Q1 = new TPZMatPoisson3d(matID_Q1, dim);
+        TPZMatPoisson3d *material_Q2 = new TPZMatPoisson3d(matID_Q2, dim);
+
+        material_Q1->SetPermeability(pConfig.perm_Q1);
+        material_Q2->SetPermeability(pConfig.perm_Q2);
+
+        if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
+            material_Q1->SetForcingFunction(mat1->ForcingFunction());
+            material_Q1->SetForcingFunctionExact(mat1->Exact());
+
+            material_Q2->SetForcingFunction(mat2->ForcingFunction());
+            material_Q2->SetForcingFunctionExact(mat2->Exact());
+        }
+
+        cmesh->InsertMaterialObject(material_Q1);
+        cmesh->InsertMaterialObject(material_Q2);
+
+
+
+        // Inserts boundary conditions
+        TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
+        TPZMaterial *BCond0_Q1 = material_Q1->CreateBC(material_Q1, -5, dirichlet, val1, val2);
+        TPZMaterial *BCond0_Q2 = material_Q2->CreateBC(material_Q2, -6, dirichlet, val1, val2);
+        if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
+            BCond0_Q1->SetForcingFunction(mat1->Exact());
+            BCond0_Q2->SetForcingFunction(mat2->Exact());
+        }
+        val2.Zero();
+        TPZMaterial *BCond1_Q1 = material_Q1->CreateBC(material_Q1, -8, neumann, val1, val2);
+        TPZMaterial *BCond1_Q2 = material_Q1->CreateBC(material_Q1, -9, neumann, val1, val2);
+
+        cmesh->InsertMaterialObject(BCond0_Q1);
+        cmesh->InsertMaterialObject(BCond0_Q2);
+        cmesh->InsertMaterialObject(BCond1_Q1);
+        cmesh->InsertMaterialObject(BCond1_Q2);
+    }
+
+    cmesh->SetDefaultOrder(config.k);//ordem
+    cmesh->ApproxSpace().SetAllCreateFunctionsContinuous();
+
+    cmesh->AutoBuild();
+
+
+    return cmesh;
+}

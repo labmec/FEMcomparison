@@ -43,4 +43,6 @@ TPZGeoMesh* CreateGeoMesh_OriginCentered(int nel, TPZVec<int>& bcids);
 //// Set exact solution
 void SetFExact(TLaplaceExample1 *mat1, TLaplaceExample1 *mat2,PreConfig &pConfig);
 
+TPZCompMesh* InsertCMeshH1(ProblemConfig &config,PreConfig &pConfig);
+
 #endif //FEMCOMPARISON_MESHINIT_H

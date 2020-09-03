@@ -19,12 +19,12 @@ int main(int argc, char *argv[]) {
     InitializePZLOG();
 #endif
     PreConfig pConfig;
-    pConfig.k = 1;
+    pConfig.k = 2;
     pConfig.n = 3;
-    pConfig.problem = "ESteklovNonConst";                 //// {"Esinsin","EArcTan",ESteklovNonConst"}
-    pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
+    pConfig.problem = "ESteklovNonConst";        //// {"Esinsin","EArcTan",ESteklovNonConst"}
+    pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.refLevel = 3;                        //// How many refinements
-    pConfig.debugger = true;                    //// Print geometric and computational mesh
+    pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);

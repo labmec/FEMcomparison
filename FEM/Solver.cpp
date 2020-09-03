@@ -19,7 +19,7 @@
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
-    TPZCompMesh *cmesh = CMeshH1(config);
+    TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
     TPZMultiphysicsCompMesh *multiCmesh = new TPZMultiphysicsCompMesh(config.gmesh);
     int interfaceMatID = -10;
     int hybridLevel = 1;
@@ -151,7 +151,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 #endif
 
     std::set<int> matids;
-    matids.insert(1);
+    for (auto matid : config.materialids) matids.insert(matid);
 
     for(auto mat:config.bcmaterialids){
         matids.insert(mat);
