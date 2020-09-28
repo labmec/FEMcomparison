@@ -17,6 +17,7 @@
 #include "TPZMultiphysicsCompMesh.h"
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "TPZHybridizeHDiv.h"
+#include "TPZGeoElSidePartition.h"
 
 #include "pzlog.h"
 
