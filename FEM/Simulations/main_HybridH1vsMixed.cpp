@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     PreConfig pConfig;
     pConfig.k = 2;
     pConfig.n = 3;
-    pConfig.problem = "ESteklovNonConst";        //// {"Esinsin","EArcTan",ESteklovNonConst"}
+    pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.refLevel = 3;                        //// How many refinements
     pConfig.debugger = false;                    //// Print geometric and computational mesh

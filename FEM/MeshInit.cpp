@@ -10,6 +10,9 @@
 #include "TPZNullMaterial.h"
 #include "pzbndcond.h"
 #include "TPZGenGrid2D.h"
+#include "LCC_MixedPoisson.h"
+#include "TPZCompMeshTools.h"
+
 
 void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig &config, PreConfig &pConfig){
     int matID_Q1 = 2;
@@ -237,6 +240,94 @@ void BuildFluxMesh(TPZCompMesh *cmesh_flux, ProblemConfig &config, PreConfig &pC
     cmesh_flux->InitializeBlock();
 }
 
+void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, ProblemConfig &config){
+    //Flux mesh creation
+    TPZCompMesh *cmesh_flux = new TPZCompMesh(config.gmesh);
+    BuildFluxMesh(cmesh_flux,config,eData);
+    {
+        int64_t nelem = cmesh_flux->NElements();
+        int dimgrid = cmesh_flux->Dimension();
+        for (int64_t el = 0; el<nelem; el++) {
+            TPZCompEl *cel = cmesh_flux->Element(el);
+            if(!cel) continue;
+            TPZGeoEl *gel = cel->Reference();
+            int dimgel = gel->Dimension();
+            int nconnects = cel->NConnects();
+            int nSides = gel->NSides(cmesh_flux->Dimension()-1);
+            if(dimgrid != 2) DebugStop();
+            if(dimgel == dimgrid){
+                if(nconnects != nSides+1){
+                    DebugStop();
+                }
+                for(int ic = 0 ; ic < nSides; ic ++){
+                    cel->Connect(ic).SetLagrangeMultiplier(3);
+                }
+            }
+            if(dimgel == dimgrid-1){
+                if(nconnects != nSides){
+                    DebugStop();
+                }
+                cel->Connect(0).SetLagrangeMultiplier(3);
+            }
+            if (dimgel > dimgrid || dimgel < dimgrid - 1){
+                DebugStop();
+            }
+        }
+    }
+
+    //Potential mesh creation
+    TPZCompMesh *cmesh_p = new TPZCompMesh(config.gmesh);
+    BuildPotentialMesh(cmesh_p,config,eData);
+    {
+        int64_t nconnects = cmesh_p->NConnects();
+        for (int ic=0; ic<nconnects; ic++) {
+            cmesh_p->ConnectVec()[ic].SetLagrangeMultiplier(1);
+        }
+    }
+
+
+    TPZCompMesh *gspace = new TPZCompMesh(config.gmesh);
+    {
+        InsertNullSpaceMaterialIds(gspace,config);
+        gspace->ApproxSpace().SetAllCreateFunctionsDiscontinuous();
+        gspace->SetDefaultOrder(0);//sao espacos de pressao media
+        gspace->AutoBuild();
+        int64_t nconnects = gspace->NConnects();
+        for (int ic = 0; ic<nconnects; ic++) {
+            gspace->ConnectVec()[ic].SetLagrangeMultiplier(2);
+        }
+    }
+    TPZCompMesh *average = new TPZCompMesh(config.gmesh);
+    {
+        InsertNullSpaceMaterialIds(average,config);
+        average->ApproxSpace().SetAllCreateFunctionsDiscontinuous();
+        average->SetDefaultOrder(0);
+        average->AutoBuild();
+        int64_t nconnects = average->NConnects();
+        for (int ic = 0; ic<nconnects; ic++) {
+            average->ConnectVec()[ic].SetLagrangeMultiplier(4);
+        }
+    }
+
+    meshvec[0] = cmesh_flux;
+    meshvec[1] = cmesh_p;
+    meshvec[2] = gspace;
+    meshvec[3] = average;
+    TPZCompMeshTools::AdjustFluxPolynomialOrders(meshvec[0], config.n); //Increases internal flux order by "hdivmais"
+    TPZCompMeshTools::SetPressureOrders(meshvec[0], meshvec[1]);//Set the pressure order the same as the internal flux
+}
+
+void InsertNullSpaceMaterialIds(TPZCompMesh *nullspace, ProblemConfig &config)
+{
+    for (auto matid:config.materialids) {
+        TPZNullMaterial *nullmat = new TPZNullMaterial(matid);
+        nullmat->SetDimension(config.gmesh->Dimension());
+        nullmat->SetNStateVariables(1);
+        nullspace->InsertMaterialObject(nullmat);
+    }
+}
+
+
 void BuildFluxMesh_MultiK(TPZCompMesh *cmesh_flux, ProblemConfig &config) {
 
     int dim = config.gmesh->Dimension();
@@ -316,7 +407,7 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
         cmesh_mixed->SetDimModel(dim);
         cmesh_mixed->SetAllCreateFunctionsMultiphysicElem();
 
-        TPZMixedPoisson *material = new TPZMixedPoisson(matID, dim); //Using standard PermealityTensor = Identity.
+        LCCMixedPoisson *material = new LCCMixedPoisson(matID, dim); //Using standard PermealityTensor = Identity.
         material->SetForcingFunction(config.exact.operator*().ForcingFunction());
         material->SetForcingFunctionExact(config.exact.operator*().Exact());
         cmesh_mixed->InsertMaterialObject(material);

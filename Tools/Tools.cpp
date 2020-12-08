@@ -11,6 +11,7 @@
 #include "TPZGeoLinear.h"
 #include "TPZGenGrid2D.h"
 #include <tuple>
+#include "TPZNullMaterial.h"
 #include <memory>
 
 #include "pzcondensedcompel.h"
@@ -20,7 +21,7 @@ TPZCompMesh* CreatePressureMesh(const ProblemConfig& problem) {
     TPZCompMesh* cmesh = new TPZCompMesh(problem.gmesh);
     TPZMaterial* mat = 0;
     for (auto matid : problem.materialids) {
-        TPZMixedPoisson* mix = new TPZMixedPoisson(matid, cmesh->Dimension());
+        TPZNullMaterial* mix = new TPZNullMaterial(matid);
         if (!mat) mat = mix;
         cmesh->InsertMaterialObject(mix);
     }

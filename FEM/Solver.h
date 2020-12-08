@@ -15,6 +15,7 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, in
 
 //// Call required methods to build a computational mesh for a Mixed approximation
 void CreateMixedComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Mixed,PreConfig &eData, ProblemConfig &config);
+void CreateCondensedMixedElements(TPZMultiphysicsCompMesh *cmesh_Mixed);
 
 //// Solve classical H1 problem
 void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct PreConfig &eData);

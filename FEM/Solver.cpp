@@ -16,6 +16,9 @@
 #include "pzstepsolver.h"
 #include "Tools.h"
 #include "Output.h"
+#include "pzvisualmatrix.h"
+#include "MeshInit.h"
+
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
@@ -66,32 +69,29 @@ void DrawMesh(ProblemConfig &config, PreConfig &preConfig, TPZCompMesh *cmesh, T
 }
 
 void CreateMixedComputationalMesh(TPZMultiphysicsCompMesh *cmesh_Mixed, PreConfig &pConfig, ProblemConfig &config){
-
-    int matID = 1;
-    int dim = config.gmesh->Dimension();
-
-    //Flux mesh creation
-    TPZCompMesh *cmesh_flux = new TPZCompMesh(config.gmesh);
-    BuildFluxMesh(cmesh_flux, config,pConfig);
-
-    //Potential mesh creation
-    TPZCompMesh *cmesh_p = new TPZCompMesh(config.gmesh);
-    BuildPotentialMesh(cmesh_p, config, pConfig);
-
-    //Multiphysics mesh build
     InsertMaterialMixed(cmesh_Mixed, config,pConfig);
-    TPZManVector<int> active(2, 1);
-    TPZManVector<TPZCompMesh *, 2> meshvector(2);
-    meshvector[0] = cmesh_flux;
-    meshvector[1] = cmesh_p;
-    TPZCompMeshTools::AdjustFluxPolynomialOrders(meshvector[0], config.n); //Increases internal flux order by "hdivmais"
-    TPZCompMeshTools::SetPressureOrders(meshvector[0], meshvector[1]);//Set the pressure order the same as the internal flux
+    TPZManVector<TPZCompMesh *, 4> meshvector(4);
+    CreateMixedAtomicMeshes(meshvector,pConfig, config);
+
+    TPZManVector<int> active(4, 1);
 
     cmesh_Mixed->BuildMultiphysicsSpace(active,meshvector);
-    bool keeponelagrangian = true, keepmatrix = false;
-    TPZCompMeshTools::CreatedCondensedElements(cmesh_Mixed, keeponelagrangian, keepmatrix);
+    CreateCondensedMixedElements(cmesh_Mixed);
     cmesh_Mixed->LoadReferences();
     cmesh_Mixed->InitializeBlock();
+}
+void CreateCondensedMixedElements(TPZMultiphysicsCompMesh *cmesh_Mixed){
+
+    int numActiveSpaces = cmesh_Mixed->MeshVector().size();
+    if(numActiveSpaces == 4){
+        int64_t nconnects = cmesh_Mixed->NConnects();
+        for (int64_t ic = 0; ic<nconnects; ic++) {
+            TPZConnect &c = cmesh_Mixed->ConnectVec()[ic];
+            if(c.LagrangeMultiplier() == 4) c.IncrementElConnected();
+        }
+    }
+    bool keeponelagrangian = true, keepmatrix = false;
+    TPZCompMeshTools::CreatedCondensedElements(cmesh_Mixed, keeponelagrangian, keepmatrix);
 }
 
 void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int &interFaceMatID , PreConfig &pConfig, ProblemConfig &config,int hybridLevel){
@@ -141,7 +141,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
 #ifdef USING_MKL
     TPZSymetricSpStructMatrix strmat(cmeshH1);
-    strmat.SetNumThreads(8);
+    strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
 #else
     TPZParFrontStructMatrix<TPZFrontSym<STATE> > strmat(cmeshH1);
@@ -149,7 +149,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     //        TPZSkylineStructMatrix strmat3(cmesh_HDiv);
     //        strmat3.SetNumThreads(8);
 #endif
-
+    
     std::set<int> matids;
     for (auto matid : config.materialids) matids.insert(matid);
 
@@ -159,6 +159,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
     strmat.SetMaterialIds(matids);
     an.SetStructuralMatrix(strmat);
+    //VisualMatrixVTK(an.,matrixName);
 
     TPZStepSolver<STATE> *direct = new TPZStepSolver<STATE>;
     direct->SetDirect(ELDLt);
@@ -166,6 +167,9 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     delete direct;
     direct = 0;
     an.Assemble();
+    const string matrixNamevtk("matrixRigidezH1Problem.vtk");
+    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
+    VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();//resolve o problema misto ate aqui
 
     int64_t nelem = cmeshH1->NElements();
@@ -200,7 +204,6 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
         an.DefineGraphMesh(dim, scalnames, vecnames, plotname);
         an.PostProcess(resolution,dim);
     }
-
     std::cout << "FINISHED!" << std::endl;
 }
 
@@ -237,6 +240,9 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     delete direct;
     direct = 0;
     an.Assemble();
+    const string matrixNamevtk("matrixRigidezHybridH1Problem.vtk");
+    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
+    VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();
 
     int64_t nelem = cmesh_H1Hybrid->NElements();
@@ -283,13 +289,20 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
 
     std::cout << "Solving Mixed " << std::endl;
     TPZAnalysis an(cmesh_Mixed, optBW); //Cria objeto de análise que gerenciará a analise do problema
-
+    if(false){
+        cout<<"Total ecuaciones:"<<an.Solution().Rows()<<endl;
+        TPZFMatrix<REAL> MatrixTest(10,10,0.);
+        an.Mesh()->ComputeFillIn(10, MatrixTest);
+        MatrixTest.Print(cout);
+        VisualMatrixVTK(MatrixTest, "salidatemp.vtk");
+    }
     //MKL solver
 #ifdef USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_Mixed);
-    strmat.SetNumThreads(8);
+    //strmat.SetNumThreads(8);
+    strmat.SetNumThreads(0);
 #else
-    TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
+    TPZSkylineStructMatrix strmat(cmesh_Mixed);
     strmat.SetNumThreads(0);
 #endif
     an.SetStructuralMatrix(strmat);
@@ -300,6 +313,9 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     delete direct;
     direct = 0;
     an.Assemble();
+    const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
+    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
+    VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();
 
     ////Calculo do erro

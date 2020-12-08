@@ -8,6 +8,13 @@
 #include "TPZMatLaplacianHybrid.h"
 #include "pzbndcond.h"
 #include "pzaxestools.h"
+#ifdef USING_MKL
+#include "mkl.h"
+#endif
+#ifdef LOG4CXX
+static LoggerPtr logger(Logger::getLogger("MaterialHybrid"));
+#endif
+
 
 TPZMatLaplacianHybrid::TPZMatLaplacianHybrid(int matid, int dim)
 : TPZRegisterClassId(&TPZMatLaplacianHybrid::ClassId), TPZMatLaplacian(matid,dim)
@@ -129,7 +136,57 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
         fPermeabilityFunction->Execute(x, func, dfunc);
         KPerm = dfunc(0,0);
     }
-    
+#ifdef USING_MKL
+    {
+        double *A, *B, *C;
+        int m, n, k;
+        double alpha, beta;
+        m = phr, k = fDim, n = phr;
+        alpha = weight*KPerm;
+        beta = 1.0;
+        int LDA,LDB,LDC;
+        LDA = dphi.Rows();
+        LDB = dphi.Rows();
+        LDC = ek.Rows();
+        if(LDC != phr+2)
+            DebugStop();
+        A = &dphi(0,0);
+        B = &dphi(0,0);
+        C = &ek(0,0);
+        cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans,
+                       phr, phr, LDA,alpha , A, LDA, B, LDB, beta, C, LDC);
+        printf ("\n Top left corner of matrix C: \n");
+           for (int i=0; i<min(m,6); i++) {
+             for (int j=0; j<min(n,6); j++) {
+               printf ("%12.5G", C[j+i*n]);
+             }
+             printf ("\n");
+           }
+    }
+    {
+        //saxpy implementation
+        int N = phr;
+        double alpha = weight*fXfLoc;
+        double *X = &phi(0,0);
+        int incX = 1;
+        double *Y = &ef(0,0);
+        int incY = 1;
+        cblas_daxpy(N,alpha,X,incX, Y,incY);
+    }
+    {
+        //
+        int N = phr;
+        double alpha = weight;
+        double *X = &phi(0,0);
+        int incX = 1;
+        double *Y = &ek(0,phr);
+        int incY = 1;
+        cblas_daxpy(N,alpha,X,incX, Y,incY);
+        Y = &ek(phr,0);
+        incY = ek.Rows();
+        cblas_daxpy(N,alpha,X,incX, Y,incY);
+    }
+#else
     //Equacao de Poisson
     for( int in = 0; in < phr; in++ ) {
         int kd;
@@ -146,6 +203,7 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
         ek(phr,in) += weight*phi(in,0);//lambda*phi
         ek(in,phr) += weight*phi(in,0);
     }
+#endif
     //equacoes de restricao de pressao media
     ek(phr,phr+1) -= weight;
     ek(phr+1,phr) -= weight;
@@ -153,6 +211,15 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
     if (this->IsSymetric()){
         if ( !ek.VerifySymmetry(1.e-10) ) std::cout << __PRETTY_FUNCTION__ << "\nMATRIZ NAO SIMETRICA" << std::endl;
     }
+#ifdef LOG4CXX
+    if(logger->isDebugEnabled())
+    {
+        std::stringstream valuenn;
+        ek.Print("ek = ",valuenn,EMathematicaInput);
+        ef.Print("ef = ",valuenn,EMathematicaInput);
+        LOGPZ_DEBUG(logger,valuenn.str());
+    }
+#endif
 }
 
 void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef)

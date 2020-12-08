@@ -7,6 +7,7 @@
 
 #include "DataStructure.h"
 #include <TPZMultiphysicsCompMesh.h>
+void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, ProblemConfig &config);
 
 //// Insert volumetric and BC materials on a Primal Hybrid Computational Mesh
 void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh, ProblemConfig &config,PreConfig &pConfig);
@@ -36,6 +37,7 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,Problem
 
 //// Create different materials for even an odd quadrants
 void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig &config, PreConfig &pConfig);
+void InsertNullSpaceMaterialIds(TPZCompMesh *nullspace, ProblemConfig &config);
 
 //// Create [-1,1]x[-1,1] gmesh instead of [0,1],[0,1]
 TPZGeoMesh* CreateGeoMesh_OriginCentered(int nel, TPZVec<int>& bcids);
