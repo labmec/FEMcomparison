@@ -169,7 +169,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     an.Assemble();
     const string matrixNamevtk("matrixRigidezH1Problem.vtk");
     TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
+    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();//resolve o problema misto ate aqui
 
     int64_t nelem = cmeshH1->NElements();
@@ -242,7 +242,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     an.Assemble();
     const string matrixNamevtk("matrixRigidezHybridH1Problem.vtk");
     TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
+    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();
 
     int64_t nelem = cmesh_H1Hybrid->NElements();
@@ -294,7 +294,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         TPZFMatrix<REAL> MatrixTest(10,10,0.);
         an.Mesh()->ComputeFillIn(10, MatrixTest);
         MatrixTest.Print(cout);
-        VisualMatrixVTK(MatrixTest, "salidatemp.vtk");
+        //VisualMatrixVTK(MatrixTest, "salidatemp.vtk");
     }
     //MKL solver
 #ifdef USING_MKL
@@ -315,7 +315,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     an.Assemble();
     const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
     TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
+    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();
 
     ////Calculo do erro

@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Mixed";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.refLevel = 1;                        //// How many refinements
-    pConfig.debugger = true;                    //// Print geometric and computational mesh
+    pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
