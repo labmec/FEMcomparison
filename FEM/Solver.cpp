@@ -159,7 +159,6 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
     strmat.SetMaterialIds(matids);
     an.SetStructuralMatrix(strmat);
-    //VisualMatrixVTK(an.,matrixName);
 
     TPZStepSolver<STATE> *direct = new TPZStepSolver<STATE>;
     direct->SetDirect(ELDLt);
@@ -167,9 +166,6 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     delete direct;
     direct = 0;
     an.Assemble();
-    const string matrixNamevtk("matrixRigidezH1Problem.vtk");
-    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();//resolve o problema misto ate aqui
 
     int64_t nelem = cmeshH1->NElements();
@@ -240,9 +236,6 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     delete direct;
     direct = 0;
     an.Assemble();
-    const string matrixNamevtk("matrixRigidezHybridH1Problem.vtk");
-    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();
 
     int64_t nelem = cmesh_H1Hybrid->NElements();
@@ -291,10 +284,6 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     TPZAnalysis an(cmesh_Mixed, optBW); //Cria objeto de análise que gerenciará a analise do problema
     if(false){
         cout<<"Total ecuaciones:"<<an.Solution().Rows()<<endl;
-        TPZFMatrix<REAL> MatrixTest(10,10,0.);
-        an.Mesh()->ComputeFillIn(10, MatrixTest);
-        MatrixTest.Print(cout);
-        //VisualMatrixVTK(MatrixTest, "salidatemp.vtk");
     }
     //MKL solver
 #ifdef USING_MKL
@@ -313,9 +302,6 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     delete direct;
     direct = 0;
     an.Assemble();
-    const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
-    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
     an.Solve();
 
     ////Calculo do erro
