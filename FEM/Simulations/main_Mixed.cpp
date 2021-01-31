@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 #endif
     PreConfig pConfig;
     pConfig.k = 2;//
-    pConfig.n = 1;
+    pConfig.n = 0;
     pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Mixed";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.refLevel = 6;                        //// How many refinements

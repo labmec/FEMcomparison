@@ -155,13 +155,6 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
         C = &ek(0,0);
         cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans,
                        phr, phr, LDA,alpha , A, LDA, B, LDB, beta, C, LDC);
-        printf ("\n Top left corner of matrix C: \n");
-           for (int i=0; i<min(m,6); i++) {
-             for (int j=0; j<min(n,6); j++) {
-               printf ("%12.5G", C[j+i*n]);
-             }
-             printf ("\n");
-           }
     }
     {
         //saxpy implementation
