@@ -12,6 +12,7 @@
 #include "TPZGenGrid2D.h"
 #include "LCC_MixedPoisson.h"
 #include "TPZCompMeshTools.h"
+#include "TPZCompElDisc.h"
 
 
 void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig &config, PreConfig &pConfig){
@@ -296,6 +297,11 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
         for (int ic = 0; ic<nconnects; ic++) {
             gspace->ConnectVec()[ic].SetLagrangeMultiplier(2);
         }
+        int64_t nel = gspace->NElements();
+        for (int64_t el = 0; el<nel; el++) {
+            TPZCompElDisc *disc = dynamic_cast<TPZCompElDisc *>(gspace->Element(el));
+            if(disc) disc->SetFalseUseQsiEta();
+        }
     }
     TPZCompMesh *average = new TPZCompMesh(config.gmesh);
     {
@@ -307,7 +313,12 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
         for (int ic = 0; ic<nconnects; ic++) {
             average->ConnectVec()[ic].SetLagrangeMultiplier(4);
         }
-    }
+        int64_t nel = average->NElements();
+        for (int64_t el = 0; el<nel; el++) {
+            TPZCompElDisc *disc = dynamic_cast<TPZCompElDisc *>(average->Element(el));
+            if(disc) disc->SetFalseUseQsiEta();
+        }
+}
 
     meshvec[0] = cmesh_flux;
     meshvec[1] = cmesh_p;
@@ -408,15 +419,22 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
         cmesh_mixed->SetAllCreateFunctionsMultiphysicElem();
 
         LCCMixedPoisson *material = new LCCMixedPoisson(matID, dim); //Using standard PermealityTensor = Identity.
-        material->SetForcingFunction(config.exact.operator*().ForcingFunction());
-        material->SetForcingFunctionExact(config.exact.operator*().Exact());
+        if(pConfig.debugger) {
+            material->SetForcingFunction(config.exact.operator*().ForcingFunction());
+            material->SetForcingFunctionExact(config.exact.operator*().Exact());
+        } else {
+            material->SetInternalFlux(1.);
+        }
         cmesh_mixed->InsertMaterialObject(material);
 
         //Boundary Conditions
         TPZFMatrix<STATE> val1(2, 2, 0.), val2(2, 1, 0.);
 
         TPZMaterial *BCond0 = material->CreateBC(material, -1, dirichlet, val1, val2);
-        BCond0->SetForcingFunction(config.exact.operator*().Exact());
+        if(pConfig.debugger)
+        {
+            BCond0->SetForcingFunction(config.exact.operator*().Exact());
+        }
 
         TPZMaterial *BCond1 = material->CreateBC(material, -2, neumann, val1, val2);
 
