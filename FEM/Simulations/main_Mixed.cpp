@@ -30,9 +30,12 @@ int main(int argc, char *argv[]) {
     Solve(config,pConfig);
     pConfig.hLog = pConfig.h;
     
-    std::string command = "cp ErroMixed.txt " + pConfig.plotfile + "/Erro.txt";
-    system(command.c_str());
-    FlushTable(pConfig,argv);    
+    if(pConfig.debugger)
+    {
+        std::string command = "cp ErroMixed.txt " + pConfig.plotfile + "/Erro.txt";
+        system(command.c_str());
+        FlushTable(pConfig,argv);
+    }
     return 0.;
 }
 
