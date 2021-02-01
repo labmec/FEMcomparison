@@ -302,19 +302,24 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     delete direct;
     direct = 0;
     an.Assemble();
+#ifdef PZDEBUG2
+    const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
+    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
+    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
+#endif
     an.Solve();
-
-    ////Calculo do erro
-    std::cout << "Computing Error MIXED " << std::endl;
-
-    an.SetExact(config.exact.operator*().ExactSolution());
-
-    std::cout << "DOF = " << cmesh_Mixed->NEquations() << std::endl;
-
-    StockErrors(an,cmesh_Mixed,pConfig.Erro,pConfig.Log,pConfig);
 
     ////PostProcess
     if(pConfig.debugger) {
+
+        ////Calculo do erro
+        std::cout << "Computing Error MIXED " << std::endl;
+
+        an.SetExact(config.exact.operator*().ExactSolution());
+
+        std::cout << "DOF = " << cmesh_Mixed->NEquations() << std::endl;
+
+        StockErrors(an,cmesh_Mixed,pConfig.Erro,pConfig.Log,pConfig);
 
         int dim = config.gmesh->Dimension();
         std::string plotname;
