@@ -243,18 +243,13 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     cmesh_H1Hybrid->ExpandSolution();
     cmesh_H1Hybrid->ElementSolution().Redim(nelem, 5);
 
-    ////Calculo do erro
-    std::cout << "Computing Error HYBRID_H1 " << std::endl;
-
-    an.SetExact(config.exact.operator*().ExactSolution());
-
-    std::cout << "DOF = " << cmesh_H1Hybrid->NEquations() << std::endl;
-
-   StockErrors(an,cmesh_H1Hybrid,pConfig.Erro,pConfig.Log,pConfig);
-
-    ////PostProcess
-
     if(pConfig.debugger) {
+        std::cout << "Computing Error HYBRID_H1 " << std::endl;
+        an.SetExact(config.exact.operator*().ExactSolution());
+        ////Calculo do erro
+        StockErrors(an,cmesh_H1Hybrid,pConfig.Erro,pConfig.Log,pConfig);
+        std::cout << "DOF = " << cmesh_H1Hybrid->NEquations() << std::endl;
+        ////PostProcess
         TPZStack<std::string> scalnames, vecnames;
         scalnames.Push("Pressure");
         scalnames.Push("PressureExact");

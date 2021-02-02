@@ -458,22 +458,16 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
     // Creates Poisson material
     if(pConfig.type != 2) {
         TPZMatLaplacianHybrid *material = new TPZMatLaplacianHybrid(matID, dim);
-
         material->SetPermeability(1.);
-
         cmesh_H1Hybrid->InsertMaterialObject(material);
-        if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
-            material->SetForcingFunction(
-                    config.exact.operator*().ForcingFunction());
-            material->SetForcingFunctionExact(config.exact.operator*().Exact());
-        }
-
         // Inserts boundary conditions
         TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
         TPZMaterial *BCond0 =
                 material->CreateBC(material, -1, dirichlet, val1, val2);
-        if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
-            BCond0->SetForcingFunction(config.exact.operator*().Exact());
+        if(pConfig.debugger) {
+            if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
+                BCond0->SetForcingFunction(config.exact.operator*().Exact());
+            }
         }
         val2.Zero();
         TPZMaterial *BCond1 = material->CreateBC(material, -2, neumann, val1, val2);

@@ -18,7 +18,7 @@
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "TPZHybridizeHDiv.h"
 #include "TPZGeoElSidePartition.h"
-
+#include "TPZCompElDisc.h"
 #include "pzlog.h"
 
 #ifdef LOG4CXX
@@ -82,6 +82,11 @@ void TPZCreateMultiphysicsSpace::CreateAtomicMeshes(TPZVec<TPZCompMesh *> &meshv
         for (int ic = 0; ic<nconnects; ic++) {
             gspace->ConnectVec()[ic].SetLagrangeMultiplier(2);
         }
+        int64_t nel = gspace->NElements();
+        for (int64_t el = 0; el<nel; el++) {
+            TPZCompElDisc *disc = dynamic_cast<TPZCompElDisc *>(gspace->Element(el));
+             if(disc) disc->SetFalseUseQsiEta();
+        }
     }
     TPZCompMesh *average = new TPZCompMesh(fGeoMesh);
     {
@@ -93,6 +98,11 @@ void TPZCreateMultiphysicsSpace::CreateAtomicMeshes(TPZVec<TPZCompMesh *> &meshv
         for (int ic = 0; ic<nconnects; ic++) {
             average->ConnectVec()[ic].SetLagrangeMultiplier(5);
         }
+        int64_t nel = average->NElements();
+        for (int64_t el = 0; el<nel; el++) {
+            TPZCompElDisc *disc = dynamic_cast<TPZCompElDisc *>(average->Element(el));
+            if(disc) disc->SetFalseUseQsiEta();
+        } 
     }
 
     meshvec.Resize(4,0);
