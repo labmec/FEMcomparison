@@ -13,7 +13,7 @@
 #include "pzelementgroup.h"
 #include "pzcondensedcompel.h"
 #include "TPZNullMaterial.h"
-#include "TPZLagrangeMultiplier.h"
+#include "LCC_LagrangeMultiplier.h"
 #include "TPZMultiphysicsCompMesh.h"
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "TPZHybridizeHDiv.h"
@@ -731,16 +731,16 @@ void TPZCreateMultiphysicsSpace::InsertLagranceMaterialObjects(TPZMultiphysicsCo
 {
     if(fSpaceType == EH1Hybrid)
     {
-        TPZLagrangeMultiplier *lag1 = new TPZLagrangeMultiplier(fH1Hybrid.fLagrangeMatid.first, fDimension-1, 1);
+        LCC_LagrangeMultiplier *lag1 = new LCC_LagrangeMultiplier(fH1Hybrid.fLagrangeMatid.first, fDimension-1, 1);
         mphys->InsertMaterialObject(lag1);
-        TPZLagrangeMultiplier *lag2 = new TPZLagrangeMultiplier(fH1Hybrid.fLagrangeMatid.second, fDimension-1, 1);
+        LCC_LagrangeMultiplier *lag2 = new LCC_LagrangeMultiplier(fH1Hybrid.fLagrangeMatid.second, fDimension-1, 1);
         lag2->SetMultiplier(-1.);
         mphys->InsertMaterialObject(lag2);
     }
     else if (fSpaceType == EH1HybridSquared) {
-        TPZLagrangeMultiplier *lag1 = new TPZLagrangeMultiplier(fH1Hybrid.fLagrangeMatid.first, fDimension-1, 1);
+        LCC_LagrangeMultiplier *lag1 = new LCC_LagrangeMultiplier(fH1Hybrid.fLagrangeMatid.first, fDimension-1, 1);
         mphys->InsertMaterialObject(lag1);
-        TPZLagrangeMultiplier *lag2 = new TPZLagrangeMultiplier(fH1Hybrid.fSecondLagrangeMatid, fDimension-1, 1);
+        LCC_LagrangeMultiplier *lag2 = new LCC_LagrangeMultiplier(fH1Hybrid.fSecondLagrangeMatid, fDimension-1, 1);
         lag2->SetMultiplier(-1.);
         mphys->InsertMaterialObject(lag2);
     }

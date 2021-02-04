@@ -8,6 +8,10 @@
 
 #include "LCC_LagrangeMultiplier.h"
 #include "pzaxestools.h"
+#ifdef USING_MKL
+#include "mkl.h"
+#endif
+
 
 
 
@@ -108,7 +112,53 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<T
 
     int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
     int il,jl,ir,jr;
+
+#ifdef USING_MKL
+    {
+        double *A, *B, *C;
+        double alpha, beta;
+        int m,n,k,phrL,phrR;
+        phrL = phiL.Rows();
+        phrR = phiR.Rows();
+        m = phrL;
+        n = phrR;
+        k = 1;
+        alpha = weight * fMultiplier ;
+        beta = 1.0;
+        int LDA,LDB,LDC;
+        LDC = phrL+phrR;
+        LDA = phiL.Rows();
+        LDB = 1;
+        C = &ek(0,phrL);
+        A = &phiL(0,0);
+        B = &phiR(0,0);
+        cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+                       m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
+    }
+    {
+        double *A, *B, *C;
+        double alpha, beta;
+        int m,n,k,phrL,phrR;
+        phrL = phiL.Rows();
+        phrR = phiR.Rows();
+        m = phrL;
+        n = phrR;
+        k = 1;
+        alpha = weight * fMultiplier ;
+        beta = 1.0;
+        int LDA,LDB,LDC;
+        LDC = phrL+phrR;
+        LDA = phiL.Rows();
+        LDB = 1;
+        C = &ek(phrL,0);
+        B = &phiR(0,0);
+        A = &phiL(0,0);
+        cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+                       m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
+    }
     
+#else
+
     // 3) phi_I_left, phi_J_right
     for(il=0; il<nrowl; il++) {
         for(jr=0; jr<nrowr; jr++) {
@@ -126,7 +176,8 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<T
             }
         }
     }
-
+#endif
+    
 }
 
 
@@ -162,6 +213,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMater
 #endif
     int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
 	int il,jl,ir,jr;
+    
     
 	// 3) phi_I_left, phi_J_right
 	for(il=0; il<nrowl; il++) {
