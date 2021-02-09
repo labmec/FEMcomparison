@@ -208,7 +208,7 @@ void SetMultiPermeMaterials(TPZGeoMesh* gmesh){
             // Changing the permeability
             //std::cout <<"el: " << ind  << "x_ave: " << elCenterCoord[0] << "y_ave: " << elCenterCoord[1] << std::endl;
             if ((elCenterCoord[0] > 0. && elCenterCoord[1] > 0. &&  elCenterCoord[2] > 0.)  || //x,y,z > 0
-                (elCenterCoord[0] < 0. && elCenterCoord[1] < 0. &&  elCenterCoord[2] < 0.)  || //x,y,z < 0
+                (elCenterCoord[0] > 0. && elCenterCoord[1] < 0. &&  elCenterCoord[2] < 0.)  || //y,z < 0, x > 0
                 (elCenterCoord[0] < 0. && elCenterCoord[1] < 0. &&  elCenterCoord[2] > 0.)  || //x,y < 0, z > 0
                 (elCenterCoord[0] < 0. && elCenterCoord[1] > 0. &&  elCenterCoord[2] < 0.))    //x,z < 0, y > 0
                 {
@@ -273,7 +273,7 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
             int dimgel = gel->Dimension();
             int nconnects = cel->NConnects();
             int nSides = gel->NSides(cmesh_flux->Dimension()-1);
-            if(dimgrid != 2) DebugStop();
+            //if(dimgrid != 2) DebugStop();
             if(dimgel == dimgrid){
                 if(nconnects != nSides+1){
                     DebugStop();
@@ -478,6 +478,10 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
         TPZMatLaplacianHybrid *material = new TPZMatLaplacianHybrid(matID, dim);
         material->SetPermeability(1.);
         cmesh_H1Hybrid->InsertMaterialObject(material);
+        if(pConfig.debugger) {
+            material->SetForcingFunction(config.exact.operator*().ForcingFunction());
+            material->SetForcingFunctionExact(config.exact.operator*().Exact());
+        }
         // Inserts boundary conditions
         TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
         TPZMaterial *BCond0 =

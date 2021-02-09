@@ -90,20 +90,23 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     Configure(config,0,pConfig,argv);
 
     std::stringstream out;
+    std::string dimension;
+    if(pConfig.dim == 2) dimension = "2D";
+    else dimension = "3D";
 
     switch(pConfig.mode) {
         case 0: //H1
-            out << "H1_" << config.problemname << "_k-"
+            out << "H1_" <<  dimension << "_" << config.problemname << "_k-"
                 << config.k;
             pConfig.plotfile = out.str();
             break;
         case 1: //Hybrid
-            out << "Hybrid_" << config.problemname << "_k-"
+            out << "Hybrid_" << dimension << "_" << config.problemname  << "_k-"
                 << config.k << "_n-" << config.n;
             pConfig.plotfile = out.str();
             break;
         case 2: // Mixed
-            out << "Mixed_" << config.problemname << "_k-"
+            out << "Mixed_" << dimension << "_" << config.problemname << "_k-"
                 << config.k << "_n-" << config.n;
             pConfig.plotfile = out.str();
             break;

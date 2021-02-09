@@ -249,7 +249,7 @@ TPZGeoMesh* CreateGeoMesh(int nel, TPZVec<int>& bcids, int dim, bool isOriginCen
         TPZManVector<int> nx(2, nel);
         TPZManVector<REAL> x0(3, 0.), x1(3, 1.);
         if(isOriginCentered == 1){
-            x0[0]= x0[1] = x1[2]  = -1;
+            x0[0]= x0[1] = x0[2]  = -1;
         }
 
          TPZManVector<int> nelDiv(3, 1);

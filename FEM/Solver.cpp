@@ -192,8 +192,16 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
         std::string plotname;
         {
             std::stringstream out;
-            out << pConfig.plotfile /* << config.dir_name*/ << "/" << "H1_Problem" << config.k << "_" << dim
-                << "D_" << config.problemname << "Ndiv_ " << config.ndivisions << ".vtk";
+            out << pConfig.plotfile << "/" << config.problemname;
+
+            if(dim == 2) out  << "_2D";
+            if(dim == 3) out  << "_3D";
+
+            out <<  "_k-" << config.k << "_n-" << config.n;
+
+            if(dim == 2) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
+            if(dim == 3) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
+
             plotname = out.str();
         }
         int resolution=0;
@@ -327,9 +335,16 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         std::string plotname;
         {
             std::stringstream out;
-            out << pConfig.plotfile  << "/"
-                << config.problemname << "_Mixed_k-" << config.k
-                << "_n-" << config.n << "_ref-" << 1/pConfig.h <<" x " << 1/pConfig.h << ".vtk";
+            out << pConfig.plotfile << "/" << config.problemname;
+
+            if(dim == 2) out  << "_2D";
+            if(dim == 3) out  << "_3D";
+
+            out <<  "_k-" << config.k << "_n-" << config.n;
+
+            if(dim == 2) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
+            if(dim == 3) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
+
             plotname = out.str();
         }
 
