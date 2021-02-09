@@ -39,9 +39,6 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,Problem
 void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig &config, PreConfig &pConfig);
 void InsertNullSpaceMaterialIds(TPZCompMesh *nullspace, ProblemConfig &config);
 
-//// Create [-1,1]x[-1,1] gmesh instead of [0,1],[0,1]
-TPZGeoMesh* CreateGeoMesh_OriginCentered(int nel, TPZVec<int>& bcids);
-
 //// Set exact solution
 void SetFExact(TLaplaceExample1 *mat1, TLaplaceExample1 *mat2,PreConfig &pConfig);
 

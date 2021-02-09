@@ -10,9 +10,11 @@
 #include "tpzgeoblend.h"
 #include "TPZGeoLinear.h"
 #include "TPZGenGrid2D.h"
+#include "TPZGenGrid3D.h"
 #include <tuple>
 #include "TPZNullMaterial.h"
 #include <memory>
+#include "pzeltype.h"
 
 #include "pzcondensedcompel.h"
 #include "pzelementgroup.h"
@@ -217,25 +219,76 @@ void UniformRefinement(int nDiv, int dim, TPZGeoMesh* gmesh) {
     }
 }
 
-TPZGeoMesh* CreateGeoMesh(int nel, TPZVec<int>& bcids) {
-    
-    TPZManVector<int> nx(2, nel);
-    TPZManVector<REAL> x0(3, 0.), x1(3, 1.);
-    x1[2] = 0.;
-    TPZGenGrid2D gen(nx, x0, x1, 1, 0);
-    
-    //TPZGenGrid2D gen(nx, x0, x1);
-    gen.SetRefpatternElements(true);
-    TPZGeoMesh* gmesh = new TPZGeoMesh;
-    gen.Read(gmesh);
-    gen.SetBC(gmesh, 4, bcids[0]);
-    gen.SetBC(gmesh, 5, bcids[1]);
-    gen.SetBC(gmesh, 6, bcids[2]);
-    gen.SetBC(gmesh, 7, bcids[3]);
-    
-    gmesh->SetDimension(2);
-    
-    return gmesh;
+TPZGeoMesh* CreateGeoMesh(int nel, TPZVec<int>& bcids, int dim, bool isOriginCentered) {
+
+    if (dim == 2){
+        TPZManVector<int> nx(2, nel);
+        TPZManVector<REAL> x0(3, 0.), x1(3, 1.);
+        if(isOriginCentered == 1){
+            x0[0]= x0[1] = -1;
+        }
+        x1[2] = x0[2] = 0.;
+        TPZGenGrid2D gen(nx, x0, x1, 1, 0);
+
+        //TPZGenGrid2D gen(nx, x0, x1);
+        gen.SetRefpatternElements(true);
+        TPZGeoMesh* gmesh = new TPZGeoMesh;
+        gen.Read(gmesh);
+        gen.SetBC(gmesh, 4, bcids[0]);
+        gen.SetBC(gmesh, 5, bcids[1]);
+        gen.SetBC(gmesh, 6, bcids[2]);
+        gen.SetBC(gmesh, 7, bcids[3]);
+
+        gmesh->SetDimension(2);
+
+        return gmesh;
+    }
+    if (dim == 3){
+        int volID = 1;
+        int bcID = -1;
+        TPZManVector<int> nx(2, nel);
+        TPZManVector<REAL> x0(3, 0.), x1(3, 1.);
+        if(isOriginCentered == 1){
+            x0[0]= x0[1] = x1[2]  = -1;
+        }
+
+         TPZManVector<int> nelDiv(3, 1);
+         MMeshType  hexaType = MMeshType::EHexahedral;
+         TPZGenGrid3D *gen = new TPZGenGrid3D(x0, x1, nelDiv, hexaType);
+
+         TPZGeoMesh* gmesh = new TPZGeoMesh;
+         gmesh = gen->BuildVolumetricElements(volID);
+         gmesh = gen->BuildBoundaryElements(bcID,bcID,bcID,bcID,bcID,bcID);
+
+         gmesh->SetDimension(3);
+         return gmesh;
+    }
+    DebugStop(); // Dim should be 2 or 3
+}
+
+void DrawGeoMesh(ProblemConfig &config, PreConfig &preConfig) {
+
+    std::stringstream ref;
+    ref << "_ref-" << 1/preConfig.h <<" x " << 1/preConfig.h;
+    std::string refinement =  ref.str();
+
+    std::ofstream out(preConfig.plotfile + "/gmesh"+ refinement + ".vtk");
+    std::ofstream out2(preConfig.plotfile + "/gmesh"+ refinement + ".txt");
+
+    TPZVTKGeoMesh::PrintGMeshVTK(config.gmesh, out);
+    config.gmesh->Print(out2);
+}
+
+void DrawCompMesh(ProblemConfig &config, PreConfig &preConfig, TPZCompMesh *cmesh, TPZMultiphysicsCompMesh *multiCmesh) {
+
+    std::stringstream ref;
+    ref << "_ref-" << 1/preConfig.h <<" x " << 1/preConfig.h;
+    std::string refinement =  ref.str();
+
+    std::ofstream out(preConfig.plotfile + "/cmesh" + refinement + ".txt");
+
+    if (preConfig.mode == 0) cmesh->Print(out);
+    else multiCmesh->Print(out);
 }
 
 
@@ -814,7 +867,7 @@ TPZGeoMesh* ReadGeometricMesh(struct ProblemConfig& config, bool IsgmeshReader) 
     } else {
         
         TPZManVector<int, 4> bcids(4, -1);
-        gmesh = CreateGeoMesh(2, bcids);
+        gmesh = CreateGeoMesh(2, bcids,config.dimension);
         config.materialids.insert(1);
         config.bcmaterialids.insert(-1);
         config.gmesh = gmesh;

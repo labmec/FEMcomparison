@@ -62,10 +62,11 @@ struct PreConfig{
 
     int k = 1;
     int n = 1;
+    int dim = 1;
     std::string problem;
     std::string approx;
 
-    REAL perm_Q1 = 5;
+    REAL perm_Q1 = 5;      /// Permeability coefficient of even quadrants (Steklov only)
     REAL perm_Q2 = 1;
 
     REAL hLog = -1, h = -1000;

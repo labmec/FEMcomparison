@@ -10,17 +10,19 @@
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     ReadEntry(config, pConfig);
     config.ndivisions = ndiv;
-    config.dimension = 2;
+    config.dimension = pConfig.dim;
     config.prefine = false;
     config.exact.operator*().fSignConvention = 1;
+    config.exact->fDimension = config.dimension;
 
-    // geometric mesh
-    TPZManVector<int, 4> bcids(4, -1);
+    bool isOriginCentered = 0; /// Wheater the domain = [0,1]x^n or [-1,1]^n
+    if(pConfig.type == 2) isOriginCentered = 1;
+
     TPZGeoMesh *gmesh;
-    if(pConfig.type != 2) gmesh = CreateGeoMesh(1, bcids); //rectangular mesh [0,1]x[0,1], matID = 1;
-    else {
-        gmesh = CreateGeoMesh_OriginCentered(1, bcids); //rectangular mesh [-1,1]x[-1,1], matID_Q1-Q3 = alpha, matID_Q2-Q4 = beta
-    }
+    TPZManVector<int, 4> bcids(4, -1);
+    gmesh = CreateGeoMesh(1, bcids, config.dimension,isOriginCentered);
+
+
     UniformRefinement(config.ndivisions, gmesh);
 
     config.gmesh = gmesh;
@@ -41,6 +43,10 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     if(pConfig.argc != 1) {
         config.k = atoi(argv[3]);
         config.n = atoi(argv[4]);
+    }
+
+    if(pConfig.debugger == true){
+        DrawGeoMesh(config,pConfig);
     }
 }
 

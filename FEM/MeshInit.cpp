@@ -156,56 +156,74 @@ void SetMultiPermeMaterials(TPZGeoMesh* gmesh){
     int numEl = elvec.NElements();
     TPZVec<int64_t> nodeInd;
     int numberNodes;
-    TPZManVector<REAL,2> elCenterCoord = {0.,0.};
+    TPZManVector<REAL,2> elCenterCoord = {0.,0.,0.};
+    int meshDim = gmesh ->Dimension();
 
-    //Getting center coordinates of the element
-    for(int ind = 0; ind < numEl; ind++) {
-        TPZGeoEl *gel = elvec[ind];
-        gel->GetNodeIndices(nodeInd);
-        numberNodes = gel->NNodes();
-        elCenterCoord[0] = elCenterCoord[1] = 0.;
-        for (int nodeIter = 0; nodeIter < numberNodes; nodeIter++) {
-            TPZGeoNode nodo = gmesh->NodeVec()[nodeInd[nodeIter]];
-            elCenterCoord[0] += nodo.Coord(0);
-            elCenterCoord[1] += nodo.Coord(1);
-        }
-        elCenterCoord[0] /= numberNodes;
-        elCenterCoord[1] /= numberNodes;
+    if (meshDim == 2) {
+        //Getting center coordinates of the element
+        for (int ind = 0; ind < numEl; ind++) {
+            TPZGeoEl *gel = elvec[ind];
+            gel->GetNodeIndices(nodeInd);
+            numberNodes = gel->NNodes();
+            elCenterCoord[0] = elCenterCoord[1] = 0.;
+            for (int nodeIter = 0; nodeIter < numberNodes; nodeIter++) {
+                TPZGeoNode nodo = gmesh->NodeVec()[nodeInd[nodeIter]];
+                elCenterCoord[0] += nodo.Coord(0);
+                elCenterCoord[1] += nodo.Coord(1);
+            }
+            elCenterCoord[0] /= numberNodes;
+            elCenterCoord[1] /= numberNodes;
 
-        // Changing the permeability
-        //std::cout <<"el: " << ind  << "x_ave: " << elCenterCoord[0] << "y_ave: " << elCenterCoord[1] << std::endl;
-        if((elCenterCoord[0] >=0. && elCenterCoord[1] >= 0.) || (elCenterCoord[0] < 0. && elCenterCoord[1] <= 0.)) { // first/third quadrants
-            if(gel->Dimension() == gmesh->Dimension()) { /*if(gel->MaterialId() == 1)*/ gel->SetMaterialId(2);}
-            else {/*if (gel->MaterialId() < 0 && gel->MaterialId() > -5)*/ gel->SetMaterialId(-5);} // Assumes dirichlet boundary condition
+            // Changing the permeability
+            //std::cout <<"el: " << ind  << "x_ave: " << elCenterCoord[0] << "y_ave: " << elCenterCoord[1] << std::endl;
+            if ((elCenterCoord[0] >= 0. && elCenterCoord[1] >= 0.) ||
+                (elCenterCoord[0] < 0. && elCenterCoord[1] <= 0.)) { // first/third quadrants
+                if (gel->Dimension() == gmesh->Dimension()) { /*if(gel->MaterialId() == 1)*/ gel->SetMaterialId(2); }
+                else {/*if (gel->MaterialId() < 0 && gel->MaterialId() > -5)*/ gel->SetMaterialId(-5);
+                } // Assumes dirichlet boundary condition
+            } else {
+                if (gel->Dimension() == gmesh->Dimension()) { /*if(gel->MaterialId() == 1)*/ gel->SetMaterialId(3); }
+                else {/*if (gel->MaterialId() < 0 && gel->MaterialId() > -5)*/ gel->SetMaterialId(-6);
+                }// Assumes dirichlet boundary condition
+            }
         }
-        else{
-            if(gel->Dimension() == gmesh->Dimension())  { /*if(gel->MaterialId() == 1)*/ gel->SetMaterialId(3);}
-            else {/*if (gel->MaterialId() < 0 && gel->MaterialId() > -5)*/ gel->SetMaterialId(-6);}// Assumes dirichlet boundary condition
+    }
+    if (meshDim == 3) {
+        //Getting center coordinates of the element
+        for (int ind = 0; ind < numEl; ind++) {
+            TPZGeoEl *gel = elvec[ind];
+            gel->GetNodeIndices(nodeInd);
+            numberNodes = gel->NNodes();
+            elCenterCoord[0] = elCenterCoord[1] = 0., elCenterCoord[2] = 0.;
+            for (int nodeIter = 0; nodeIter < numberNodes; nodeIter++) {
+                TPZGeoNode nodo = gmesh->NodeVec()[nodeInd[nodeIter]];
+                elCenterCoord[0] += nodo.Coord(0);
+                elCenterCoord[1] += nodo.Coord(1);
+                elCenterCoord[2] += nodo.Coord(2);
+            }
+            elCenterCoord[0] /= numberNodes;
+            elCenterCoord[1] /= numberNodes;
+            elCenterCoord[2] /= numberNodes;
+
+            // Changing the permeability
+            //std::cout <<"el: " << ind  << "x_ave: " << elCenterCoord[0] << "y_ave: " << elCenterCoord[1] << std::endl;
+            if ((elCenterCoord[0] > 0. && elCenterCoord[1] > 0. &&  elCenterCoord[2] > 0.)  || //x,y,z > 0
+                (elCenterCoord[0] < 0. && elCenterCoord[1] < 0. &&  elCenterCoord[2] < 0.)  || //x,y,z < 0
+                (elCenterCoord[0] < 0. && elCenterCoord[1] < 0. &&  elCenterCoord[2] > 0.)  || //x,y < 0, z > 0
+                (elCenterCoord[0] < 0. && elCenterCoord[1] > 0. &&  elCenterCoord[2] < 0.))    //x,z < 0, y > 0
+                {
+                    if (gel->Dimension() == meshDim) gel->SetMaterialId(2);
+                    else gel->SetMaterialId(-5);
+                }
+            else
+                {
+                    if (gel->Dimension() == meshDim) gel->SetMaterialId(3);
+                    else gel->SetMaterialId(-6);
+                }
         }
     }
     gmesh->ResetConnectivities();
     gmesh->BuildConnectivity();
-}
-
-TPZGeoMesh* CreateGeoMesh_OriginCentered(int nel, TPZVec<int>& bcids) {
-
-    TPZManVector<int> nx(2, nel);
-    TPZManVector<REAL> x0(3, -1.), x1(3, 1.);
-    x1[2] = x0[2] = 0.;
-    TPZGenGrid2D gen(nx, x0, x1, 1, 0);
-
-    //TPZGenGrid2D gen(nx, x0, x1);
-    gen.SetRefpatternElements(true);
-    TPZGeoMesh* gmesh = new TPZGeoMesh;
-    gen.Read(gmesh);
-    gen.SetBC(gmesh, 4, bcids[0]);
-    gen.SetBC(gmesh, 5, bcids[1]);
-    gen.SetBC(gmesh, 6, bcids[2]);
-    gen.SetBC(gmesh, 7, bcids[3]);
-
-    gmesh->SetDimension(2);
-
-    return gmesh;
 }
 
 void BuildFluxMesh(TPZCompMesh *cmesh_flux, ProblemConfig &config, PreConfig &pConfig){

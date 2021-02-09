@@ -48,7 +48,7 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
     }
     FlushTime(preConfig,start);
 
-    if(preConfig.debugger) DrawMesh(config,preConfig,cmesh,multiCmesh);
+    if(preConfig.debugger) DrawCompMesh(config,preConfig,cmesh,multiCmesh);
 }
 
 void DrawMesh(ProblemConfig &config, PreConfig &preConfig, TPZCompMesh *cmesh, TPZMultiphysicsCompMesh *multiCmesh) {
@@ -255,16 +255,23 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         scalnames.Push("PressureExact");
         vecnames.Push("Flux");
 
-        int dim = 2;
+        int dim = pConfig.dim;
         std::string plotname;
         {
             std::stringstream out;
-            out << pConfig.plotfile /* << config.dir_name*/ << "/"
-                << config.problemname << "_k-" << config.k
-                << "_n-" << config.n << "_ref_" << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
+            out << pConfig.plotfile << "/" << config.problemname;
+
+            if(dim == 2) out  << "_2D";
+            if(dim == 3) out  << "_3D";
+
+            out <<  "_k-" << config.k << "_n-" << config.n;
+
+            if(dim == 2) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
+            if(dim == 3) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
+
             plotname = out.str();
         }
-        int resolution = 0;
+        int resolution = 3;
         an.DefineGraphMesh(dim, scalnames, vecnames, plotname);
         an.PostProcess(resolution, dim);
     }

@@ -62,7 +62,7 @@ void UniformRefinement(int nDiv, int dim, TPZGeoMesh* gmesh);
 TPZGeoMesh* CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly, TPZVec<int>& bcids);
 
 /// Create a geometric mesh on a unit square domain with boundary condition ids defined by bcids
-TPZGeoMesh* CreateGeoMesh(int nelem, TPZVec<int>& bcids);
+TPZGeoMesh* CreateGeoMesh(int nelem, TPZVec<int>& bcids,int dim, bool isOriginCentered = 0);
 
 /// Divide lower dimensional elements
 void DivideLowerDimensionalElements(TPZGeoMesh* gmesh);
@@ -83,7 +83,6 @@ void FunctionTest();
 void MultiPhysicsHybrid(const ProblemConfig& config);
 
 void Prefinamento(TPZCompMesh* cmesh, int ndiv, int porder);
-
 
 void SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, const ProblemConfig& problem, bool PostProcessingFEM);
 
@@ -113,4 +112,8 @@ TPZGeoMesh* CreateQuadMeshRefTriang(TPZVec<int>& bcids);
 void ComputeError(TPZCompMesh *Hybridmesh, std::ofstream  &out,const ProblemConfig &config);
 
 void VectorEnergyNorm(TPZCompMesh *hdivmesh, std::ostream &out,  const ProblemConfig& problem);
+
+void DrawGeoMesh(ProblemConfig &config, PreConfig &preConfig);
+
+void DrawCompMesh(ProblemConfig &config, PreConfig &preConfig, TPZCompMesh *cmesh, TPZMultiphysicsCompMesh *multiCmesh);
 

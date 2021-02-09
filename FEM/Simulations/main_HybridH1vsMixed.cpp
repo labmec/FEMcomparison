@@ -23,8 +23,9 @@ int main(int argc, char *argv[]) {
     pConfig.n = 3;
     pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
-    pConfig.refLevel = 3;                        //// How many refinements
-    pConfig.debugger = false;                    //// Print geometric and computational mesh
+    pConfig.dim = 2;                             //// Problem's dimension (2D or 3D)
+    pConfig.refLevel = 1;                        //// How many refinements
+    pConfig.debugger = true;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
