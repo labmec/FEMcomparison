@@ -132,27 +132,28 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<T
         C = &ek(0,phrL);
         A = &phiL(0,0);
         B = &phiR(0,0);
+        //cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,                       m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
         cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
                        m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
     }
     {
-        double *A, *B, *C;
+      double *A, *B, *C;
         double alpha, beta;
         int m,n,k,phrL,phrR;
         phrL = phiL.Rows();
         phrR = phiR.Rows();
-        m = phrL;
-        n = phrR;
+        m = phrR;
+        n = phrL;
         k = 1;
         alpha = weight * fMultiplier ;
         beta = 1.0;
         int LDA,LDB,LDC;
         LDC = phrL+phrR;
-        LDA = phiL.Rows();
+        LDA = phiR.Rows();
         LDB = 1;
         C = &ek(phrL,0);
-        B = &phiR(0,0);
-        A = &phiL(0,0);
+        B = &phiL(0,0);
+        A = &phiR(0,0);
         cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
                        m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
     }
