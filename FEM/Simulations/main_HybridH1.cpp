@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
     PreConfig pConfig;
     pConfig.k = 2;//
     pConfig.n = 2;
+    pConfig.dim = 3;                             //// Problem's dimension (2D or 3D)
     pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.refLevel = 2;                        //// How many refinements

@@ -11,7 +11,10 @@
 #ifdef USING_MKL
 #include "mkl.h"
 #endif
-
+#ifdef LOG4CXX
+static LoggerPtr logdata(Logger::getLogger("LagrangeMultipliersData"));
+static LoggerPtr logerror(Logger::getLogger("LagrangeMultipliersError"));
+#endif
 
 
 
@@ -176,6 +179,15 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<T
                 ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phiR(ir) * phiL(jl));
             }
         }
+    }
+#endif
+#ifdef LOG4CXX
+    if(logdata->isDebugEnabled())
+    {
+        std::stringstream valuenn;
+        ek.Print("ek = ",valuenn,EMathematicaInput);
+        ef.Print("ef = ",valuenn,EMathematicaInput);
+        LOGPZ_DEBUG(logdata,valuenn.str());
     }
 #endif
     
