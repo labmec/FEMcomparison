@@ -62,7 +62,7 @@ void UniformRefinement(int nDiv, int dim, TPZGeoMesh* gmesh);
 TPZGeoMesh* CreateTrapezoidalMesh(int nelx, int nely, REAL Lx, REAL Ly, TPZVec<int>& bcids);
 
 /// Create a geometric mesh on a unit square domain with boundary condition ids defined by bcids
-TPZGeoMesh* CreateGeoMesh(int nelem, TPZVec<int>& bcids,int dim, bool isOriginCentered = 0);
+TPZGeoMesh* CreateGeoMesh(int nelem, TPZVec<int>& bcids,int dim, bool isOriginCentered, int topologyMode);
 
 /// Divide lower dimensional elements
 void DivideLowerDimensionalElements(TPZGeoMesh* gmesh);

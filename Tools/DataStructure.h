@@ -63,8 +63,12 @@ struct PreConfig{
     int k = 1;
     int n = 1;
     int dim = 1;
+    int topologyMode = -1;
+
     std::string problem;
     std::string approx;
+    std::string topology;           //Topology' name typed as input
+    std::string topologyFileName;   //Simplified name used for naming files/directories
 
     REAL perm_Q1 = 5;      /// Permeability coefficient of even quadrants (Steklov only)
     REAL perm_Q2 = 1;

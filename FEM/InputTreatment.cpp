@@ -20,8 +20,7 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
 
     TPZGeoMesh *gmesh;
     TPZManVector<int, 4> bcids(4, -1);
-    gmesh = CreateGeoMesh(1, bcids, config.dimension,isOriginCentered);
-
+    gmesh = CreateGeoMesh(1, bcids, config.dimension,isOriginCentered,pConfig.topologyMode);
 
     UniformRefinement(config.ndivisions, gmesh);
 
@@ -45,7 +44,7 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
         config.n = atoi(argv[4]);
     }
 
-    if(pConfig.debugger == true){
+    if(pConfig.debugger == true && ndiv != 0){
         DrawGeoMesh(config,pConfig);
     }
 }
@@ -90,23 +89,40 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     Configure(config,0,pConfig,argv);
 
     std::stringstream out;
-    std::string dimension;
-    if(pConfig.dim == 2) dimension = "2D";
-    else dimension = "3D";
+    switch (pConfig.topologyMode) {
+        case 1:
+            pConfig.topologyFileName = "2D-Tri";
+            break;
+        case 2:
+            pConfig.topologyFileName = "2D-Qua";
+            break;
+        case 3:
+            pConfig.topologyFileName = "3D-Tetra";
+            break;
+        case 4:
+            pConfig.topologyFileName = "3D-Hex";
+            break;
+        case 5:
+            pConfig.topologyFileName = "3D-Prism";
+            break;
+        default:
+            DebugStop();
+            break;
+    }
 
     switch(pConfig.mode) {
         case 0: //H1
-            out << "H1_" <<  dimension << "_" << config.problemname << "_k-"
+            out << "H1_" <<  pConfig.topologyFileName << "_" << config.problemname << "_k-"
                 << config.k;
             pConfig.plotfile = out.str();
             break;
         case 1: //Hybrid
-            out << "Hybrid_" << dimension << "_" << config.problemname  << "_k-"
+            out << "Hybrid_" <<   pConfig.topologyFileName << "_" << config.problemname  << "_k-"
                 << config.k << "_n-" << config.n;
             pConfig.plotfile = out.str();
             break;
         case 2: // Mixed
-            out << "Mixed_" << dimension << "_" << config.problemname << "_k-"
+            out << "Mixed_" <<  pConfig.topologyFileName << "_" << config.problemname << "_k-"
                 << config.k << "_n-" << config.n;
             pConfig.plotfile = out.str();
             break;
@@ -182,6 +198,17 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         else if (pConfig.problem == "ESteklovNonConst") pConfig.type = 2;
         else DebugStop();
     }
+
+    if (pConfig.topologyMode != -1) DebugStop();
+    if (pConfig.topology == "Triangular") pConfig.topologyMode = 1;
+    else if (pConfig.topology == "Quadrilateral") pConfig.topologyMode = 2;
+    else if (pConfig.topology == "Tetrahedral") pConfig.topologyMode = 3;
+    else if (pConfig.topology == "Hexahedral") pConfig.topologyMode = 4;
+    else if (pConfig.topology == "Prism") pConfig.topologyMode = 5;
+    if (pConfig.topologyMode == -1) DebugStop();
+
+    if(pConfig.topologyMode < 3) pConfig.dim = 2;
+    else pConfig.dim = 3;
 }
 
 void IsInteger(char *argv){

@@ -192,12 +192,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
         std::string plotname;
         {
             std::stringstream out;
-            out << pConfig.plotfile << "/" << config.problemname;
-
-            if(dim == 2) out  << "_2D";
-            if(dim == 3) out  << "_3D";
-
-            out <<  "_k-" << config.k << "_n-" << config.n;
+            out << pConfig.plotfile << "/" << config.problemname <<"_" << pConfig.topologyFileName << "_k-" << config.k << "_n-" << config.n;
 
             if(dim == 2) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
             if(dim == 3) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
@@ -267,12 +262,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         std::string plotname;
         {
             std::stringstream out;
-            out << pConfig.plotfile << "/" << config.problemname;
-
-            if(dim == 2) out  << "_2D";
-            if(dim == 3) out  << "_3D";
-
-            out <<  "_k-" << config.k << "_n-" << config.n;
+            out << pConfig.plotfile << "/" << config.problemname <<"_" << pConfig.topologyFileName << "_k-" << config.k << "_n-" << config.n;
 
             if(dim == 2) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
             if(dim == 3) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
@@ -335,12 +325,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         std::string plotname;
         {
             std::stringstream out;
-            out << pConfig.plotfile << "/" << config.problemname;
-
-            if(dim == 2) out  << "_2D";
-            if(dim == 3) out  << "_3D";
-
-            out <<  "_k-" << config.k << "_n-" << config.n;
+            out << pConfig.plotfile << "/" << config.problemname <<"_" << pConfig.topologyFileName << "_k-" << config.k << "_n-" << config.n;
 
             if(dim == 2) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";
             if(dim == 3) out  << "_numEl_" << 1/pConfig.h << " x " << 1/pConfig.h << " x " << 1/pConfig.h <<".vtk";

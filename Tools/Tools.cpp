@@ -219,7 +219,7 @@ void UniformRefinement(int nDiv, int dim, TPZGeoMesh* gmesh) {
     }
 }
 
-TPZGeoMesh* CreateGeoMesh(int nel, TPZVec<int>& bcids, int dim, bool isOriginCentered) {
+TPZGeoMesh* CreateGeoMesh(int nel, TPZVec<int>& bcids, int dim, bool isOriginCentered, int topologyMode) {
 
     if (dim == 2){
         TPZManVector<int> nx(2, nel);
@@ -228,7 +228,13 @@ TPZGeoMesh* CreateGeoMesh(int nel, TPZVec<int>& bcids, int dim, bool isOriginCen
             x0[0]= x0[1] = -1;
         }
         x1[2] = x0[2] = 0.;
+
         TPZGenGrid2D gen(nx, x0, x1, 1, 0);
+        MMeshType eltype;
+        if(topologyMode == 1) eltype = MMeshType::ETriangular;
+        else if(topologyMode == 2) eltype = MMeshType::EQuadrilateral;
+        else DebugStop();
+        gen.SetElementType(eltype);
 
         //TPZGenGrid2D gen(nx, x0, x1);
         gen.SetRefpatternElements(true);
@@ -253,8 +259,12 @@ TPZGeoMesh* CreateGeoMesh(int nel, TPZVec<int>& bcids, int dim, bool isOriginCen
         }
 
          TPZManVector<int> nelDiv(3, 1);
-         MMeshType  hexaType = MMeshType::EHexahedral;
-         TPZGenGrid3D *gen = new TPZGenGrid3D(x0, x1, nelDiv, hexaType);
+         MMeshType  eltype;
+         if(topologyMode == 3) eltype = MMeshType::ETetrahedral;
+         else if(topologyMode == 4) eltype = MMeshType::EHexahedral;
+         else if(topologyMode == 5) eltype = MMeshType::EPrismatic;
+         else DebugStop();
+         TPZGenGrid3D *gen = new TPZGenGrid3D(x0, x1, nelDiv, eltype);
 
          TPZGeoMesh* gmesh = new TPZGeoMesh;
          gmesh = gen->BuildVolumetricElements(volID);
@@ -272,7 +282,7 @@ void DrawGeoMesh(ProblemConfig &config, PreConfig &preConfig) {
     ref << "_ref-" << 1/preConfig.h <<" x " << 1/preConfig.h;
     std::string refinement =  ref.str();
 
-    std::ofstream out(preConfig.plotfile + "/gmesh"+ refinement + ".vtk");
+    std::ofstream out(preConfig.plotfile + "/gmesh_"+ preConfig.topologyFileName + refinement + ".vtk");
     std::ofstream out2(preConfig.plotfile + "/gmesh"+ refinement + ".txt");
 
     TPZVTKGeoMesh::PrintGMeshVTK(config.gmesh, out);
@@ -867,7 +877,7 @@ TPZGeoMesh* ReadGeometricMesh(struct ProblemConfig& config, bool IsgmeshReader) 
     } else {
         
         TPZManVector<int, 4> bcids(4, -1);
-        gmesh = CreateGeoMesh(2, bcids,config.dimension);
+        gmesh = CreateGeoMesh(2, bcids,config.dimension,0,2);
         config.materialids.insert(1);
         config.bcmaterialids.insert(-1);
         config.gmesh = gmesh;

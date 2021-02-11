@@ -21,10 +21,10 @@ int main(int argc, char *argv[]) {
     PreConfig pConfig;
     pConfig.k = 1;
     pConfig.n = 2;
-    pConfig.problem = "ESteklovNonConst";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
+    pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
-    pConfig.dim = 3;                             //// Problem's dimension (2D or 3D)
-    pConfig.refLevel = 2;                        //// How many refinements
+    pConfig.topology = "Triangular";           //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.refLevel = 3;                        //// How many refinements
     pConfig.debugger = true;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
