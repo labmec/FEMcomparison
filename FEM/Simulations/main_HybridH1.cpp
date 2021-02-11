@@ -14,12 +14,12 @@ int main(int argc, char *argv[]) {
     InitializePZLOG();
 #endif
     PreConfig pConfig;
-    pConfig.k = 2;//
+    pConfig.k = 1;//
     pConfig.n = 2;
-    pConfig.dim = 3;                             //// Problem's dimension (2D or 3D)
-    pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
-    pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
-    pConfig.refLevel = 2;                        //// How many refinements
+    pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
+    pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
+    pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.refLevel = 0;                        //// How many refinements
     pConfig.debugger = true;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
     pConfig.h = 1./pConfig.exp;
     ProblemConfig config;
     Configure(config,pConfig.refLevel ,pConfig,argv);
+    DrawGeoMesh(config,pConfig);
     Solve(config,pConfig);
     pConfig.hLog = pConfig.h;
     if(pConfig.debugger){
