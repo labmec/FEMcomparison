@@ -16,7 +16,8 @@ int main(int argc, char *argv[]) {
 #ifdef LOG4CXX
     InitializePZLOG();
 #endif
-    PreConfig pConfig;
+    
+    PreConfig pConfig;/*
     pConfig.k = 2;//
     pConfig.n = 2;
     pConfig.dim = 2;
@@ -24,7 +25,7 @@ int main(int argc, char *argv[]) {
     pConfig.approx = "Mixed";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel = 4;                        //// How many refinements
-    
+    */
     //LEctura por ficheros
     string line;
     ifstream myfile ("config.txt");

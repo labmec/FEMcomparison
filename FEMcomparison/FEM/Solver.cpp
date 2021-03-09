@@ -37,8 +37,11 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-            
-
+        {TPZTimer timer;
+        timer.start();
+            SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
+            timer.stop();
+            solveGlobalTime+=timer.seconds();}
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);

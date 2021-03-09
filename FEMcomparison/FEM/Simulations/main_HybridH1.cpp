@@ -20,13 +20,13 @@ int main(int argc, char *argv[]) {
     InitializePZLOG();
 #endif
     PreConfig pConfig;
-    pConfig.k = 2;//
-    pConfig.n = 2;
-    pConfig.dim = 2;
-    pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
-    pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 4;                        //// How many refinements
+    //pConfig.k = 2;//
+    //pConfig.n = 2;
+    //pConfig.dim = 2;
+    //pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
+    //pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
+    //pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    //pConfig.refLevel = 4;                        //// How many refinements
     
     //LEctura por ficheros
     string line;
