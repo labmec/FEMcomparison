@@ -6,6 +6,9 @@ target_link_libraries(HybridH1vsMixed Methods Tools)
 add_executable(HybridH1 main_HybridH1.cpp)
 target_link_libraries(HybridH1 Methods Tools)
 
+add_executable(ContributeTest main_ContributeTest.cpp)
+target_link_libraries(ContributeTest Methods Tools)
+
 # Project to apply error estimation for hybrid H1 approximations
 add_executable(Mixed main_Mixed.cpp)
 target_link_libraries(Mixed Methods Tools)
