@@ -20,20 +20,20 @@ static LoggerPtr logerror(Logger::getLogger("LagrangeMultipliersError"));
 
 /** @brief Unique identifier for serialization purposes */
 int LCC_LagrangeMultiplier::ClassId() const{
-    return Hash("LCC_LagrangeMultiplier") ^ TPZDiscontinuousGalerkin::ClassId() << 1;
+    return Hash("LCC_LagrangeMultiplier") ^ TPZMaterial::ClassId() << 1;
 }
 
 /** @brief Saves the element data to a stream */
 void LCC_LagrangeMultiplier::Write(TPZStream &buf, int withclassid) const
 {
-    TPZDiscontinuousGalerkin::Write(buf, withclassid);
+    TPZMaterial::Write(buf, withclassid);
     buf.Write(&fNStateVariables);
 }
 
 /** @brief Reads the element data from a stream */
 void LCC_LagrangeMultiplier::Read(TPZStream &buf, void *context)
 {
-    TPZDiscontinuousGalerkin::Read(buf, context);
+    TPZMaterial::Read(buf, context);
     buf.Read(&fNStateVariables);
     
 }

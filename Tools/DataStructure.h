@@ -46,8 +46,10 @@ struct ProblemConfig
     /// set of boundary condition material ids
     std::set<int> bcmaterialids;
     /// exact solution
+#ifdef _AUTODIFF
     TPZAutoPointer<TLaplaceExample1> exact;
-
+#endif
+    
     ProblemConfig() = default;
 
     ProblemConfig(const ProblemConfig &cp) = default;

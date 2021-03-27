@@ -12,9 +12,11 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     config.ndivisions = ndiv;
     config.dimension = pConfig.dim;
     config.prefine = false;
+#ifdef _AUTODIFF
     config.exact.operator*().fSignConvention = 1;
     config.exact->fDimension = config.dimension;
-
+#endif
+    
     bool isOriginCentered = 0; /// Wheater the domain = [0,1]x^n or [-1,1]^n
     if(pConfig.type == 2) isOriginCentered = 1;
 
@@ -51,6 +53,7 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
 
 void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
 
+#ifdef _AUTODIFF
     config.exact = new TLaplaceExample1;
     switch(preConfig.type){
         case 0:
@@ -67,7 +70,7 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
             DebugStop();
             break;
     }
-
+#endif
     config.k = preConfig.k;
     config.n = preConfig.n;
     config.problemname = preConfig.problem;

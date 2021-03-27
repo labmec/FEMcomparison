@@ -7,5 +7,5 @@ add_library(Tools
     Tools.cpp
 )
 
-target_link_libraries(Tools pz)
+target_link_libraries(Tools NeoPZ::pz)
 target_include_directories(Tools PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

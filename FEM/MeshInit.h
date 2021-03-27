@@ -39,8 +39,10 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,Problem
 void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig &config, PreConfig &pConfig);
 void InsertNullSpaceMaterialIds(TPZCompMesh *nullspace, ProblemConfig &config);
 
+#ifdef _AUTODIFF
 //// Set exact solution
 void SetFExact(TLaplaceExample1 *mat1, TLaplaceExample1 *mat2,PreConfig &pConfig);
+#endif
 
 TPZCompMesh* InsertCMeshH1(ProblemConfig &config,PreConfig &pConfig);
 

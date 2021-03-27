@@ -10,10 +10,10 @@
 #define __PZ__LCC_LagrangeMultiplier__
 
 #include <iostream>
-#include "pzdiscgal.h"
+#include "TPZMaterial.h"
 
 /// Material which implements a Lagrange Multiplier
-class LCC_LagrangeMultiplier : public TPZDiscontinuousGalerkin
+class LCC_LagrangeMultiplier : public TPZMaterial
 {
     
     /// Number of state variables
@@ -27,27 +27,27 @@ class LCC_LagrangeMultiplier : public TPZDiscontinuousGalerkin
     public :
 	/** @brief Simple constructor */
     LCC_LagrangeMultiplier() : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZDiscontinuousGalerkin()
+    TPZMaterial()
     {
         
     }
 	/** @brief Constructor with the index of the material object within the vector */
     LCC_LagrangeMultiplier(int nummat, int dimension, int nstate) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZDiscontinuousGalerkin(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
+    TPZMaterial(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
     {
         
     }
 	
 	/** @brief Copy constructor */
 	LCC_LagrangeMultiplier(const LCC_LagrangeMultiplier &copy) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZDiscontinuousGalerkin(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
+    TPZMaterial(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
     {
         
     }
     
     LCC_LagrangeMultiplier &operator=(const LCC_LagrangeMultiplier &copy)
     {
-        TPZDiscontinuousGalerkin::operator=(copy);
+        TPZMaterial::operator=(copy);
         fNStateVariables = copy.fNStateVariables;
         fDimension = copy.fDimension;
         fMultiplier = copy.fMultiplier;
@@ -287,22 +287,7 @@ class LCC_LagrangeMultiplier : public TPZDiscontinuousGalerkin
         return fNStateVariables;
     }
 	
-	
-	virtual void ContributeInterfaceErrors(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright,
-										   REAL weight,
-										   TPZVec<STATE> &nkL,
-										   TPZVec<STATE> &nkR,
-										   int &errorid)  override {
-		PZError << "Method not implemented\n";
-	}
-	
-	virtual void ContributeInterfaceBCErrors(TPZMaterialData &data, TPZMaterialData &dataleft,
-											 REAL weight,
-											 TPZVec<STATE> &nk,
-											 TPZBndCond &bc,
-											 int &errorid)  override {
-		PZError << "Method not implemented\n";
-	}
+		
 	
     /** @{
      * @name Save and Load methods

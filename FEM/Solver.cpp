@@ -133,8 +133,10 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
 
 void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct PreConfig &pConfig){
 
+#ifdef _AUTODIFF
     config.exact.operator*().fSignConvention = -1;
-
+#endif
+    
     std::cout << "Solving H1 " << std::endl;
 
     TPZAnalysis an(cmeshH1);
@@ -176,8 +178,10 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     ////Calculo do erro
     std::cout << "Computing Error H1 " << std::endl;
 
+#ifdef _AUTODIFF
     an.SetExact(config.exact.operator*().ExactSolution());
-
+#endif
+    
     StockErrorsH1(an,cmeshH1,pConfig.Erro,pConfig.Log,pConfig);
 
     ////PostProcess
@@ -208,8 +212,10 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
 
+#ifdef _AUTODIFF
     config.exact.operator*().fSignConvention = 1;
-
+#endif
+    
     std::cout << "Solving HYBRID_H1 " << std::endl;
 
     TPZAnalysis an(cmesh_H1Hybrid);
@@ -248,7 +254,9 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     if(pConfig.debugger) {
         std::cout << "Computing Error HYBRID_H1 " << std::endl;
+#ifdef _AUTODIFF
         an.SetExact(config.exact.operator*().ExactSolution());
+#endif
         ////Calculo do erro
         StockErrors(an,cmesh_H1Hybrid,pConfig.Erro,pConfig.Log,pConfig);
         std::cout << "DOF = " << cmesh_H1Hybrid->NEquations() << std::endl;
@@ -275,9 +283,13 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     }
 }
 
+using namespace std;
+
 void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig config,struct PreConfig &pConfig) {
 
+#ifdef _AUTODIFF
     config.exact.operator*().fSignConvention = 1;
+#endif
     bool optBW = true;
 
     std::cout << "Solving Mixed " << std::endl;
@@ -315,8 +327,10 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         ////Calculo do erro
         std::cout << "Computing Error MIXED " << std::endl;
 
+#ifdef _AUTODIFF
         an.SetExact(config.exact.operator*().ExactSolution());
-
+#endif
+        
         std::cout << "DOF = " << cmesh_Mixed->NEquations() << std::endl;
 
         StockErrors(an,cmesh_Mixed,pConfig.Erro,pConfig.Log,pConfig);

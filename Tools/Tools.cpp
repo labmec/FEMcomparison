@@ -19,6 +19,8 @@
 #include "pzcondensedcompel.h"
 #include "pzelementgroup.h"
 
+using namespace std;
+
 TPZCompMesh* CreatePressureMesh(const ProblemConfig& problem) {
     TPZCompMesh* cmesh = new TPZCompMesh(problem.gmesh);
     TPZMaterial* mat = 0;
@@ -66,7 +68,9 @@ TPZCompMesh* CreateFluxHDivMesh(const ProblemConfig& problem) {
             bctype = 1;
         }
         TPZBndCond* bc = mat->CreateBC(mat, matid, bctype, val1, val2);
-        bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
+#ifdef _AUTODIFF
+    bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
+#endif
         cmesh->InsertMaterialObject(bc);
     }
     cmesh->SetDefaultOrder(problem.k);
@@ -114,8 +118,10 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
     
     for (auto matid : problem.materialids) {
         TPZMixedPoisson *mix = new TPZMixedPoisson(matid, cmesh->Dimension());
-        mix->SetForcingFunction(problem.exact.operator*().ForcingFunction());
-        mix->SetForcingFunctionExact(problem.exact.operator*().Exact());
+#ifdef _AUTODIFF
+    mix->SetForcingFunction(problem.exact.operator*().ForcingFunction());
+        mix->SetExactSol(problem.exact.operator*().Exact());
+#endif
         mix->SetPermeabilityTensor(K, invK);
 
         if (!mat) mat = mix;
@@ -149,7 +155,9 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
             }
         }
         TPZBndCond* bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+#ifdef _AUTODIFF
         bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
+#endif
         cmesh->InsertMaterialObject(bc);
     }
     cmesh->ApproxSpace().SetAllCreateFunctionsMultiphysicElem();
@@ -443,6 +451,7 @@ void RandomRefine(ProblemConfig& config, int numelrefine, int depth) {
     }
 }
 
+#ifdef _AUTODIFF
 
 void Print(const FADREAL& a, std::ostream& out) {
     out << " val " << a.val() << std::endl;
@@ -537,7 +546,7 @@ void FunctionTest() {
     std::cout << "valor de div " << force << std::endl;
     
 }
-
+#endif
 
 void Prefinamento(TPZCompMesh* cmesh, int ndiv, int porder) {
     if (ndiv < 1) return;
@@ -630,7 +639,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
         an.DefineGraphMesh(2, scalnames, vecnames, sout.str());
         int resolution = 0;
         an.PostProcess(resolution, Hybridmesh->Dimension());
-        
+#ifdef _AUTODIFF
         if (problem.exact.operator*().Exact()) {
             TPZManVector<REAL> errors(5, 0.);
             an.SetThreadsForError(0);
@@ -652,8 +661,8 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
             
             //
             
-            ofstream myfile;
-            myfile.open("ErrorBCFemProblem.txt", ios::app);
+            std::ofstream myfile;
+            myfile.open("ErrorBCFemProblem.txt", std::ios::app);
             
             
             
@@ -670,7 +679,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
             
             myfile.close();
         }
-        
+#endif
     }
     
     
@@ -702,9 +711,9 @@ void ComputeError(TPZCompMesh *Hybridmesh, std::ofstream &out,const ProblemConfi
         TPZBndCond *bc = dynamic_cast<TPZBndCond *>(mat);
         
 
-        
+#ifdef _AUTODIFF
         cel->EvaluateError(config.exact->ExactSolution(), elerror, NULL);
-
+#endif
         int nerr = elerror.size();
         for (int i=0; i<nerr; i++) {
             globerrors[i] += elerror[i]*elerror[i];
@@ -807,9 +816,11 @@ void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
     int resolution = 2;
     an.PostProcess(resolution, dim);
 
+#ifdef _AUTODIFF
     if (config.exact.operator*().Exact()) {
         TPZManVector<REAL> errors(4, 0.);
         an.SetThreadsForError(0);
+
         an.SetExact(config.exact.operator*().ExactSolution());
         an.PostProcessError(errors, false);
 
@@ -836,6 +847,7 @@ void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
          // myfile << "Hdiv norm = " << errors[4] << "\n";
         myfile.close();
     }
+#endif
 }
 
 
@@ -998,9 +1010,10 @@ TPZCompMesh* CMeshH1(ProblemConfig problem) {
     
     for (auto matid : problem.materialids) {
         TPZMatPoisson3d *mix = new TPZMatPoisson3d(matid, cmesh->Dimension());
-        mix->SetForcingFunctionExact(problem.exact.operator*().Exact());
-        mix->SetForcingFunction(problem.exact.operator*().ForcingFunction());
-
+#ifdef _AUTODIFF
+        mix->SetExactSol(problem.exact.operator*().Exact());
+    mix->SetForcingFunction(problem.exact.operator*().ForcingFunction());
+#endif
         if (!mat) mat = mix;
         cmesh->InsertMaterialObject(mix);
     }
@@ -1010,8 +1023,9 @@ TPZCompMesh* CMeshH1(ProblemConfig problem) {
         int bctype = 0;
         val2.Zero();
         TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+#ifdef _AUTODIFF
         bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
-
+#endif
         cmesh->InsertMaterialObject(bc);
     }
 
@@ -1489,9 +1503,9 @@ void VectorEnergyNorm(TPZCompMesh *hdivmesh, std::ostream &out,  const ProblemCo
                  TPZCompEl *celneigh = equal[ieq].Element();
                  TPZInterpolatedElement *intelneigh = dynamic_cast<TPZInterpolatedElement *>(celneigh);
                  TPZVec<REAL> errors(5,0.);
-
+#ifdef _AUTODIFF
                 intelneigh->EvaluateError(problem.exact->ExactSolution(),errors,false);
-   
+#endif
 
              }
          }

@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 3;                        //// How many refinements
-    pConfig.debugger = true;                    //// Print geometric and computational mesh
+    pConfig.refLevel = 5;                        //// How many refinements
+    pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     // Problem configuration and geometric mesh definition
     ProblemConfig config;
     Configure(config,pConfig.refLevel ,pConfig,argv);
-    DrawGeoMesh(config,pConfig);
+//    DrawGeoMesh(config,pConfig);
 
     // The FEM abstractions and computations are here
     Solve(config,pConfig);
