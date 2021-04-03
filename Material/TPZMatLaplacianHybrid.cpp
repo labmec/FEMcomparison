@@ -8,7 +8,7 @@
 #include "TPZMatLaplacianHybrid.h"
 #include "pzbndcond.h"
 #include "pzaxestools.h"
-#ifdef USING_MKL
+#ifdef PZ_USING_MKL
 #include "mkl.h"
 #endif
 #ifdef LOG4CXX
@@ -136,7 +136,7 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
         fPermeabilityFunction->Execute(x, func, dfunc);
         KPerm = dfunc(0,0);
     }
-#ifdef USING_MKL
+#ifdef PZ_USING_MKL
     {
         double *A, *B, *C;
         int m, n, k;

@@ -10,7 +10,7 @@
 #include "pzbndcond.h"
 #include "pzfmatrix.h"
 #include "pzaxestools.h"
-#ifdef USING_MKL
+#ifdef PZ_USING_MKL
 #include "mkl.h"
 #endif
 
@@ -108,7 +108,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
             ivec(id,iq) = datavec[0].fDeformedDirections(id,ivecind)*phiQ(ishapeind,0);
         }
     }
-#ifdef USING_MKL
+#ifdef PZ_USING_MKL
     {
         double *A, *B, *C;
         double alpha, beta;
