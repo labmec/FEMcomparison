@@ -8,7 +8,7 @@
 
 #include "LCC_LagrangeMultiplier.h"
 #include "pzaxestools.h"
-#ifdef USING_MKL
+#ifdef PZ_USING_MKL
 #include "mkl.h"
 #endif
 #ifdef LOG4CXX
@@ -77,28 +77,31 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @param ef [out] is the load vector
  * @since June 5, 2012
  */
-void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
-    TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
-    for (int i=0; i<dataleft.size(); i++) {
-        if (dataleft[i].phi.Rows() != 0) {
-            phiLPtr = &dataleft[i].phi;
-            break;
-        }
-    }
-    for (int i=0; i<dataright.size(); i++) {
-        if (dataright[i].phi.Rows() != 0) {
-            phiRPtr = &dataright[i].phi;
-            break;
-        }
-    }
-    
-    if(!phiLPtr || !phiRPtr)
-    {
-        DebugStop();
-    }
-    TPZFMatrix<REAL> &phiL = *phiLPtr;
-    TPZFMatrix<REAL> &phiR = *phiRPtr;
+#ifdef PZDEBUG
+    if(dataleft.size() != 1 || dataright.size() != 1) DebugStop();
+#endif
+//    TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
+//    for (int i=0; i<dataleft.size(); i++) {
+//        if (dataleft[i].phi.Rows() != 0) {
+//            phiLPtr = &dataleft[i].phi;
+//            break;
+//        }
+//    }
+//    for (int i=0; i<dataright.size(); i++) {
+//        if (dataright[i].phi.Rows() != 0) {
+//            phiRPtr = &dataright[i].phi;
+//            break;
+//        }
+//    }
+//
+//    if(!phiLPtr || !phiRPtr)
+//    {
+//        DebugStop();
+//    }
+    TPZFMatrix<REAL> &phiL = dataleft.begin()->second.phi;
+    TPZFMatrix<REAL> &phiR = dataright.begin()->second.phi;
     
     
     int nrowl = phiL.Rows();
@@ -116,7 +119,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<T
     int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
     int il,jl,ir,jr;
 
-#ifdef USING_MKL
+#ifdef PZ_USING_MKL
     {
         double *A, *B, *C;
         double alpha, beta;
