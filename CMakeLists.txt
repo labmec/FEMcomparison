@@ -5,6 +5,9 @@ project (FEMcomparison)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+#this allow us to define custom FindXXX.cmake modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
 include(cmake/StandardProjectSettings.cmake)
 
 ## Sanitizer options if supported by compiler
@@ -26,6 +29,13 @@ enable_log4cxx()
 find_package(Threads)
 
 find_package(TBB)
+
+#enabling MKL library
+option(USING_MKL "Whether the MKL library will be linked in" OFF)
+if(USING_MKL)
+    include(cmake/EnableMKL.cmake)
+    enable_mkl(Tools)
+endif(USING_MKL)
 
 # This option enables a lot of warnings and treat them as errors, to ensure
 # good programming practices are used. Since its behaviour is extreme, it

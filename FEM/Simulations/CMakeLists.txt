@@ -1,7 +1,8 @@
 
 add_pz_target(
   NAME HybridH1vsMixed
-SOURCES main_HybridH1vsMixed.cpp)
+SOURCES main_HybridH1vsMixed.cpp
+)
 
 # Project to apply error estimation for hybrid H1 approximations
 #add_executable(HybridH1vsMixed main_HybridH1vsMixed.cpp)
