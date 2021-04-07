@@ -1,5 +1,5 @@
 #This file creates a library with tools
-add_library(Tools
+target_sources(Tools PUBLIC
     DataStructure.h
     TPZCreateMultiphysicsSpace.cpp
     TPZCreateMultiphysicsSpace.h
@@ -7,5 +7,6 @@ add_library(Tools
     Tools.cpp
 )
 
-target_link_libraries(Tools NeoPZ::pz)
+target_link_libraries(Tools PUBLIC NeoPZ::pz)
+target_include_directories(Tools PUBLIC ${PZ_INCLUDE_DIRS})
 target_include_directories(Tools PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

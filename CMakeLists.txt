@@ -15,6 +15,18 @@ include(cmake/StandardProjectSettings.cmake)
 #add_library(project_options INTERFACE)
 #enable_sanitizers(project_options)
 
+set(TOOLS_LIB_TYPE STATIC)
+add_library(Tools ${TOOLS_LIB_TYPE} "")
+
+
+#enabling MKL library
+option(USING_MKL "Whether the MKL library will be linked in" OFF)
+if(USING_MKL)
+    include(cmake/EnableMKL.cmake)
+    enable_mkl(Tools)
+endif(USING_MKL)
+
+
 # Allow for static analysis options
 include(cmake/StaticAnalyzers.cmake)
 
@@ -29,13 +41,6 @@ enable_log4cxx()
 find_package(Threads)
 
 find_package(TBB)
-
-#enabling MKL library
-option(USING_MKL "Whether the MKL library will be linked in" OFF)
-if(USING_MKL)
-    include(cmake/EnableMKL.cmake)
-    enable_mkl(Tools)
-endif(USING_MKL)
 
 # This option enables a lot of warnings and treat them as errors, to ensure
 # good programming practices are used. Since its behaviour is extreme, it

@@ -18,18 +18,15 @@ function(enable_mkl target)
   message(STATUS "Setting MKL threading model: ${MKL_THREAD_MODEL}")
   
   #do NOT change this lib unless you know what you are doing
-  target_link_libraries(${target} PRIVATE mkl::mkl_intel_32bit_${MKL_THREAD_MODEL}_dyn)
+  target_link_libraries(${target} PUBLIC mkl::mkl_intel_32bit_${MKL_THREAD_MODEL}_dyn)
   #on our test machine it was needed to link directly with mkl core
   #perhaps on newer mkl installs this is not needed anymore?
   if(APPLE)
-      target_link_libraries(${target} PRIVATE ${_mkl_core_lib})
+      target_link_libraries(${target} PUBLIC ${_mkl_core_lib})
   endif()
-  target_include_directories(${target} PRIVATE ${MKL_INCLUDE_DIR})
-  target_compile_definitions(${target} PRIVATE USING_MKL)
-  target_compile_definitions(${target} PRIVATE USING_LAPACK)
-  target_compile_definitions(${target} INTERFACE PZ_USING_MKL)
-  target_compile_definitions(${target} INTERFACE PZ_USING_LAPACK)
-  target_compile_definitions(${target} PRIVATE MKLLAPACK)
+  target_include_directories(${target} PUBLIC ${MKL_INCLUDE_DIR})
+  target_compile_definitions(${target} PUBLIC PZ_USING_MKL)
+  target_compile_definitions(${target} PUBLIC PZ_USING_LAPACK)
   #TODOWIN32: should we do something with mkl_rt on windows?
   mark_as_advanced(MKL_THREAD_MODEL)
 endfunction()
