@@ -136,7 +136,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         m = phrq;
         n = phrp;
         k = 1;
-        alpha = weight;
+        alpha = (-1.)*weight;
         beta = 1.0;
         int LDA,LDB,LDC;
         LDA = phrq;
@@ -156,7 +156,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         m = phrp;
         n = phrq;
         k = 1;
-        alpha = weight;
+        alpha = (-1.)*weight;
         beta = 1.0;
         int LDA,LDB,LDC;
         LDA = phrp;
