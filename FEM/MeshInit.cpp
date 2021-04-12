@@ -26,7 +26,7 @@ void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemCon
     cmesh_mixed -> SetDefaultOrder(defaultOrder);
     cmesh_mixed -> SetDimModel(dim);
     cmesh_mixed->SetAllCreateFunctionsMultiphysicElem();
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
     TLaplaceExample1 *mat1 = new TLaplaceExample1,*mat2 = new TLaplaceExample1;
 
     SetFExact(mat1,mat2,pConfig);
@@ -43,7 +43,7 @@ void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemCon
 #endif
     TPZMixedPoisson *material_Q1 = new TPZMixedPoisson(matID_Q1,dim); //Using standard PermealityTensor = Identity.
     TPZMixedPoisson *material_Q2 = new TPZMixedPoisson(matID_Q2,dim);
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
     material_Q1->SetForcingFunction(config.exact.operator*().ForcingFunction());
     material_Q1->SetExactSol(config.exact.operator*().Exact());
     material_Q2->SetForcingFunction(config.exact.operator*().ForcingFunction());
@@ -60,11 +60,11 @@ void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemCon
     TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
 
     TPZMaterial *BCond0_Q1 = material_Q1->CreateBC(material_Q1, -5, dirichlet, val1, val2);
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
     BCond0_Q1->SetForcingFunction(config.exact.operator*().Exact());
 #endif
     TPZMaterial *BCond0_Q2 = material_Q2->CreateBC(material_Q2, -6, dirichlet, val1, val2);
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
     BCond0_Q2->SetForcingFunction(config.exact.operator*().Exact());
 #endif
     TPZMaterial *BCond1_Q1 = material_Q1->CreateBC(material_Q1, -8, neumann, val1, val2);
@@ -85,7 +85,7 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, Proble
     int dirichlet = 0;
     int neumann = 1;
 
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
     TLaplaceExample1 *mat1 = new TLaplaceExample1,*mat2 = new TLaplaceExample1;
     SetFExact(mat1,mat2,pConfig);
 
@@ -108,7 +108,7 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, Proble
     cmesh_H1Hybrid->InsertMaterialObject(material_Q1);
     cmesh_H1Hybrid->InsertMaterialObject(material_Q2);
 
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
     if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
         material_Q1->SetForcingFunction(mat1->ForcingFunction());
         material_Q1->SetExactSol(mat1->Exact());
@@ -121,7 +121,7 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, Proble
     TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
     TPZMaterial *BCond0_Q1 = material_Q1->CreateBC(material_Q1, -5, dirichlet, val1, val2);
     TPZMaterial *BCond0_Q2 = material_Q2->CreateBC(material_Q2, -6, dirichlet, val1, val2);
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
     if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
         BCond0_Q1->SetForcingFunction(mat1->Exact());
         BCond0_Q2->SetForcingFunction(mat2->Exact());
@@ -137,7 +137,7 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, Proble
     cmesh_H1Hybrid->InsertMaterialObject(BCond1_Q2);
 }
 
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
 void SetFExact(TLaplaceExample1 *mat1, TLaplaceExample1 *mat2,PreConfig &pConfig){
     switch(pConfig.type) {
         case 0:
@@ -449,7 +449,7 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
 
         LCCMixedPoisson *material = new LCCMixedPoisson(matID, dim); //Using standard PermealityTensor = Identity.
         if(pConfig.debugger) {
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
             material->SetForcingFunction(config.exact.operator*().ForcingFunction());
             material->SetExactSol(config.exact.operator*().Exact());
 #endif
@@ -464,7 +464,7 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
         TPZMaterial *BCond0 = material->CreateBC(material, -1, dirichlet, val1, val2);
         if(pConfig.debugger)
         {
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
             BCond0->SetForcingFunction(config.exact.operator*().Exact());
 #endif
         }
@@ -494,7 +494,7 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
         material->SetPermeability(1.);
         cmesh_H1Hybrid->InsertMaterialObject(material);
         if(pConfig.debugger) {
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
             material->SetForcingFunction(config.exact.operator*().ForcingFunction());
             material->SetExactSol(config.exact.operator*().Exact());
 #endif
@@ -504,7 +504,7 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
         TPZMaterial *BCond0 =
                 material->CreateBC(material, -1, dirichlet, val1, val2);
         if(pConfig.debugger) {
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
             if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
                 BCond0->SetForcingFunction(config.exact.operator*().Exact());
             }
@@ -534,7 +534,7 @@ TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
     if(pConfig.type != 2) {
         for (auto matid : config.materialids) {
             TPZMatPoisson3d *mix = new TPZMatPoisson3d(matid, cmesh->Dimension());
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
             mix->SetExactSol(config.exact.operator*().Exact());
             mix->SetForcingFunction(config.exact.operator*().ForcingFunction());
 #endif
@@ -547,7 +547,7 @@ TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
             int bctype = 0;
             val2.Zero();
             TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
             bc->TPZMaterial::SetForcingFunction(config.exact.operator*().Exact());
 #endif
 
@@ -555,7 +555,7 @@ TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
         }
     }
     else{
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
         TLaplaceExample1 *mat1 = new TLaplaceExample1,*mat2 = new TLaplaceExample1;
         SetFExact(mat1,mat2,pConfig);
 
@@ -575,7 +575,7 @@ TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
         material_Q1->SetPermeability(pConfig.perm_Q1);
         material_Q2->SetPermeability(pConfig.perm_Q2);
 
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
         if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
             material_Q1->SetForcingFunction(mat1->ForcingFunction());
             material_Q1->SetExactSol(mat1->Exact());
@@ -594,7 +594,7 @@ TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
         TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
         TPZMaterial *BCond0_Q1 = material_Q1->CreateBC(material_Q1, -5, dirichlet, val1, val2);
         TPZMaterial *BCond0_Q2 = material_Q2->CreateBC(material_Q2, -6, dirichlet, val1, val2);
-#ifdef _AUTODIFF
+#ifdef PZ_USING_MKL
         if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
             BCond0_Q1->SetForcingFunction(mat1->Exact());
             BCond0_Q2->SetForcingFunction(mat2->Exact());
