@@ -12,7 +12,7 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     config.ndivisions = ndiv;
     config.dimension = pConfig.dim;
     config.prefine = false;
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
     config.exact->fDimension = config.dimension;
 #endif
@@ -53,7 +53,7 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
 
 void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
 
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
     config.exact = new TLaplaceExample1;
     switch(preConfig.type){
         case 0:

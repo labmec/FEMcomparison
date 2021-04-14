@@ -46,9 +46,9 @@ struct ProblemConfig
     /// set of boundary condition material ids
     std::set<int> bcmaterialids;
     /// exact solution
-#ifdef PZ_USING_MKL
+
     TPZAutoPointer<TLaplaceExample1> exact;
-#endif
+
     
     ProblemConfig() = default;
 

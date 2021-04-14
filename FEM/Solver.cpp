@@ -133,7 +133,7 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
 
 void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct PreConfig &pConfig){
 
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = -1;
 #endif
     
@@ -178,7 +178,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     ////Calculo do erro
     std::cout << "Computing Error H1 " << std::endl;
 
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
     an.SetExact(config.exact.operator*().ExactSolution());
 #endif
     
@@ -212,7 +212,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
 
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
 #endif
     
@@ -254,7 +254,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     if(pConfig.debugger) {
         std::cout << "Computing Error HYBRID_H1 " << std::endl;
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
         an.SetExact(config.exact.operator*().ExactSolution());
 #endif
         ////Calculo do erro
@@ -287,7 +287,7 @@ using namespace std;
 
 void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig config,struct PreConfig &pConfig) {
 
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
 #endif
     bool optBW = true;
@@ -327,7 +327,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         ////Calculo do erro
         std::cout << "Computing Error MIXED " << std::endl;
 
-#ifdef PZ_USING_MKL
+#ifndef OPTMIZE_RUN_TIME
         an.SetExact(config.exact.operator*().ExactSolution());
 #endif
         

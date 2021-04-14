@@ -26,6 +26,11 @@ if(USING_MKL)
     enable_mkl(Tools)
 endif(USING_MKL)
 
+option(OPTMIZE_RUN_TIME "Whether the simulation is accelarated." OFF)
+if(OPTMIZE_RUN_TIME)
+    add_definitions(-DOPTMIZE_RUN_TIME)
+endif(OPTMIZE_RUN_TIME)
+
 
 # Allow for static analysis options
 include(cmake/StaticAnalyzers.cmake)
