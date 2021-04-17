@@ -1053,7 +1053,8 @@ void hAdaptivity(TPZCompMesh* postProcessMesh, TPZGeoMesh* gmeshToRefine, Proble
         TPZCompEl* cel = postProcessMesh->ElementVec()[iel];
         if (!cel) continue;
         if (cel->Dimension() != postProcessMesh->Dimension()) continue;
-        REAL elementError = postProcessMesh->ElementSolution()(iel, fluxErrorEstimateCol);
+        TPZFMatrix<STATE> &elsol = postProcessMesh->ElementSolution();
+        REAL elementError = elsol(iel, fluxErrorEstimateCol);
         
         
         if (elementError > maxError) {
@@ -1071,7 +1072,8 @@ void hAdaptivity(TPZCompMesh* postProcessMesh, TPZGeoMesh* gmeshToRefine, Proble
         if (!cel) continue;
         if (cel->Dimension() != postProcessMesh->Dimension()) continue;
         
-        REAL elementError = postProcessMesh->ElementSolution()(iel, fluxErrorEstimateCol);
+        TPZFMatrix<STATE> &elsol = postProcessMesh->ElementSolution();
+        REAL elementError = elsol(iel, fluxErrorEstimateCol);
         //prefinement
         if (elementError > threshold) {
             
