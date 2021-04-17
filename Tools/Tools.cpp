@@ -712,7 +712,7 @@ void ComputeError(TPZCompMesh *Hybridmesh, std::ofstream &out,const ProblemConfi
 
 
 #ifndef OPTMIZE_RUN_TIME
-        cel->EvaluateError(config.exact->ExactSolution(), elerror, NULL);
+        cel->EvaluateError(elerror, NULL);
 #endif
         int nerr = elerror.size();
         for (int i=0; i<nerr; i++) {
@@ -1506,7 +1506,7 @@ void VectorEnergyNorm(TPZCompMesh *hdivmesh, std::ostream &out,  const ProblemCo
                  TPZInterpolatedElement *intelneigh = dynamic_cast<TPZInterpolatedElement *>(celneigh);
                  TPZVec<REAL> errors(5,0.);
 #ifndef OPTMIZE_RUN_TIME
-                intelneigh->EvaluateError(problem.exact->ExactSolution(),errors,false);
+                intelneigh->EvaluateError(errors,false);
 #endif
 
              }
