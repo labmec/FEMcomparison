@@ -400,7 +400,7 @@ void TPZMatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var, 
 }
 
 
-void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE> &u_exact, TPZFMatrix<STATE> &du_exact, TPZVec<REAL> &errors)
+void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &errors)
 {
     /**
      datavec[1] L2 mesh (phi's)
@@ -419,11 +419,16 @@ void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<STATE> 
     errors.Resize(NEvalErrors());
     errors.Fill(0.0);
     
-
+    TPZVec<STATE> u_exact;
+    TPZFMatrix<STATE> du_exact;
     
     if(this->fExactSol){
         
         this->fExactSol->Execute(data[1].x,u_exact,du_exact);
+    }
+    else
+    {
+        DebugStop();
     }
     
 
