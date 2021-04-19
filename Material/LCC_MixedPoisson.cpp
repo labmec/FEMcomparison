@@ -80,7 +80,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
             nactive++;
         }
     }
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     if(nactive == 4)
     {
         int phrgb = datavec[2].phi.Rows();
@@ -213,7 +213,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
 
 void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
     
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     int nref =  datavec.size();
 //    if (nref != 2 ) {
 //        std::cout << " Erro.!! datavec tem que ser de tamanho 2 \n";

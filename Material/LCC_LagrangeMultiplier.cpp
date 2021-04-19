@@ -79,7 +79,7 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  */
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     if(dataleft.size() != 1 || dataright.size() != 1) DebugStop();
 #endif
 //    TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
@@ -221,7 +221,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMater
 
 	int nrowl = phiL.Rows();
 	int nrowr = phiR.Rows();
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     if(phiL.Rows()*fNStateVariables+phiR.Rows()*fNStateVariables != ek.Rows())
     {
         DebugStop();

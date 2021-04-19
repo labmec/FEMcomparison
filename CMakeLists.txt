@@ -18,7 +18,6 @@ include(cmake/StandardProjectSettings.cmake)
 set(TOOLS_LIB_TYPE STATIC)
 add_library(Tools ${TOOLS_LIB_TYPE} "")
 
-
 #enabling MKL library
 option(USING_MKL "Whether the MKL library will be linked in" OFF)
 if(USING_MKL)
@@ -31,6 +30,9 @@ if(OPTMIZE_RUN_TIME)
     add_definitions(-DOPTMIZE_RUN_TIME)
 endif(OPTMIZE_RUN_TIME)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DFEMCOMPARISON_DEBUG)
+endif()
 
 # Allow for static analysis options
 include(cmake/StaticAnalyzers.cmake)

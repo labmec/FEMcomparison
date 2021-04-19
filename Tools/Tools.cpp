@@ -582,7 +582,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
     
     TPZAnalysis an(Hybridmesh);
 
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(Hybridmesh);
     strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
@@ -747,7 +747,7 @@ void PlotLagrangeMultiplier(TPZCompMesh* cmesh, const ProblemConfig& problem) {
 }
 
 void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     {
         std::ofstream out("gmeshSolve.vtk");
         TPZVTKGeoMesh::PrintGMeshVTK(config.gmesh, out);
@@ -759,7 +759,7 @@ void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
     TPZAnalysis an(cmesh_HDiv, false);
 
 
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_HDiv);
     strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
@@ -926,7 +926,7 @@ TPZMultiphysicsCompMesh* HybridSolveProblem(TPZMultiphysicsCompMesh* cmesh_HDiv,
     std::cout << " InterfaceMatid = " << hybrid.fInterfaceMatid << std::endl;
 
 
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     {
         
         std::ofstream out2("OriginalFluxMesh.txt");
@@ -941,7 +941,7 @@ TPZMultiphysicsCompMesh* HybridSolveProblem(TPZMultiphysicsCompMesh* cmesh_HDiv,
     
     SolveHybridProblem(HybridMesh, hybrid.fInterfaceMatid, config, false);
 
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     {
         std::ofstream out("OriginalHybridMesh.txt");
         (HybridMesh)->Print(out);

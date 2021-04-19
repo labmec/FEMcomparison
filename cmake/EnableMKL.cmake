@@ -25,7 +25,7 @@ function(enable_mkl target)
       target_link_libraries(${target} PUBLIC ${_mkl_core_lib})
   endif()
   target_include_directories(${target} PUBLIC ${MKL_INCLUDE_DIR})
-  target_compile_definitions(${target} PUBLIC PZ_USING_MKL)
+  target_compile_definitions(${target} PUBLIC FEMCOMPARISON_USING_MKL)
   target_compile_definitions(${target} PUBLIC PZ_USING_LAPACK)
   #TODOWIN32: should we do something with mkl_rt on windows?
   mark_as_advanced(MKL_THREAD_MODEL)

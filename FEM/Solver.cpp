@@ -141,7 +141,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
     TPZAnalysis an(cmeshH1);
 
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmeshH1);
     strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
@@ -298,7 +298,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         cout<<"Total ecuaciones:"<<an.Solution().Rows()<<endl;
     }
     //MKL solver
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_Mixed);
     //strmat.SetNumThreads(8);
     strmat.SetNumThreads(0);
@@ -314,7 +314,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     delete direct;
     direct = 0;
     an.Assemble();
-#ifdef PZDEBUG2
+#ifdef FEMCOMPARISON_DEBUG2
     const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
     TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
     //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
