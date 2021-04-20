@@ -8,7 +8,7 @@
 
 #include "LCC_LagrangeMultiplier.h"
 #include "pzaxestools.h"
-#ifdef PZ_USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
 #ifdef LOG4CXX
@@ -119,7 +119,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
     int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
     int il,jl,ir,jr;
 
-#ifdef PZ_USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     {
         double *A, *B, *C;
         double alpha, beta;
