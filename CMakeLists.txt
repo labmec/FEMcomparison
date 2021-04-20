@@ -19,11 +19,11 @@ set(TOOLS_LIB_TYPE STATIC)
 add_library(Tools ${TOOLS_LIB_TYPE} "")
 
 #enabling MKL library
-option(USING_MKL "Whether the MKL library will be linked in" OFF)
-if(USING_MKL)
+option(FEMCOMPARISON_USING_MKL "Whether the MKL library will be linked in" OFF)
+if(FEMCOMPARISON_USING_MKL)
     include(cmake/EnableMKL.cmake)
     enable_mkl(Tools)
-endif(USING_MKL)
+endif(FEMCOMPARISON_USING_MKL)
 
 option(OPTMIZE_RUN_TIME "Whether the simulation is accelarated." OFF)
 if(OPTMIZE_RUN_TIME)
