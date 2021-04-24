@@ -15,7 +15,7 @@
 static LoggerPtr logdata(Logger::getLogger("LagrangeMultipliersData"));
 static LoggerPtr logerror(Logger::getLogger("LagrangeMultipliersError"));
 #endif
-
+#include "TPZTimer.h"
 
 
 /** @brief Unique identifier for serialization purposes */
@@ -77,8 +77,11 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @param ef [out] is the load vector
  * @since June 5, 2012
  */
+extern double contributeTimeInterface;
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
+    TPZTimer timer;
+    timer.start();
 #ifdef FEMCOMPARISON_DEBUG
     if(dataleft.size() != 1 || dataright.size() != 1) DebugStop();
 #endif
@@ -193,7 +196,8 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         LOGPZ_DEBUG(logdata,valuenn.str());
     }
 #endif
-    
+    timer.stop();
+    contributeTimeInterface += timer.seconds();
 }
 
 
@@ -260,6 +264,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMater
  * @param ef [out] is the load vector
  * @since April 16, 2007
  */
+
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
 {
     DebugStop();

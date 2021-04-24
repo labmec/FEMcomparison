@@ -14,7 +14,7 @@
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("MaterialHybrid"));
 #endif
-
+#include "TPZTimer.h"
 
 TPZMatLaplacianHybrid::TPZMatLaplacianHybrid(int matid, int dim)
 : TPZRegisterClassId(&TPZMatLaplacianHybrid::ClassId), TPZMatLaplacian(matid,dim)
@@ -92,7 +92,7 @@ int TPZMatLaplacianHybrid::NSolutionVariables(int var){
     }
 }
 
-
+extern double contributeTimeMaterial;
 void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     /**
@@ -111,7 +111,8 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
      f2 = int_partialK g*mu_j dx
      
      **/
-    
+    TPZTimer timer;
+    timer.start();
     TPZFMatrix<REAL>  &phi = datavec[1].phi;
     TPZFMatrix<REAL> &dphi = datavec[1].dphix;
     TPZVec<REAL>  &x = datavec[1].x;
@@ -215,6 +216,8 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
         LOGPZ_DEBUG(logger,valuenn.str());
     }
 #endif
+    timer.stop();
+    contributeTimeMaterial += timer.seconds();
 }
 
 void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef)
