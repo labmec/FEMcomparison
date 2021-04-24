@@ -7,9 +7,14 @@
 #include "Tools.h"
 #include <tuple>
 #include "pzvisualmatrix.h"
+double solveTime =0.;
+double assembleTime =0.;
+extern double calcstiffTime;
+extern double contributeTime;
 
 int main(int argc, char *argv[]) {
-
+    calcstiffTime=0.;
+    contributeTime=0.;
 #ifdef LOG4CXX
     InitializePZLOG();
 #endif
@@ -19,8 +24,8 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 0;                        //// How many refinements
-    pConfig.debugger = true;                    //// Print geometric and computational mesh
+    pConfig.refLevel = 4;                        //// How many refinements
+    pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
@@ -37,6 +42,7 @@ int main(int argc, char *argv[]) {
         system(command.c_str());
             FlushTable(pConfig,argv);
     }
+    std::cout<<"calcstiffTime= "<< calcstiffTime << std::endl;
     return 0;
 }
 

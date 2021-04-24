@@ -6,9 +6,14 @@
 #include "DataStructure.h"
 #include "Tools.h"
 #include <tuple>
+double solveTime =0.;
+double assembleTime =0.;
+extern double calcstiffTime;
+extern double contributeTime;
 
 int main(int argc, char *argv[]) {
-
+    calcstiffTime = 0.;
+    contributeTime = 0.;
 #ifdef LOG4CXX
     InitializePZLOG();
 #endif
@@ -37,6 +42,8 @@ int main(int argc, char *argv[]) {
         system(command.c_str());
         FlushTable(pConfig,argv);
     }
+    std::cout<<"calcstiffTime= "<< calcstiffTime << std::endl;
+
     return 0.;
 }
 
