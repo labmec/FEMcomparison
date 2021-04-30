@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     pConfig.n = 2;
     pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Triangular";           //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.topology = "Quadrilateral";           //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel = 3;                        //// How many refinements
     pConfig.debugger = true;                    //// Print geometric and computational mesh
 

@@ -18,9 +18,11 @@
 #include "Output.h"
 #include "pzvisualmatrix.h"
 #include "MeshInit.h"
-#include <TPZTimer.h>
+#include "TPZTimer.h"
+extern double solveTime;
 extern double assembleTime;
-extern double solveGlobalTime;
+
+
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
     TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
@@ -37,19 +39,20 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-        {TPZTimer timer;
-        timer.start();
+            { TPZTimer timer;
+            timer.start();
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             timer.stop();
-            solveGlobalTime+=timer.seconds();}
+            solveTime+=timer.seconds();
+            }
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
-        {TPZTimer timer;
-        timer.start();
+            {TPZTimer timer;
+                timer.start();
             SolveMixedProblem(multiCmesh, config, preConfig);
-        timer.stop();
-        solveGlobalTime+=timer.seconds();}
+            timer.stop();
+            solveTime+=timer.seconds();}
             break;
         default:
             DebugStop();
@@ -142,13 +145,15 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
 
 void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct PreConfig &pConfig){
 
+#ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = -1;
-
+#endif
+    
     std::cout << "Solving H1 " << std::endl;
 
     TPZAnalysis an(cmeshH1);
 
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmeshH1);
     strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
@@ -185,8 +190,10 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     ////Calculo do erro
     std::cout << "Computing Error H1 " << std::endl;
 
+#ifndef OPTMIZE_RUN_TIME
     an.SetExact(config.exact.operator*().ExactSolution());
-
+#endif
+    
     StockErrorsH1(an,cmeshH1,pConfig.Erro,pConfig.Log,pConfig);
 
     ////PostProcess
@@ -217,13 +224,15 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
 
+#ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
-
+#endif
+    
     std::cout << "Solving HYBRID_H1 " << std::endl;
 
     TPZAnalysis an(cmesh_H1Hybrid);
 
-#ifdef USING_MKL
+#ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
@@ -244,16 +253,18 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     TPZStepSolver<STATE>* direct = new TPZStepSolver<STATE>;
     direct->SetDirect(ELDLt);
-    
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
-    TPZTimer timerAssemble;
-    timerAssemble.start();
+    
+    TPZTimer timer;
+    timer.start();
     an.Assemble();
-    timerAssemble.stop();
-    assembleTime+=timerAssemble.seconds();
+    timer.stop();
+    assembleTime+=timer.seconds();
+    
     an.Solve();
+
     int64_t nelem = cmesh_H1Hybrid->NElements();
     cmesh_H1Hybrid->LoadSolution(cmesh_H1Hybrid->Solution());
     cmesh_H1Hybrid->ExpandSolution();
@@ -261,7 +272,9 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     if(pConfig.debugger) {
         std::cout << "Computing Error HYBRID_H1 " << std::endl;
+#ifndef OPTMIZE_RUN_TIME
         an.SetExact(config.exact.operator*().ExactSolution());
+#endif
         ////Calculo do erro
         StockErrors(an,cmesh_H1Hybrid,pConfig.Erro,pConfig.Log,pConfig);
         std::cout << "DOF = " << cmesh_H1Hybrid->NEquations() << std::endl;
@@ -288,9 +301,13 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     }
 }
 
+using namespace std;
+
 void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig config,struct PreConfig &pConfig) {
 
+#ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
+#endif
     bool optBW = true;
 
     std::cout << "Solving Mixed " << std::endl;
@@ -299,7 +316,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         cout<<"Total ecuaciones:"<<an.Solution().Rows()<<endl;
     }
     //MKL solver
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_Mixed);
     //strmat.SetNumThreads(8);
     strmat.SetNumThreads(0);
@@ -315,12 +332,13 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     delete direct;
     direct = 0;
     
-    TPZTimer timerAssemble;
-    timerAssemble.start();
+    TPZTimer timer;
+    timer.start();
     an.Assemble();
-    timerAssemble.stop();
-    assembleTime+=timerAssemble.seconds();
-#ifdef PZDEBUG2
+    timer.stop();
+    assembleTime += timer.seconds();
+    
+#ifdef FEMCOMPARISON_DEBUG2
     const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
     TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
     //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
@@ -333,8 +351,10 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         ////Calculo do erro
         std::cout << "Computing Error MIXED " << std::endl;
 
+#ifndef OPTMIZE_RUN_TIME
         an.SetExact(config.exact.operator*().ExactSolution());
-
+#endif
+        
         std::cout << "DOF = " << cmesh_Mixed->NEquations() << std::endl;
 
         StockErrors(an,cmesh_Mixed,pConfig.Erro,pConfig.Log,pConfig);

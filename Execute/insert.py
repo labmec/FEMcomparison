@@ -10,9 +10,9 @@ try:
     cursor = connection.cursor()
     lines = tuple(open('experiment.txt', 'r'))
     postgres_insert_query = """ INSERT INTO Experiment 
-		(experimentCode,username,contributeTime,assembleTime,calcstiffGlobalTime,solveGlobalTime,k,n,dim,refLevel,timeSelector,fechahora)
- 		VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
-    record_to_insert = (lines[0],lines[1],lines[2],lines[3],lines[4],lines[5],lines[6],lines[7],lines[8],lines[9],lines[10],'NOW()')
+		(username,experimentcode,solveTime,assembleTime,calcstiffTime,contributeTime,contributeTimeMaterial,contributeTimeInterface,k,n,dim,refLevel,timeSelector,fechahora)
+ 		VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+    record_to_insert = (lines[0],lines[1],lines[2],lines[3],lines[4],lines[5],lines[6],lines[7],lines[8],lines[9],lines[10],lines[11],lines[12],'NOW()')
     cursor.execute(postgres_insert_query, record_to_insert)
 
     connection.commit()
@@ -28,6 +28,7 @@ finally:
         cursor.close()
         connection.close()
         print("PostgreSQL connection is closed")
+
 
 
 

@@ -1,5 +1,7 @@
 # Add subdirectories
-add_library(Methods
+
+add_library(Methods "")
+target_sources(Methods PUBLIC
         InputTreatment.h
         InputTreatment.cpp
         MeshInit.h
@@ -10,7 +12,7 @@ add_library(Methods
         Solver.h
         )
 
-target_link_libraries(Methods pz Tools)
+target_link_libraries(Methods PUBLIC Tools)
 target_include_directories(Methods PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(Simulations)

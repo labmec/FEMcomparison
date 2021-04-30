@@ -2,8 +2,11 @@ cmake_minimum_required (VERSION 3.13)
 
 project (FEMcomparison)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+#this allow us to define custom FindXXX.cmake modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 include(cmake/StandardProjectSettings.cmake)
 
@@ -11,6 +14,25 @@ include(cmake/StandardProjectSettings.cmake)
 #include(cmake/Sanitizers.cmake)
 #add_library(project_options INTERFACE)
 #enable_sanitizers(project_options)
+
+set(TOOLS_LIB_TYPE STATIC)
+add_library(Tools ${TOOLS_LIB_TYPE} "")
+
+#enabling MKL library
+option(FEMCOMPARISON_USING_MKL "Whether the MKL library will be linked in" OFF)
+if(FEMCOMPARISON_USING_MKL)
+    include(cmake/EnableMKL.cmake)
+    enable_mkl(Tools)
+endif(FEMCOMPARISON_USING_MKL)
+
+option(OPTMIZE_RUN_TIME "Whether the simulation is accelarated." OFF)
+if(OPTMIZE_RUN_TIME)
+    add_definitions(-DOPTMIZE_RUN_TIME)
+endif(OPTMIZE_RUN_TIME)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DFEMCOMPARISON_DEBUG)
+endif()
 
 # Allow for static analysis options
 include(cmake/StaticAnalyzers.cmake)
@@ -22,6 +44,10 @@ enable_pz()
 # Enables log4cxx library
 include(cmake/EnableLog4CXX.cmake)
 enable_log4cxx()
+
+find_package(Threads)
+
+find_package(TBB)
 
 # This option enables a lot of warnings and treat them as errors, to ensure
 # good programming practices are used. Since its behaviour is extreme, it

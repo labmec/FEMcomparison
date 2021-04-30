@@ -8,32 +8,32 @@
 
 #include "LCC_LagrangeMultiplier.h"
 #include "pzaxestools.h"
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
 #ifdef LOG4CXX
 static LoggerPtr logdata(Logger::getLogger("LagrangeMultipliersData"));
 static LoggerPtr logerror(Logger::getLogger("LagrangeMultipliersError"));
 #endif
-
+#include "TPZTimer.h"
 
 
 /** @brief Unique identifier for serialization purposes */
 int LCC_LagrangeMultiplier::ClassId() const{
-    return Hash("LCC_LagrangeMultiplier") ^ TPZDiscontinuousGalerkin::ClassId() << 1;
+    return Hash("LCC_LagrangeMultiplier") ^ TPZMaterial::ClassId() << 1;
 }
 
 /** @brief Saves the element data to a stream */
 void LCC_LagrangeMultiplier::Write(TPZStream &buf, int withclassid) const
 {
-    TPZDiscontinuousGalerkin::Write(buf, withclassid);
+    TPZMaterial::Write(buf, withclassid);
     buf.Write(&fNStateVariables);
 }
 
 /** @brief Reads the element data from a stream */
 void LCC_LagrangeMultiplier::Read(TPZStream &buf, void *context)
 {
-    TPZDiscontinuousGalerkin::Read(buf, context);
+    TPZMaterial::Read(buf, context);
     buf.Read(&fNStateVariables);
     
 }
@@ -77,28 +77,34 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @param ef [out] is the load vector
  * @since June 5, 2012
  */
-void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<TPZMaterialData> &dataleft, TPZVec<TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+extern double contributeTimeInterface;
+void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
-    TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
-    for (int i=0; i<dataleft.size(); i++) {
-        if (dataleft[i].phi.Rows() != 0) {
-            phiLPtr = &dataleft[i].phi;
-            break;
-        }
-    }
-    for (int i=0; i<dataright.size(); i++) {
-        if (dataright[i].phi.Rows() != 0) {
-            phiRPtr = &dataright[i].phi;
-            break;
-        }
-    }
-    
-    if(!phiLPtr || !phiRPtr)
-    {
-        DebugStop();
-    }
-    TPZFMatrix<REAL> &phiL = *phiLPtr;
-    TPZFMatrix<REAL> &phiR = *phiRPtr;
+    TPZTimer timer;
+    timer.start();
+#ifdef FEMCOMPARISON_DEBUG
+    if(dataleft.size() != 1 || dataright.size() != 1) DebugStop();
+#endif
+//    TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
+//    for (int i=0; i<dataleft.size(); i++) {
+//        if (dataleft[i].phi.Rows() != 0) {
+//            phiLPtr = &dataleft[i].phi;
+//            break;
+//        }
+//    }
+//    for (int i=0; i<dataright.size(); i++) {
+//        if (dataright[i].phi.Rows() != 0) {
+//            phiRPtr = &dataright[i].phi;
+//            break;
+//        }
+//    }
+//
+//    if(!phiLPtr || !phiRPtr)
+//    {
+//        DebugStop();
+//    }
+    TPZFMatrix<REAL> &phiL = dataleft.begin()->second.phi;
+    TPZFMatrix<REAL> &phiR = dataright.begin()->second.phi;
     
     
     int nrowl = phiL.Rows();
@@ -116,7 +122,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<T
     int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
     int il,jl,ir,jr;
 
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     {
         double *A, *B, *C;
         double alpha, beta;
@@ -190,7 +196,8 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZVec<T
         LOGPZ_DEBUG(logdata,valuenn.str());
     }
 #endif
-    
+    timer.stop();
+    contributeTimeInterface += timer.seconds();
 }
 
 
@@ -218,7 +225,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMater
 
 	int nrowl = phiL.Rows();
 	int nrowr = phiR.Rows();
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     if(phiL.Rows()*fNStateVariables+phiR.Rows()*fNStateVariables != ek.Rows())
     {
         DebugStop();
@@ -257,6 +264,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMater
  * @param ef [out] is the load vector
  * @since April 16, 2007
  */
+
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
 {
     DebugStop();

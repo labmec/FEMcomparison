@@ -1,0 +1,13 @@
+ESinSin_Hybrid_Quadrilateral
+romulo-MAC
+16.3388
+0.572428
+0.560784
+0.039737
+0.0205
+0.01135
+1
+2
+2
+5
+MKL

@@ -10,8 +10,7 @@
 #include "pzbndcond.h"
 #include "pzfmatrix.h"
 #include "pzaxestools.h"
-#include <TPZTimer.h>
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
 
@@ -21,8 +20,6 @@
 static LoggerPtr logdata(Logger::getLogger("pz.mixedpoisson.data"));
 static LoggerPtr logerror(Logger::getLogger("pz.mixedpoisson.error"));
 #endif
-extern double contributeTime;
-
 
 LCCMixedPoisson::LCCMixedPoisson(): TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson() {
 }
@@ -50,8 +47,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
 
     if(fIsStabilized)
         DebugStop();
-    TPZTimer timer;
-    timer.start();
+    
     // Setting the phis
     TPZFMatrix<REAL> &phiQ = datavec[0].phi;
     TPZFMatrix<REAL> &phip = datavec[1].phi;
@@ -84,7 +80,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
             nactive++;
         }
     }
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     if(nactive == 4)
     {
         int phrgb = datavec[2].phi.Rows();
@@ -112,7 +108,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
             ivec(id,iq) = datavec[0].fDeformedDirections(id,ivecind)*phiQ(ishapeind,0);
         }
     }
-#ifdef USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     {
         double *A, *B, *C;
         double alpha, beta;
@@ -140,7 +136,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         m = phrq;
         n = phrp;
         k = 1;
-        alpha = weight;
+        alpha = (-1.)*weight;
         beta = 1.0;
         int LDA,LDB,LDC;
         LDA = phrq;
@@ -160,7 +156,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         m = phrp;
         n = phrq;
         k = 1;
-        alpha = weight;
+        alpha = (-1.)*weight;
         beta = 1.0;
         int LDA,LDB,LDC;
         LDA = phrp;
@@ -211,15 +207,13 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         ek(phrp+phrq+1,phrq+phrp) += -weight;
         ek(phrq+phrp,phrp+phrq+1) += -weight;
     }
-    timer.stop();
-    contributeTime += timer.seconds();
 }
 
 
 
 void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
     
-#ifdef PZDEBUG
+#ifdef FEMCOMPARISON_DEBUG
     int nref =  datavec.size();
 //    if (nref != 2 ) {
 //        std::cout << " Erro.!! datavec tem que ser de tamanho 2 \n";

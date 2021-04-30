@@ -46,8 +46,10 @@ struct ProblemConfig
     /// set of boundary condition material ids
     std::set<int> bcmaterialids;
     /// exact solution
+
     TPZAutoPointer<TLaplaceExample1> exact;
 
+    
     ProblemConfig() = default;
 
     ProblemConfig(const ProblemConfig &cp) = default;
@@ -79,7 +81,7 @@ struct PreConfig{
     std::string plotfile;
     int mode = -1;           // 0 = "H1"; 1 = "Hybrid"; 2 = "Mixed";
     int argc = 1;
-    int type = -1;
+    int type= -1;
 
     bool debugger = true;
     int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)

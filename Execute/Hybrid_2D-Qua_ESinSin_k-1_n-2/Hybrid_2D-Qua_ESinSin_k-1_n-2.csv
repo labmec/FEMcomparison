@@ -1,0 +1,11 @@
+Geometry,Quadrilateral
+Refinement,Uniform
+domain,[0 1]x[0 1]
+Case,ESinSin
+Approximation,Hybrid
+k order,1
+Enrichment +n,2
+
+Norm,Hybrid
+semiH1-error,5248
+L2-error,0.03125

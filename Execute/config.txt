@@ -1,8 +1,7 @@
 1
 2
-2
+1
 ESinSin
 Hybrid
 Quadrilateral
-6
-pztime
+5
