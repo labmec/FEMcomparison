@@ -15,7 +15,7 @@
 #include "TPZNullMaterial.h"
 #include "LCC_LagrangeMultiplier.h"
 #include "TPZMultiphysicsCompMesh.h"
-#include "TPZMultiphysicsInterfaceEl.h"
+#include "LCC_MultiphysicsInterfaceEl.h"
 #include "TPZHybridizeHDiv.h"
 #include "TPZGeoElSidePartition.h"
 #include "TPZCompElDisc.h"
@@ -500,7 +500,7 @@ void TPZCreateMultiphysicsSpace::AddInterfaceElements(TPZMultiphysicsCompMesh *m
 //            std::cout << "Creating interface from wrap element " << gel->Index() << " using neighbour " << neighbour.Element()->Index() <<
 //             " and flux element " << fluxgel->Index() << std::endl;
             if(neighbour.Element()->Reference()) DebugStop();
-            new TPZMultiphysicsInterfaceElement(*mphys,neighbour.Element(),index,celwrap,fluxside);
+            new LCC_TPZMultiphysicsInterfaceElement(*mphys,neighbour.Element(),index,celwrap,fluxside);
 #ifdef LOG4CXX
             numcreated[neighmat]++;
 #endif
@@ -548,7 +548,7 @@ void TPZCreateMultiphysicsSpace::AddInterfaceElements(TPZMultiphysicsCompMesh *m
                     if(!celflux || !pressure) DebugStop();
                     int64_t index;
                     if(secondlagrange.Element()->Reference()) DebugStop();
-                    new TPZMultiphysicsInterfaceElement(*mphys,secondlagrange.Element(),index,celflux,pressure);
+                    new LCC_TPZMultiphysicsInterfaceElement(*mphys,secondlagrange.Element(),index,celflux,pressure);
 #ifdef LOG4CXX
                     numcreated[secondlagrange.Element()->MaterialId()]++;
 #endif
@@ -563,7 +563,7 @@ void TPZCreateMultiphysicsSpace::AddInterfaceElements(TPZMultiphysicsCompMesh *m
                 numcreated[firstlagrange.Element()->MaterialId()]++;
 #endif
                 if(firstlagrange.Element()->Reference()) DebugStop();
-                new TPZMultiphysicsInterfaceElement(*mphys,firstlagrange.Element(),index,celflux,pressure);
+                new LCC_TPZMultiphysicsInterfaceElement(*mphys,firstlagrange.Element(),index,celflux,pressure);
             }
         }
     }

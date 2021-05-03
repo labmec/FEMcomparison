@@ -61,6 +61,8 @@ if (ENABLE_ALL_WARNINGS)
 endif ()
 
 # Add subdirectories
+add_subdirectory(CompEl)
 add_subdirectory(Tools)
 add_subdirectory(Material)
 add_subdirectory(FEM)
+

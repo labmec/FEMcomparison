@@ -16,8 +16,10 @@ double contributeTimeInterface=0;
 
 
 int main(int argc, char *argv[]) {
+#ifdef OPTMIZE_RUN_TIME
     calcstiffTime=0.;
-    contributeTime =0.;
+    contributeTime =0
+#endif
 #ifdef LOG4CXX
     InitializePZLOG();
 #endif
@@ -27,8 +29,8 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 4;                        //// How many refinements
-    pConfig.debugger = false;                    //// Print geometric and computational mesh
+    pConfig.refLevel = 3;                        //// How many refinements
+    pConfig.debugger = true;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
@@ -47,8 +49,9 @@ int main(int argc, char *argv[]) {
     }
     std::cout<<"contributeTimeInterface= "<< contributeTimeInterface << std::endl;
     std::cout<<"contributeTimeMaterial= "<< contributeTimeMaterial << std::endl;
-    std::cout<<"contributeTime= "<< contributeTime << std::endl;
-
+#ifdef OPTIMIZE_RUN_TIME
+   std::cout<<"contributeTime= "<< contributeTime << std::endl;
+#endif
 
     return 0;
 }
