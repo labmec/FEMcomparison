@@ -14,8 +14,8 @@
 
 int main(int argc, char *argv[]) {
 
-#ifdef LOG4CXX
-    InitializePZLOG();
+#ifdef PZ_LOG
+    TPZLogger::InitializePZLOG();
 #endif
     PreConfig pConfig;
     pConfig.k = 1;//

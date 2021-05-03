@@ -42,8 +42,10 @@ include(cmake/EnableNeoPZ.cmake)
 enable_pz()
 
 # Enables log4cxx library
-include(cmake/EnableLog4CXX.cmake)
-enable_log4cxx()
+#TODO: Change all LOG4CXX calls to PZ_LOG or correctly implement the LOG4CXX call for this project;
+#TODO: The current call for definition LOG4CXX is a dummy call that always return false.
+#include(cmake/EnableLog4CXX.cmake)
+#enable_log4cxx()
 
 find_package(Threads)
 

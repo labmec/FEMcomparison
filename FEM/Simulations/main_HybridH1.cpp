@@ -20,8 +20,8 @@ int main(int argc, char *argv[]) {
     calcstiffTime=0.;
     contributeTime =0
 #endif
-#ifdef LOG4CXX
-    InitializePZLOG();
+#ifdef PZ_LOG
+    TPZLogger::InitializePZLOG();
 #endif
     PreConfig pConfig;
     pConfig.k = 1;//
