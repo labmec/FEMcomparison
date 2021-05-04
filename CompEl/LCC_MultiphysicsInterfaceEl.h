@@ -8,8 +8,12 @@
 #include "pzcompel.h"
 #include "pzmultiphysicselement.h"
 #include "TPZMultiphysicsInterfaceEl.h"
+#include "pzfmatrix.h"
 
 class LCC_TPZMultiphysicsInterfaceElement : public TPZMultiphysicsInterfaceElement{
+private:
+    bool fComputeStiffnessContribution;
+
 public:
     /** @brief Default constructor */
     LCC_TPZMultiphysicsInterfaceElement();
@@ -18,9 +22,9 @@ public:
 
     LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, int64_t &index);
 
-    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, const TPZMultiphysicsInterfaceElement &copy);
+    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, const LCC_TPZMultiphysicsInterfaceElement &copy);
 
-    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, const TPZMultiphysicsInterfaceElement &copy, std::map<int64_t,int64_t> & gl2lcConMap,std::map<int64_t,int64_t> & gl2lcElMap);
+    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, const LCC_TPZMultiphysicsInterfaceElement &copy, std::map<int64_t,int64_t> & gl2lcConMap,std::map<int64_t,int64_t> & gl2lcElMap);
 
     /** @brief Method for creating a copy of the element */
     virtual TPZCompEl *Clone(TPZCompMesh &mesh) const override
@@ -35,10 +39,15 @@ public:
         return new LCC_TPZMultiphysicsInterfaceElement(mesh,*this,gl2lcConMap,gl2lcElMap);
     }
 
-/** @brief Default destructor */
-virtual ~LCC_TPZMultiphysicsInterfaceElement(){
+    /** @brief Default destructor */
+    virtual ~LCC_TPZMultiphysicsInterfaceElement(){
 
-}
+    }
+
+/**
+     * Compute the stiffness matrix and load vector of the interface element
+     */
+    void CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) override;
 
 };
 
