@@ -13,6 +13,10 @@ class LCC_MatLaplacianHybrid:public TPZMatLaplacianHybrid
     LCC_MatLaplacianHybrid();
     
     LCC_MatLaplacianHybrid(const TPZMatLaplacian &copy);
+
+    virtual void FillDataRequirements(TPZVec<TPZMaterialData > &datavec) override;
     
-    virtual ~LCC_MatLaplacianHybrid();
+    virtual ~LCC_MatLaplacianHybrid(){
+
+    }
 };
