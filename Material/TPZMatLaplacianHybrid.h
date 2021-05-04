@@ -57,9 +57,26 @@ public:
 
     }
 
-
-    
     virtual int ClassId() const override;
+
+    virtual void FillDataRequirements(TPZVec<TPZMaterialData > &datavec) override;
+
+    virtual void FillBoundaryConditionDataRequirement(int type,TPZVec<TPZMaterialData > &datavec) override
+    {
+        // default is no specific data requirements
+        int nref = datavec.size();
+        for (int iref = 0; iref <nref; iref++) {
+            datavec[iref].SetAllRequirements(false);
+            datavec[iref].fNeedsSol = false;
+        }
+        datavec[0].fNeedsNormal = true;
+        if(type == 50)
+        {
+            for(int iref = 0; iref<nref; iref++){
+                datavec[iref].fNeedsSol = false;
+            }
+        }
+    }
     
     
     virtual void Write(TPZStream &buf, int withclassid) const override;

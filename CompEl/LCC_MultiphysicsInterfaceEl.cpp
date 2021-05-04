@@ -158,7 +158,7 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
         for(int i = 0 ; i < leftgel->NCornerNodes(); i++){
             sout << leftgel->NodeIndex(i) << " ";
         }
-        sout << ")\nright element indices: (";
+        sout << ")\nright element corner nodes: (";
         for(int i = 0 ; i < rightgel->NCornerNodes(); i++){
             sout << rightgel->NodeIndex(i) << " ";
         }

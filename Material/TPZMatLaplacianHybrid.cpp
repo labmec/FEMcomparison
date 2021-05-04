@@ -464,6 +464,17 @@ void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &
     }
 
     errors[3] = energy;
+}
 
-
+void TPZMatLaplacianHybrid::FillDataRequirements(TPZVec<TPZMaterialData > &datavec)
+{
+    int nref = datavec.size();
+    for(int i = 0; i<nref; i++ )
+    {
+        datavec[i].SetAllRequirements(false);
+        datavec[i].fNeedsNeighborSol = false;
+        datavec[i].fNeedsNeighborCenter = false;
+        datavec[i].fNeedsNormal = false;
+        datavec[i].fNeedsHSize = false;
+    }
 }
