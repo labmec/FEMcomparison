@@ -498,6 +498,8 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
             material->SetForcingFunction(config.exact.operator*().ForcingFunction());
             material->SetExactSol(config.exact.operator*().Exact());
 #endif
+        }else {
+            material->SetParameters(1.,1.);
         }
         // Inserts boundary conditions
         TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
