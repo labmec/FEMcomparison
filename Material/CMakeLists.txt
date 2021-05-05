@@ -1,7 +1,5 @@
 # Adds materials to ErrorEstimationLib
 target_sources(Tools PUBLIC
-    TPZMatLaplacianHybrid.cpp
-    TPZMatLaplacianHybrid.h
     LCC_MatLaplacianHybrid.cpp
     LCC_MatLaplacianHybrid.h
     LCC_MixedPoisson.h
