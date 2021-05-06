@@ -49,6 +49,8 @@ public:
 
     void ComputingCalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef);
 
+    void ChoosingOptimizedComputation( TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex);
+
 };
 
 

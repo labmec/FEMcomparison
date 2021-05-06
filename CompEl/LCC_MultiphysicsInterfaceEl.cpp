@@ -90,62 +90,66 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
         }
 
         if(leftNodeIndices[0] < leftNodeIndices[1]){ // Matrix A/MinusA
-            TPZFMatrix<STATE> A;
-            lagMat->GetA(A);
-            if(A.Cols() == 0){
-                A.Resize(ek.fMat.Rows(),ek.fMat.Cols());
-                ComputingCalcStiff(ek,ef);
-                lagMat->FillA(ek.fMat);
-            }
-            else{
-#ifdef FEMCOMPARISON_DEBUG
-                ComputingCalcStiff(ek,ef);
-                if(ek.fMat.Cols() != A.Cols() || ek.fMat.Rows() != A.Rows()){
-                    DebugStop();
-                }
-                STATE relDiff;
-                for(int iRow = 0; iRow < A.Rows(); iRow++){
-                    for(int iCol = 0 ; iCol < A.Cols(); iCol++){
-                        relDiff = (A(iRow,iCol) - ek.fMat(iRow,iCol))/A(iRow,iCol);
-                        if(abs(relDiff) > 0.000001){
-                            DebugStop();
-                        }
-                    }
-                }
-#endif
-                ek.fMat = A;
-            }
+            ChoosingOptimizedComputation( ek, ef,0);
         }
         else{                                        // Matrix B/MinusB
-            TPZFMatrix<STATE> B;
-            lagMat->GetB(B);
-            if(B.Cols() == 0){
-                B.Resize(ek.fMat.Rows(),ek.fMat.Cols());
-                ComputingCalcStiff(ek,ef);
-                lagMat->FillB(ek.fMat);
-            }
-            else{
-#ifdef FEMCOMPARISON_DEBUG
-                ComputingCalcStiff(ek,ef);
-                if(ek.fMat.Cols() != B.Cols() || ek.fMat.Rows() != B.Rows()){
-                    DebugStop();
-                }
-                STATE relDiff;
-                for(int iRow = 0; iRow < B.Rows(); iRow++){
-                    for(int iCol = 0 ; iCol < B.Cols(); iCol++){
-                        relDiff = (B(iRow,iCol) - ek.fMat(iRow,iCol))/B(iRow,iCol);
-                        if(abs(relDiff) > 0.000001){
-                            DebugStop();
-                        }
-                    }
-                }
-#endif
-                ek.fMat = B;
-            }
+            ChoosingOptimizedComputation( ek, ef,1);
         }
     }
     else{
         ComputingCalcStiff(ek, ef);
+    }
+}
+
+void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex){
+    TPZMaterial *material = this->Material();
+    LCC_LagrangeMultiplier *lagMat = dynamic_cast<LCC_LagrangeMultiplier *>(material);
+
+    TPZFMatrix<STATE> M;
+    switch(matrixIndex){
+        case 0:
+            lagMat->GetA(M);
+            break;
+        case 1:
+            lagMat->GetB(M);
+            break;
+        default:
+            DebugStop();
+            break;
+    }
+
+    if(M.Cols() == 0){
+        M.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+        ComputingCalcStiff(ek,ef);
+        switch(matrixIndex){
+            case 0:
+                lagMat->FillA(ek.fMat);
+                break;
+            case 1:
+                lagMat->FillB(ek.fMat);
+                break;
+            default:
+                DebugStop();
+                break;
+        }
+    }
+    else{
+#ifdef FEMCOMPARISON_DEBUG
+        ComputingCalcStiff(ek,ef);
+        if(ek.fMat.Cols() != M.Cols() || ek.fMat.Rows() != M.Rows()){
+            DebugStop();
+        }
+        STATE relDiff;
+        for(int iRow = 0; iRow < M.Rows(); iRow++){
+            for(int iCol = 0 ; iCol < M.Cols(); iCol++){
+                relDiff = (M(iRow,iCol) - ek.fMat(iRow,iCol))/M(iRow,iCol);
+                if(abs(relDiff) > 0.000001){
+                    DebugStop();
+                }
+            }
+        }
+#endif
+        ek.fMat = M;
     }
 }
 
