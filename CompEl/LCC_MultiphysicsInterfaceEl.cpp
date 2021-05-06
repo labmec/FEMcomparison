@@ -25,19 +25,19 @@
 static TPZLogger logger("StiffnessInterface");
 #endif
 
-LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(): TPZMultiphysicsInterfaceElement(), fComputeStiffnessContribution(true)
+LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(): TPZMultiphysicsInterfaceElement()
 {
 
 }
 
 LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, int64_t &index, TPZCompElSide left, TPZCompElSide right) :
-TPZMultiphysicsInterfaceElement(mesh, ref, index,  left, right), fComputeStiffnessContribution(true)
+TPZMultiphysicsInterfaceElement(mesh, ref, index,  left, right)
 {
 
 }
 
 LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, int64_t &index):
-TPZMultiphysicsInterfaceElement(mesh, ref, index), fComputeStiffnessContribution(true)
+TPZMultiphysicsInterfaceElement(mesh, ref, index)
 {
 
 }
@@ -46,29 +46,172 @@ TPZMultiphysicsInterfaceElement(mesh, ref, index), fComputeStiffnessContribution
 LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, const LCC_TPZMultiphysicsInterfaceElement &copy):
 TPZMultiphysicsInterfaceElement(mesh, copy)
 {
-    fComputeStiffnessContribution = copy.fComputeStiffnessContribution;
+
 }
 
 /** @brief create a copy of the given element using index mapping */
 LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, const LCC_TPZMultiphysicsInterfaceElement &copy, std::map<int64_t,int64_t> & gl2lcConMap,std::map<int64_t,int64_t> & gl2lcElMap):
 TPZMultiphysicsInterfaceElement(mesh, copy, gl2lcConMap,gl2lcElMap)
 {
-    fComputeStiffnessContribution = copy.fComputeStiffnessContribution;
+
 }
 
-void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef)
-{
+void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) {
     TPZMaterial *material = this->Material();
 
-    if(!material){
+    if (!material) {
         PZError << "Error at " << __PRETTY_FUNCTION__ << " this->Material() == NULL\n";
         ek.Reset();
         ef.Reset();
         return;
     }
 
+    LCC_LagrangeMultiplier *lagMat = dynamic_cast<LCC_LagrangeMultiplier *>(material);
+    if (!lagMat) {
+        DebugStop();
+    }
 
-    InitializeElementMatrix(ek,ef);
+    if (this->NConnects() == 0) return;//boundary discontinuous elements have this characteristic
+    TPZMultiphysicsElement *leftel = dynamic_cast<TPZMultiphysicsElement *> (fLeftElSide.Element());
+    TPZMultiphysicsElement *rightel = dynamic_cast<TPZMultiphysicsElement *>(fRightElSide.Element());
+    TPZGeoEl *leftgel = leftel->Reference();
+    TPZGeoEl *rightgel = rightel->Reference();
+
+    InitializeElementMatrix(ek, ef);
+
+    if(this->Dimension() == 1){
+
+        TPZManVector<int> leftNodeIndices;
+        int leftNNodes = leftgel->NNodes();
+        leftNodeIndices.Resize(leftNNodes,0);
+
+        for (int iNode = 0; iNode < leftgel->NCornerNodes(); iNode++) {
+            leftNodeIndices[iNode] = leftgel->NodeIndex(iNode);
+        }
+
+        if(leftNodeIndices[0] < leftNodeIndices[1]){ // Matrix A/MinusA
+            if(lagMat->Multiplier() == 1){           // Matrix A
+                TPZFMatrix<STATE> A;
+                lagMat->GetA(A);
+                if(A.Cols() == 0){
+                    A.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+                    ComputingCalcStiff(ek,ef);
+                    lagMat->FillA(ek.fMat);
+                }
+                else{
+#ifdef FEMCOMPARISON_DEBUG
+                    ComputingCalcStiff(ek,ef);
+                    if(ek.fMat.Cols() != A.Cols() || ek.fMat.Rows() != A.Rows()){
+                        DebugStop();
+                    }
+                    STATE relDiff;
+                    for(int iRow = 0; iRow < A.Rows(); iRow++){
+                        for(int iCol = 0 ; iCol < A.Cols(); iCol++){
+                            relDiff = (A(iRow,iCol) - ek.fMat(iRow,iCol))/A(iRow,iCol);
+                            if(abs(relDiff) > 0.000001){
+                                DebugStop();
+                            }
+                        }
+                    }
+#endif
+                    ek.fMat = A;
+                }
+            }
+            else {                                   // Matrix MinusA
+                TPZFMatrix<STATE> MinusA;
+                lagMat->GetMinusA(MinusA);
+                if(MinusA.Cols() == 0){
+                    MinusA.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+                    ComputingCalcStiff(ek,ef);
+                    lagMat->FillMinusA(ek.fMat);
+                }
+                else{
+#ifdef FEMCOMPARISON_DEBUG
+                    ComputingCalcStiff(ek,ef);
+                    if(ek.fMat.Cols() != MinusA.Cols() || ek.fMat.Rows() != MinusA.Rows()){
+                        DebugStop();
+                    }
+                    STATE relDiff;
+                    for(int iRow = 0; iRow < MinusA.Rows(); iRow++){
+                        for(int iCol = 0 ; iCol < MinusA.Cols(); iCol++){
+                            relDiff = (MinusA(iRow,iCol) - ek.fMat(iRow,iCol))/MinusA(iRow,iCol);
+                            if(abs(relDiff) > 0.000001){
+                                DebugStop();
+                            }
+                        }
+                    }
+#endif
+                    ek.fMat = MinusA;
+                }
+            }
+        }
+        else{                                        // Matrix B/MinusB
+            if(lagMat->Multiplier() == 1){           // Matrix B
+                TPZFMatrix<STATE> B;
+                lagMat->GetB(B);
+                if(B.Cols() == 0){
+                    B.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+                    ComputingCalcStiff(ek,ef);
+                    lagMat->FillB(ek.fMat);
+                }
+                else{
+#ifdef FEMCOMPARISON_DEBUG
+                    ComputingCalcStiff(ek,ef);
+                    if(ek.fMat.Cols() != B.Cols() || ek.fMat.Rows() != B.Rows()){
+                        DebugStop();
+                    }
+                    STATE relDiff;
+                    for(int iRow = 0; iRow < B.Rows(); iRow++){
+                        for(int iCol = 0 ; iCol < B.Cols(); iCol++){
+                            relDiff = (B(iRow,iCol) - ek.fMat(iRow,iCol))/B(iRow,iCol);
+                            if(abs(relDiff) > 0.000001){
+                                DebugStop();
+                            }
+                        }
+                    }
+#endif
+
+                    ek.fMat = B;
+                }
+            }
+            else {                                   // Matrix MinusB
+                TPZFMatrix<STATE> MinusB;
+                lagMat->GetMinusB(MinusB);
+                if(MinusB.Cols() == 0){
+                    MinusB.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+                    ComputingCalcStiff(ek,ef);
+                    lagMat->FillMinusB(ek.fMat);
+                }
+                else{
+#ifdef FEMCOMPARISON_DEBUG
+                    ComputingCalcStiff(ek,ef);
+                    if(ek.fMat.Cols() != MinusB.Cols() || ek.fMat.Rows() != MinusB.Rows()){
+                        DebugStop();
+                    }
+                    STATE relDiff;
+                    for(int iRow = 0; iRow < MinusB.Rows(); iRow++){
+                        for(int iCol = 0 ; iCol < MinusB.Cols(); iCol++){
+                            relDiff = (MinusB(iRow,iCol) - ek.fMat(iRow,iCol))/MinusB(iRow,iCol);
+                            if(abs(relDiff) > 0.000001){
+                                DebugStop();
+                            }
+                        }
+                    }
+#endif
+                    ek.fMat = MinusB;
+                }
+            }
+        }
+
+    }
+    else{
+        ComputingCalcStiff(ek, ef);
+    }
+}
+
+void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) {
+
+    TPZMaterial *material = this->Material();
 
     if (this->NConnects() == 0) return;//boundary discontinuous elements have this characteristic
     TPZMultiphysicsElement *leftel = dynamic_cast<TPZMultiphysicsElement *> (fLeftElSide.Element());

@@ -15,6 +15,15 @@
 /// Material which implements a Lagrange Multiplier
 class LCC_LagrangeMultiplier : public TPZMaterial
 {
+
+    /** @brief Pointer to a blocked matrix object*/
+    TPZFNMatrix<1000, STATE> fA;
+
+    TPZFNMatrix<1000, STATE> fMinusA;
+
+    TPZFNMatrix<1000, STATE> fB;
+
+    TPZFNMatrix<1000, STATE> fMinusB;
     
     /// Number of state variables
     int fNStateVariables;
@@ -29,20 +38,29 @@ class LCC_LagrangeMultiplier : public TPZMaterial
     LCC_LagrangeMultiplier() : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
     TPZMaterial()
     {
-        
+        fA.Resize(0,0);
+        fMinusA.Resize(0,0);
+        fB.Resize(0,0);
+        fMinusB.Resize(0,0);
     }
 	/** @brief Constructor with the index of the material object within the vector */
     LCC_LagrangeMultiplier(int nummat, int dimension, int nstate) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
     TPZMaterial(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
     {
-        
+        fA.Resize(0,0);
+        fMinusA.Resize(0,0);
+        fB.Resize(0,0);
+        fMinusB.Resize(0,0);
     }
 	
 	/** @brief Copy constructor */
 	LCC_LagrangeMultiplier(const LCC_LagrangeMultiplier &copy) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
     TPZMaterial(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
     {
-        
+        fA = copy.fA;
+        fMinusA = copy.fMinusA;
+        fB = copy.fB;
+        fMinusB = copy.fMinusB;
     }
     
     LCC_LagrangeMultiplier &operator=(const LCC_LagrangeMultiplier &copy)
@@ -51,6 +69,10 @@ class LCC_LagrangeMultiplier : public TPZMaterial
         fNStateVariables = copy.fNStateVariables;
         fDimension = copy.fDimension;
         fMultiplier = copy.fMultiplier;
+        fA = copy.fA;
+        fMinusA = copy.fMinusA;
+        fB = copy.fB;
+        fMinusB = copy.fMinusB;
         return *this;
     }
     
@@ -89,6 +111,32 @@ class LCC_LagrangeMultiplier : public TPZMaterial
 	virtual std::string Name() override
     {
         return "LCC_LagrangeMultiplier";
+    }
+
+    void GetA(TPZFMatrix<STATE> &A){
+        A = fA;
+    }
+    void GetMinusA(TPZFMatrix<STATE> &MinusA){
+        MinusA = fMinusA;
+    }
+    void GetB(TPZFMatrix<STATE> &B){
+        B = B;
+    }
+    void GetMinusB(TPZFMatrix<STATE> &MinusB){
+        MinusB = fMinusB;
+    }
+
+    void FillA(const TPZFMatrix<STATE> A){
+        fA = A;
+    }
+    void FillMinusA(const TPZFMatrix<STATE> MinusA){
+        fMinusA = MinusA;
+    }
+    void FillB(const TPZFMatrix<STATE> B){
+        fB = B;
+    }
+    void FillMinusB(const TPZFMatrix<STATE> MinusB){
+        fMinusB = MinusB;
     }
 	
     // print the data in human readable form
