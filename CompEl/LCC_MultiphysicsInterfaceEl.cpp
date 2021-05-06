@@ -237,139 +237,205 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
 #ifdef PZ_LOG
     if (logger.isDebugEnabled())
     {
-        if(leftgel->Dimension() == 1) {
-            std::stringstream sout;
-            sout << "\nH1-bound element:\n    Element id:" << leftgel->Id() << "\n    Geometric nodes: (";
-            for (int i = 0; i < leftgel->NCornerNodes(); i++) {
-                sout << leftgel->NodeIndex(i) << " ";
-            }
-            sout << ")\n    CONNECT INFO. BY GEOMETRIC ELEMENT:\n";
-            TPZManVector<REAL, 3> xicenter(gel->Dimension(), 0.);
-            TPZManVector<REAL> xcenter(3, 0.);
-            for (int i = 0; i < leftgel->NSides(); i++) {
-                leftgel->CenterPoint(i, xicenter);
-                leftgel->X(xicenter, xcenter);
-                sout << "        Cord = [" << xcenter;
-                int iCon = i;
-                if (leftel->NConnects()) {
-                    TPZConnect &con = leftel->Connect(iCon);
-                    sout << "] Side = " << i;
-                    if (1) {
-                        sout << " Seqnumber = " << con.SequenceNumber();
-                    }
-                    sout << " Order = " << (int) con.Order() << " NState = " << (int) con.NState()
-                         << " NShape " << con.NShape();
-
-                    if (1) {
-                        sout << " IsLagrangeMult = " << (int) con.LagrangeMultiplier();
-                    }
-                    sout << " IsCondensed: " << (int) con.IsCondensed();
-
-                    sout << '\n';
+        std::stringstream sout;
+        sout << "\nH1-bound element:\n    Element id:" << leftgel->Id() << "\n    Geometric nodes: (";
+        for (int i = 0; i < leftgel->NCornerNodes(); i++) {
+            sout << leftgel->NodeIndex(i) << " ";
+        }
+        sout << ")\n    CONNECT INFO. BY GEOMETRIC ELEMENT:\n";
+        TPZManVector<REAL, 3> xicenter(gel->Dimension(), 0.);
+        TPZManVector<REAL> xcenter(3, 0.);
+        for (int i = 0; i < leftgel->NSides(); i++) {
+            leftgel->CenterPoint(i, xicenter);
+            leftgel->X(xicenter, xcenter);
+            sout << "        Cord = [" << xcenter;
+            int iCon = i;
+            if (leftel->NConnects()) {
+                TPZConnect &con = leftel->Connect(iCon);
+                sout << "] Side = " << i;
+                if (1) {
+                    sout << " Seqnumber = " << con.SequenceNumber();
                 }
+                sout << " Order = " << (int) con.Order() << " NState = " << (int) con.NState()
+                     << " NShape " << con.NShape();
+
+                if (1) {
+                    sout << " IsLagrangeMult = " << (int) con.LagrangeMultiplier();
+                }
+                sout << " IsCondensed: " << (int) con.IsCondensed();
+
+                sout << '\n';
             }
+        }
 
 
-            TPZManVector<REAL,3> Node1(leftgel->Dimension()), Node2(leftgel->Dimension());
+        TPZManVector<REAL,3> Node1(leftgel->Dimension()), Node2(leftgel->Dimension());
+        TPZManVector<REAL,3> Node3(leftgel->Dimension()), Node4(leftgel->Dimension());
+        if(leftgel->NNodes() == 2){
             Node1[0] = -1.;
             Node2[0] = +1.;
-
-            TPZManVector<REAL,3> X1(3,0), X2(3,0);
-            leftgel->X(Node1,X1);
-            leftgel->X(Node2,X2);
-
-            leftel->AffineTransform(leftcomptr);
-            leftel->ComputeRequiredData(Node1, leftcomptr, datavecleft);
-
-            sout << "    SHAPE FUNCTION VALUE PER NODE:\n";
-            sout << "        Node coord:  (" << X1[0] << ", " << X1[1] << ", " << X1[2] << "): \n";
-            leftel->AffineTransform(leftcomptr);
-            leftel->ComputeRequiredData(Node1, leftcomptr, datavecleft);
-
-            for(auto &it : datavecleft){
-                sout << "            Space " << it.first<< ": " ;
-                TPZFMatrix<REAL>  &phi = it.second.phi;
-                for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                    sout << phi(iPhi,0) << ", ";
-                sout << "\n";
-            }
-            sout << "        Node coord:  (" << X2[0] << ", " << X2[1] << ", " << X2[2] << "): \n";
-            leftel->AffineTransform(leftcomptr);
-            leftel->ComputeRequiredData(Node2, leftcomptr, datavecleft);
-            for(auto &it : datavecleft){
-                sout << "            Space " << it.first<< ": " ;
-                TPZFMatrix<REAL>  &phi = it.second.phi;
-                for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                    sout << phi(iPhi,0) << ", ";
-                sout << "\n";
-            }
-
-            sout << "\nH(div)-bound element:\n    Element id:" << rightgel->Id() << "\n    Geometric nodes: (";
-            for (int i = 0; i < rightgel->NCornerNodes(); i++) {
-                sout << rightgel->NodeIndex(i) << " ";
-            }
-            sout << ")\n    CONNECT INFO. BY GEOMETRIC ELEMENT:\n";
-            int nCon = rightel->NConnects();
-            int nSides = gel->NSides();
-            int firstSideToHaveConnect = 0;
-            if (nSides != nCon) {
-                firstSideToHaveConnect = gel->NCornerNodes();
-            }
-            for (int i = firstSideToHaveConnect; i < nSides; i++) {
-                rightgel->CenterPoint(i, xicenter);
-                rightgel->X(xicenter, xcenter);
-                sout << "        Cord = [" << xcenter;
-
-                int iCon = i - firstSideToHaveConnect;
-                if (nCon) {
-                    TPZConnect &con = rightel->Connect(iCon);
-                    sout << "] Side = " << i;
-                    if (1) {
-                        sout << " Seqnumber = " << con.SequenceNumber();
-                    }
-                    sout << " Order = " << (int) con.Order() << " NState = " << (int) con.NState()
-                         << " NShape " << con.NShape();
-
-                    if (1) {
-                        sout << " IsLagrangeMult = " << (int) con.LagrangeMultiplier();
-                    }
-                    sout << " IsCondensed: " << (int) con.IsCondensed();
-
-                    sout << '\n';
-                }
-            }
-
-            sout << "    SHAPE FUNCTION VALUE PER NODE:\n";
-            sout << "        Node coord:  (" << X1[0] << ", " << X1[1] << ", " << X1[2] << "): \n";
-            rightel->AffineTransform(rightcomptr);
-            rightel->ComputeRequiredData(Node1, rightcomptr, datavecright);
-
-            for(auto &it : datavecright){
-                sout << "            Space " << it.first<< ": " ;
-                TPZFMatrix<REAL>  &phi = it.second.phi;
-                for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                    sout << phi(iPhi,0) << ", ";
-                sout << "\n";
-            }
-            sout << "        Node coord:  (" << X2[0] << ", " << X2[1] << ", " << X2[2] << "): \n";
-            rightel->ComputeRequiredData(Node2, rightcomptr, datavecright);
-            for(auto &it : datavecright){
-                sout << "            Space " << it.first<< ": " ;
-                TPZFMatrix<REAL>  &phi = it.second.phi;
-                for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                    sout << phi(iPhi,0) << ", ";
-                sout << "\n";
-            }
-
-            LCC_LagrangeMultiplier *lagMat = dynamic_cast<LCC_LagrangeMultiplier *>(material);
-            if (lagMat) {
-                sout << "\nfMultiplier = " << lagMat->Multiplier() << "\n";
-            }
-            ek.fMat.Print(sout);
-            sout
-                    << "----------------------------------------------------------------------------------------------------------------------------------------\n";
-            LOGPZ_DEBUG(logger, sout.str().c_str());
         }
+        if(leftgel->NNodes() == 4) {
+            Node1[0] = -1.; Node1[1] = -1.;
+            Node2[0] = 1.;  Node2[1] = -1.;
+            Node3[0] = 1.;  Node3[1] = 1.;
+            Node4[0] = -1.; Node4[1] = 1.;
+        }
+        if(leftgel->NNodes() == 3){
+            Node1[0] = 0.; Node1[1] = 0.;
+            Node2[0] = 1.;  Node2[1] = 0.;
+            Node3[0] = 0.;  Node3[1] = 1.;
+        }
+
+        TPZManVector<REAL,3> X1(3,0), X2(3,0);
+        TPZManVector<REAL,3> X3(3,0), X4(3,0);
+        leftgel->X(Node1,X1);
+        leftgel->X(Node2,X2);
+        leftgel->X(Node3,X3);
+        if(leftgel->NNodes() == 4){
+            leftgel->X(Node4,X4);
+        }
+
+        leftel->AffineTransform(leftcomptr);
+        leftel->ComputeRequiredData(Node1, leftcomptr, datavecleft);
+
+        sout << "    SHAPE FUNCTION VALUE PER NODE:\n";
+        sout << "        Node coord:  (" << X1[0] << ", " << X1[1] << ", " << X1[2] << "): \n";
+        leftel->AffineTransform(leftcomptr);
+        leftel->ComputeRequiredData(Node1, leftcomptr, datavecleft);
+
+        for(auto &it : datavecleft){
+            sout << "            Space " << it.first<< ": " ;
+            TPZFMatrix<REAL>  &phi = it.second.phi;
+            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                sout << phi(iPhi,0) << ", ";
+            sout << "\n";
+        }
+        sout << "        Node coord:  (" << X2[0] << ", " << X2[1] << ", " << X2[2] << "): \n";
+        leftel->AffineTransform(leftcomptr);
+        leftel->ComputeRequiredData(Node2, leftcomptr, datavecleft);
+        for(auto &it : datavecleft){
+            sout << "            Space " << it.first<< ": " ;
+            TPZFMatrix<REAL>  &phi = it.second.phi;
+            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                sout << phi(iPhi,0) << ", ";
+            sout << "\n";
+        }
+
+        if(leftgel->NNodes() == 3 || leftgel->NNodes() == 4) {
+            sout << "        Node coord:  (" << X3[0] << ", " << X3[1] << ", " << X3[2] << "): \n";
+            leftel->AffineTransform(leftcomptr);
+            leftel->ComputeRequiredData(Node3, leftcomptr, datavecleft);
+            for (auto &it : datavecleft) {
+                sout << "            Space " << it.first << ": ";
+                TPZFMatrix<REAL> &phi = it.second.phi;
+                for (int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                    sout << phi(iPhi, 0) << ", ";
+                sout << "\n";
+            }
+        }
+        if(leftgel->NNodes() == 4){
+            sout << "        Node coord:  (" << X4[0] << ", " << X4[1] << ", " << X4[2] << "): \n";
+            leftel->AffineTransform(leftcomptr);
+            leftel->ComputeRequiredData(Node4, leftcomptr, datavecleft);
+            for(auto &it : datavecleft){
+                sout << "            Space " << it.first<< ": " ;
+                TPZFMatrix<REAL>  &phi = it.second.phi;
+                for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                    sout << phi(iPhi,0) << ", ";
+                sout << "\n";
+            }
+        }
+
+        sout << "\nH(div)-bound element:\n    Element id:" << rightgel->Id() << "\n    Geometric nodes: (";
+        for (int i = 0; i < rightgel->NCornerNodes(); i++) {
+            sout << rightgel->NodeIndex(i) << " ";
+        }
+        sout << ")\n    CONNECT INFO. BY GEOMETRIC ELEMENT:\n";
+        int nCon = rightel->NConnects();
+        int nSides = gel->NSides();
+        int firstSideToHaveConnect = 0;
+        if (nSides != nCon) {
+            firstSideToHaveConnect = gel->NSides() - 1;
+        }
+        for (int i = firstSideToHaveConnect; i < nSides; i++) {
+            rightgel->CenterPoint(i, xicenter);
+            rightgel->X(xicenter, xcenter);
+            sout << "        Cord = [" << xcenter;
+
+            int iCon = i - firstSideToHaveConnect;
+            if (nCon) {
+                TPZConnect &con = rightel->Connect(iCon);
+                sout << "] Side = " << i;
+                if (1) {
+                    sout << " Seqnumber = " << con.SequenceNumber();
+                }
+                sout << " Order = " << (int) con.Order() << " NState = " << (int) con.NState()
+                     << " NShape " << con.NShape();
+
+                if (1) {
+                    sout << " IsLagrangeMult = " << (int) con.LagrangeMultiplier();
+                }
+                sout << " IsCondensed: " << (int) con.IsCondensed();
+
+                sout << '\n';
+            }
+        }
+
+        sout << "    SHAPE FUNCTION VALUE PER NODE:\n";
+        sout << "        Node coord:  (" << X1[0] << ", " << X1[1] << ", " << X1[2] << "): \n";
+        rightel->AffineTransform(rightcomptr);
+        rightel->ComputeRequiredData(Node1, rightcomptr, datavecright);
+
+        for(auto &it : datavecright){
+            sout << "            Space " << it.first<< ": " ;
+            TPZFMatrix<REAL>  &phi = it.second.phi;
+            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                sout << phi(iPhi,0) << ", ";
+            sout << "\n";
+        }
+        sout << "        Node coord:  (" << X2[0] << ", " << X2[1] << ", " << X2[2] << "): \n";
+        rightel->ComputeRequiredData(Node2, rightcomptr, datavecright);
+        for(auto &it : datavecright){
+            sout << "            Space " << it.first<< ": " ;
+            TPZFMatrix<REAL>  &phi = it.second.phi;
+            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                sout << phi(iPhi,0) << ", ";
+            sout << "\n";
+        }
+
+        if(leftgel->NNodes() == 3 || leftgel->NNodes() == 4) {
+            sout << "        Node coord:  (" << X3[0] << ", " << X3[1] << ", " << X3[2] << "): \n";
+            rightel->ComputeRequiredData(Node3, rightcomptr, datavecright);
+            for (auto &it : datavecright) {
+                sout << "            Space " << it.first << ": ";
+                TPZFMatrix<REAL> &phi = it.second.phi;
+                for (int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                    sout << phi(iPhi, 0) << ", ";
+                sout << "\n";
+            }
+        }
+
+        if(leftgel->NNodes() == 4){
+            sout << "        Node coord:  (" << X4[0] << ", " << X4[1] << ", " << X4[2] << "): \n";
+            rightel->ComputeRequiredData(Node4, rightcomptr, datavecright);
+            for(auto &it : datavecright){
+                sout << "            Space " << it.first<< ": " ;
+                TPZFMatrix<REAL>  &phi = it.second.phi;
+                for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
+                    sout << phi(iPhi,0) << ", ";
+                sout << "\n";
+            }
+        }
+
+        LCC_LagrangeMultiplier *lagMat = dynamic_cast<LCC_LagrangeMultiplier *>(material);
+        if (lagMat) {
+            sout << "\nfMultiplier = " << lagMat->Multiplier() << "\n";
+        }
+        ek.fMat.Print(sout);
+        sout
+                << "----------------------------------------------------------------------------------------------------------------------------------------\n";
+        LOGPZ_DEBUG(logger, sout.str().c_str());
     }
 #endif
 
