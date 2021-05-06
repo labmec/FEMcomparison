@@ -90,119 +90,59 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
         }
 
         if(leftNodeIndices[0] < leftNodeIndices[1]){ // Matrix A/MinusA
-            if(lagMat->Multiplier() == 1){           // Matrix A
-                TPZFMatrix<STATE> A;
-                lagMat->GetA(A);
-                if(A.Cols() == 0){
-                    A.Resize(ek.fMat.Rows(),ek.fMat.Cols());
-                    ComputingCalcStiff(ek,ef);
-                    lagMat->FillA(ek.fMat);
-                }
-                else{
-#ifdef FEMCOMPARISON_DEBUG
-                    ComputingCalcStiff(ek,ef);
-                    if(ek.fMat.Cols() != A.Cols() || ek.fMat.Rows() != A.Rows()){
-                        DebugStop();
-                    }
-                    STATE relDiff;
-                    for(int iRow = 0; iRow < A.Rows(); iRow++){
-                        for(int iCol = 0 ; iCol < A.Cols(); iCol++){
-                            relDiff = (A(iRow,iCol) - ek.fMat(iRow,iCol))/A(iRow,iCol);
-                            if(abs(relDiff) > 0.000001){
-                                DebugStop();
-                            }
-                        }
-                    }
-#endif
-                    ek.fMat = A;
-                }
+            TPZFMatrix<STATE> A;
+            lagMat->GetA(A);
+            if(A.Cols() == 0){
+                A.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+                ComputingCalcStiff(ek,ef);
+                lagMat->FillA(ek.fMat);
             }
-            else {                                   // Matrix MinusA
-                TPZFMatrix<STATE> MinusA;
-                lagMat->GetMinusA(MinusA);
-                if(MinusA.Cols() == 0){
-                    MinusA.Resize(ek.fMat.Rows(),ek.fMat.Cols());
-                    ComputingCalcStiff(ek,ef);
-                    lagMat->FillMinusA(ek.fMat);
-                }
-                else{
+            else{
 #ifdef FEMCOMPARISON_DEBUG
-                    ComputingCalcStiff(ek,ef);
-                    if(ek.fMat.Cols() != MinusA.Cols() || ek.fMat.Rows() != MinusA.Rows()){
-                        DebugStop();
-                    }
-                    STATE relDiff;
-                    for(int iRow = 0; iRow < MinusA.Rows(); iRow++){
-                        for(int iCol = 0 ; iCol < MinusA.Cols(); iCol++){
-                            relDiff = (MinusA(iRow,iCol) - ek.fMat(iRow,iCol))/MinusA(iRow,iCol);
-                            if(abs(relDiff) > 0.000001){
-                                DebugStop();
-                            }
+                ComputingCalcStiff(ek,ef);
+                if(ek.fMat.Cols() != A.Cols() || ek.fMat.Rows() != A.Rows()){
+                    DebugStop();
+                }
+                STATE relDiff;
+                for(int iRow = 0; iRow < A.Rows(); iRow++){
+                    for(int iCol = 0 ; iCol < A.Cols(); iCol++){
+                        relDiff = (A(iRow,iCol) - ek.fMat(iRow,iCol))/A(iRow,iCol);
+                        if(abs(relDiff) > 0.000001){
+                            DebugStop();
                         }
                     }
-#endif
-                    ek.fMat = MinusA;
                 }
+#endif
+                ek.fMat = A;
             }
         }
         else{                                        // Matrix B/MinusB
-            if(lagMat->Multiplier() == 1){           // Matrix B
-                TPZFMatrix<STATE> B;
-                lagMat->GetB(B);
-                if(B.Cols() == 0){
-                    B.Resize(ek.fMat.Rows(),ek.fMat.Cols());
-                    ComputingCalcStiff(ek,ef);
-                    lagMat->FillB(ek.fMat);
-                }
-                else{
-#ifdef FEMCOMPARISON_DEBUG
-                    ComputingCalcStiff(ek,ef);
-                    if(ek.fMat.Cols() != B.Cols() || ek.fMat.Rows() != B.Rows()){
-                        DebugStop();
-                    }
-                    STATE relDiff;
-                    for(int iRow = 0; iRow < B.Rows(); iRow++){
-                        for(int iCol = 0 ; iCol < B.Cols(); iCol++){
-                            relDiff = (B(iRow,iCol) - ek.fMat(iRow,iCol))/B(iRow,iCol);
-                            if(abs(relDiff) > 0.000001){
-                                DebugStop();
-                            }
-                        }
-                    }
-#endif
-
-                    ek.fMat = B;
-                }
+            TPZFMatrix<STATE> B;
+            lagMat->GetB(B);
+            if(B.Cols() == 0){
+                B.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+                ComputingCalcStiff(ek,ef);
+                lagMat->FillB(ek.fMat);
             }
-            else {                                   // Matrix MinusB
-                TPZFMatrix<STATE> MinusB;
-                lagMat->GetMinusB(MinusB);
-                if(MinusB.Cols() == 0){
-                    MinusB.Resize(ek.fMat.Rows(),ek.fMat.Cols());
-                    ComputingCalcStiff(ek,ef);
-                    lagMat->FillMinusB(ek.fMat);
-                }
-                else{
+            else{
 #ifdef FEMCOMPARISON_DEBUG
-                    ComputingCalcStiff(ek,ef);
-                    if(ek.fMat.Cols() != MinusB.Cols() || ek.fMat.Rows() != MinusB.Rows()){
-                        DebugStop();
-                    }
-                    STATE relDiff;
-                    for(int iRow = 0; iRow < MinusB.Rows(); iRow++){
-                        for(int iCol = 0 ; iCol < MinusB.Cols(); iCol++){
-                            relDiff = (MinusB(iRow,iCol) - ek.fMat(iRow,iCol))/MinusB(iRow,iCol);
-                            if(abs(relDiff) > 0.000001){
-                                DebugStop();
-                            }
+                ComputingCalcStiff(ek,ef);
+                if(ek.fMat.Cols() != B.Cols() || ek.fMat.Rows() != B.Rows()){
+                    DebugStop();
+                }
+                STATE relDiff;
+                for(int iRow = 0; iRow < B.Rows(); iRow++){
+                    for(int iCol = 0 ; iCol < B.Cols(); iCol++){
+                        relDiff = (B(iRow,iCol) - ek.fMat(iRow,iCol))/B(iRow,iCol);
+                        if(abs(relDiff) > 0.000001){
+                            DebugStop();
                         }
                     }
-#endif
-                    ek.fMat = MinusB;
                 }
+#endif
+                ek.fMat = B;
             }
         }
-
     }
     else{
         ComputingCalcStiff(ek, ef);
