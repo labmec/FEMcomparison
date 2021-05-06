@@ -57,19 +57,6 @@ TPZMultiphysicsInterfaceElement(mesh, copy, gl2lcConMap,gl2lcElMap)
 }
 
 void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) {
-    TPZMaterial *material = this->Material();
-
-    if (!material) {
-        PZError << "Error at " << __PRETTY_FUNCTION__ << " this->Material() == NULL\n";
-        ek.Reset();
-        ef.Reset();
-        return;
-    }
-
-    LCC_LagrangeMultiplier *lagMat = dynamic_cast<LCC_LagrangeMultiplier *>(material);
-    if (!lagMat) {
-        DebugStop();
-    }
 
     if (this->NConnects() == 0) return;//boundary discontinuous elements have this characteristic
     TPZMultiphysicsElement *leftel = dynamic_cast<TPZMultiphysicsElement *> (fLeftElSide.Element());
@@ -79,14 +66,27 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
 
     InitializeElementMatrix(ek, ef);
 
-    if(this->Dimension() == 1){
+    int NNodes = leftgel->NNodes();
+    TPZManVector<int> leftNodeIndices;
+    leftNodeIndices.Resize(NNodes,0);
 
-        TPZManVector<int> leftNodeIndices;
-        int leftNNodes = leftgel->NNodes();
-        leftNodeIndices.Resize(leftNNodes,0);
+    for (int iNode = 0; iNode < leftgel->NCornerNodes(); iNode++) {
+        leftNodeIndices[iNode] = leftgel->NodeIndex(iNode);
+    }
 
-        for (int iNode = 0; iNode < leftgel->NCornerNodes(); iNode++) {
-            leftNodeIndices[iNode] = leftgel->NodeIndex(iNode);
+    std::pair<int, int> smallerNode;
+    smallerNode.first = 0;
+    smallerNode.second = leftNodeIndices[0];
+    for(int iNode = 1; iNode < leftgel->NCornerNodes(); iNode++){
+        if(leftNodeIndices[iNode] < smallerNode.second){
+            smallerNode.first = iNode;
+            smallerNode.second = leftNodeIndices[iNode];
+        }
+    }
+
+    if(NNodes == 1){
+        if(this->Dimension() != 1){
+            DebugStop();
         }
 
         if(leftNodeIndices[0] < leftNodeIndices[1]){ // Matrix A/MinusA
@@ -96,42 +96,106 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
             ChoosingOptimizedComputation( ek, ef,1);
         }
     }
+    else if(NNodes == 4){
+        if(this->Dimension() != 2){
+            DebugStop();
+        }
+        switch(smallerNode.first) {
+            case 0:
+                if(leftNodeIndices[1] < leftNodeIndices[3]){ // Case A;
+                    ChoosingOptimizedComputation( ek, ef,0);
+                }
+                else{
+                    ChoosingOptimizedComputation( ek, ef,1);
+                }
+                break;
+            case 1:
+                if(leftNodeIndices[2] < leftNodeIndices[0]){ // Case A;
+                    ChoosingOptimizedComputation( ek, ef,2);
+                }
+                else{
+                    ChoosingOptimizedComputation( ek, ef,3);
+                }
+                break;
+            case 2:
+                if(leftNodeIndices[3] < leftNodeIndices[1]){ // Case A;
+                    ChoosingOptimizedComputation( ek, ef,4);
+                }
+                else{
+                    ChoosingOptimizedComputation( ek, ef,5);
+                }
+                break;
+            case 3:
+                if(leftNodeIndices[0] < leftNodeIndices[2]){ // Case A;
+                    ChoosingOptimizedComputation( ek, ef,6);
+                }
+                else{
+                    ChoosingOptimizedComputation( ek, ef,7);
+                }
+                break;
+            default:
+                DebugStop();
+        }
+    }
+    else if(NNodes == 3){
+        if(this->Dimension() != 2){
+            DebugStop();
+        }
+        switch(smallerNode.first) {
+            case 0:
+                if(leftNodeIndices[1] < leftNodeIndices[2]){ // Case A;
+                    ChoosingOptimizedComputation( ek, ef,8);
+                }
+                else{
+                    ChoosingOptimizedComputation( ek, ef,9);
+                }
+                break;
+            case 1:
+                if(leftNodeIndices[2] < leftNodeIndices[0]){ // Case A;
+                    ChoosingOptimizedComputation( ek, ef,10);
+                }
+                else{
+                    ChoosingOptimizedComputation( ek, ef,11);
+                }
+                break;
+            case 2:
+                if(leftNodeIndices[0] < leftNodeIndices[1]){ // Case A;
+                    ChoosingOptimizedComputation( ek, ef,12);
+                }
+                else{
+                    ChoosingOptimizedComputation( ek, ef,13);
+                }
+                break;
+            default:
+                DebugStop();
+        }
+    }
     else{
         ComputingCalcStiff(ek, ef);
     }
 }
 
 void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex){
+
     TPZMaterial *material = this->Material();
+    if (!material) {
+        PZError << "Error at " << __PRETTY_FUNCTION__ << " this->Material() == NULL\n";
+        ek.Reset();
+        ef.Reset();
+        return;
+    }
     LCC_LagrangeMultiplier *lagMat = dynamic_cast<LCC_LagrangeMultiplier *>(material);
+    if (!lagMat) {
+        DebugStop();
+    }
 
     TPZFMatrix<STATE> M;
-    switch(matrixIndex){
-        case 0:
-            lagMat->GetA(M);
-            break;
-        case 1:
-            lagMat->GetB(M);
-            break;
-        default:
-            DebugStop();
-            break;
-    }
+    lagMat->GetStiffnessMatrix(M,matrixIndex);
 
     if(M.Cols() == 0){
         M.Resize(ek.fMat.Rows(),ek.fMat.Cols());
         ComputingCalcStiff(ek,ef);
-        switch(matrixIndex){
-            case 0:
-                lagMat->FillA(ek.fMat);
-                break;
-            case 1:
-                lagMat->FillB(ek.fMat);
-                break;
-            default:
-                DebugStop();
-                break;
-        }
+        lagMat->FillStiffnessMatrix(ek.fMat,matrixIndex);
     }
     else{
 #ifdef FEMCOMPARISON_DEBUG
@@ -143,8 +207,11 @@ void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElemen
         for(int iRow = 0; iRow < M.Rows(); iRow++){
             for(int iCol = 0 ; iCol < M.Cols(); iCol++){
                 relDiff = (M(iRow,iCol) - ek.fMat(iRow,iCol))/M(iRow,iCol);
-                if(abs(relDiff) > 0.000001){
-                    DebugStop();
+                if(abs(M(iRow,iCol)) > 1.0e-16){
+                    if(abs(relDiff) > 0.000001){
+                        std::cout << "M: " << M(iRow,iCol) <<"; ek: " << ek.fMat(iRow,iCol) <<"\n";
+                        DebugStop();
+                    }
                 }
             }
         }
@@ -272,76 +339,71 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
             }
         }
 
-
-        TPZManVector<REAL,3> Node1(leftgel->Dimension()), Node2(leftgel->Dimension());
-        TPZManVector<REAL,3> Node3(leftgel->Dimension()), Node4(leftgel->Dimension());
-        if(leftgel->NNodes() == 2){
-            Node1[0] = -1.;
-            Node2[0] = +1.;
+        TPZFMatrix<STATE> Nodes;
+        TPZFMatrix<STATE> X;
+        int nNodes = leftgel->NNodes();
+        int dim = leftgel->Dimension();
+        int nPoints;
+        switch(nNodes){
+            case 2:
+                nPoints = 2;
+                break;
+            case 3:
+                nPoints = 3;
+                break;
+            case 4:
+                nPoints = 10;
+                break;
+            default:
+                DebugStop();
         }
+
+        Nodes.Resize(nPoints,dim);
+        X.Resize(nPoints,3);
+
+        if(nNodes == 2){
+            Nodes(0,0) = -1.;
+            Nodes(0,0) = +1.;
+        }
+
+        if(nNodes == 3){
+            Nodes(0,0) = 0.; Nodes(0,1) = 0.;
+            Nodes(1,0) = 1.; Nodes(1,1) = 0.;
+            Nodes(2,0) = 0.; Nodes(2,1) = 1.;
+        }
+
         if(leftgel->NNodes() == 4) {
-            Node1[0] = -1.; Node1[1] = -1.;
-            Node2[0] = 1.;  Node2[1] = -1.;
-            Node3[0] = 1.;  Node3[1] = 1.;
-            Node4[0] = -1.; Node4[1] = 1.;
-        }
-        if(leftgel->NNodes() == 3){
-            Node1[0] = 0.; Node1[1] = 0.;
-            Node2[0] = 1.;  Node2[1] = 0.;
-            Node3[0] = 0.;  Node3[1] = 1.;
-        }
-
-        TPZManVector<REAL,3> X1(3,0), X2(3,0);
-        TPZManVector<REAL,3> X3(3,0), X4(3,0);
-        leftgel->X(Node1,X1);
-        leftgel->X(Node2,X2);
-        leftgel->X(Node3,X3);
-        if(leftgel->NNodes() == 4){
-            leftgel->X(Node4,X4);
+            Nodes(0,0) = -1.;  Nodes(0,1) = -1.;
+            Nodes(1,0) = 1.;   Nodes(1,1) = -1.;
+            Nodes(2,0) = 1.;   Nodes(2,1) = 1.;
+            Nodes(3,0) = -1.;  Nodes(3,1) = 1.;
+            Nodes(4,0) = 0.;   Nodes(4,1) = -1.;
+            Nodes(5,0) = 1.;   Nodes(5,1) = 0.;
+            Nodes(6,0) = 0.;   Nodes(6,1) = 1.;
+            Nodes(7,0) = -1.;  Nodes(7,1) = 0.;
+            Nodes(8,0) = 0.;   Nodes(8,1) = 0.;
+            Nodes(9,0) = -0.5; Nodes(9,1) = -0.5;
         }
 
-        leftel->AffineTransform(leftcomptr);
-        leftel->ComputeRequiredData(Node1, leftcomptr, datavecleft);
 
-        sout << "    SHAPE FUNCTION VALUE PER NODE:\n";
-        sout << "        Node coord:  (" << X1[0] << ", " << X1[1] << ", " << X1[2] << "): \n";
-        leftel->AffineTransform(leftcomptr);
-        leftel->ComputeRequiredData(Node1, leftcomptr, datavecleft);
-
-        for(auto &it : datavecleft){
-            sout << "            Space " << it.first<< ": " ;
-            TPZFMatrix<REAL>  &phi = it.second.phi;
-            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                sout << phi(iPhi,0) << ", ";
-            sout << "\n";
-        }
-        sout << "        Node coord:  (" << X2[0] << ", " << X2[1] << ", " << X2[2] << "): \n";
-        leftel->AffineTransform(leftcomptr);
-        leftel->ComputeRequiredData(Node2, leftcomptr, datavecleft);
-        for(auto &it : datavecleft){
-            sout << "            Space " << it.first<< ": " ;
-            TPZFMatrix<REAL>  &phi = it.second.phi;
-            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                sout << phi(iPhi,0) << ", ";
-            sout << "\n";
-        }
-
-        if(leftgel->NNodes() == 3 || leftgel->NNodes() == 4) {
-            sout << "        Node coord:  (" << X3[0] << ", " << X3[1] << ", " << X3[2] << "): \n";
-            leftel->AffineTransform(leftcomptr);
-            leftel->ComputeRequiredData(Node3, leftcomptr, datavecleft);
-            for (auto &it : datavecleft) {
-                sout << "            Space " << it.first << ": ";
-                TPZFMatrix<REAL> &phi = it.second.phi;
-                for (int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                    sout << phi(iPhi, 0) << ", ";
-                sout << "\n";
+        TPZVec<STATE> xi(dim), x(3);
+        for(int iNode = 0; iNode < nPoints; iNode++){
+            for(int iCor = 0 ; iCor <dim ; iCor++){
+                xi[0] = Nodes(iNode,iCor);
+            }
+            leftgel->X(xi,x);
+            for(int iCor = 0 ; iCor <3 ; iCor++){
+                X(iNode,iCor) = x[iCor];
             }
         }
-        if(leftgel->NNodes() == 4){
-            sout << "        Node coord:  (" << X4[0] << ", " << X4[1] << ", " << X4[2] << "): \n";
+
+        for(int i =0 ; i < nPoints; i++){
+            sout << "        Node coord:  (" << X(i,0) << ", " << X(i,1) << ", " << X(i,2) << "): \n";
             leftel->AffineTransform(leftcomptr);
-            leftel->ComputeRequiredData(Node4, leftcomptr, datavecleft);
+            for(int iCor = 0 ; iCor <dim ; iCor++){
+                xi[0] = Nodes(i,iCor);
+            }
+            leftel->ComputeRequiredData(xi, leftcomptr, datavecleft);
             for(auto &it : datavecleft){
                 sout << "            Space " << it.first<< ": " ;
                 TPZFMatrix<REAL>  &phi = it.second.phi;
@@ -350,6 +412,8 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
                 sout << "\n";
             }
         }
+
+        datavecleft[0].axes.Print(sout);
 
         sout << "\nH(div)-bound element:\n    Element id:" << rightgel->Id() << "\n    Geometric nodes: (";
         for (int i = 0; i < rightgel->NCornerNodes(); i++) {
@@ -387,42 +451,14 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
         }
 
         sout << "    SHAPE FUNCTION VALUE PER NODE:\n";
-        sout << "        Node coord:  (" << X1[0] << ", " << X1[1] << ", " << X1[2] << "): \n";
-        rightel->AffineTransform(rightcomptr);
-        rightel->ComputeRequiredData(Node1, rightcomptr, datavecright);
 
-        for(auto &it : datavecright){
-            sout << "            Space " << it.first<< ": " ;
-            TPZFMatrix<REAL>  &phi = it.second.phi;
-            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                sout << phi(iPhi,0) << ", ";
-            sout << "\n";
-        }
-        sout << "        Node coord:  (" << X2[0] << ", " << X2[1] << ", " << X2[2] << "): \n";
-        rightel->ComputeRequiredData(Node2, rightcomptr, datavecright);
-        for(auto &it : datavecright){
-            sout << "            Space " << it.first<< ": " ;
-            TPZFMatrix<REAL>  &phi = it.second.phi;
-            for(int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                sout << phi(iPhi,0) << ", ";
-            sout << "\n";
-        }
-
-        if(leftgel->NNodes() == 3 || leftgel->NNodes() == 4) {
-            sout << "        Node coord:  (" << X3[0] << ", " << X3[1] << ", " << X3[2] << "): \n";
-            rightel->ComputeRequiredData(Node3, rightcomptr, datavecright);
-            for (auto &it : datavecright) {
-                sout << "            Space " << it.first << ": ";
-                TPZFMatrix<REAL> &phi = it.second.phi;
-                for (int iPhi = 0; iPhi < phi.Rows(); iPhi++)
-                    sout << phi(iPhi, 0) << ", ";
-                sout << "\n";
+        for(int i =0 ; i < nPoints; i++){
+            sout << "        Node coord:  (" << X(i,0) << ", " << X(i,1) << ", " << X(i,2) << "): \n";
+            for(int iCor = 0 ; iCor <dim ; iCor++){
+                xi[0] = Nodes(i,iCor);
             }
-        }
-
-        if(leftgel->NNodes() == 4){
-            sout << "        Node coord:  (" << X4[0] << ", " << X4[1] << ", " << X4[2] << "): \n";
-            rightel->ComputeRequiredData(Node4, rightcomptr, datavecright);
+            rightel->AffineTransform(rightcomptr);
+            rightel->ComputeRequiredData(xi, rightcomptr, datavecright);
             for(auto &it : datavecright){
                 sout << "            Space " << it.first<< ": " ;
                 TPZFMatrix<REAL>  &phi = it.second.phi;
@@ -431,6 +467,7 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
                 sout << "\n";
             }
         }
+        datavecright[0].axes.Print(sout);
 
         LCC_LagrangeMultiplier *lagMat = dynamic_cast<LCC_LagrangeMultiplier *>(material);
         if (lagMat) {
