@@ -199,7 +199,35 @@ void UniformRefinement(int nDiv, TPZGeoMesh* gmesh) {
         for (int64_t elem = 0; elem < nels; elem++) {
             
             TPZGeoEl* gel = gmesh->ElementVec()[elem];
-            
+            TPZGeoElRefPattern<pzgeom::TPZGeoTetrahedra>* gelTetra = dynamic_cast<TPZGeoElRefPattern<pzgeom::TPZGeoTetrahedra> *>(gel);
+            if(gelTetra){
+                char buf[] =
+                        "10     9"
+                        "-50       Tet0000111111111	"
+                        "0.     0.     0. "
+                        "1.     0.     0. "
+                        "0.     1.     0. "
+                        "0.     0.     1. "
+                        "0.5    0.     0. "
+                        "0.     0.5    0. "
+                        "0.     0.     0.5 "
+                        "0.5    0.5    0. "
+                        "0      0.5    0.5 "
+                        "0.5    0.     0.5 "
+                        "4     4     0     1     2     3 "
+                        "4     4     0     4     5     6 "
+                        "4     4     4     1     7     9 "
+                        "4     4     7     2     5     8 "
+                        "4     4     6     9     8     3 "
+                        "4     4     4     9     6     5 "
+                        "4     4     5     8     6     9 "
+                        "4     4     7     8     9     5 "
+                        "4     4     4     7     5     9 ";
+                std::istringstream str(buf);
+                TPZAutoPointer<TPZRefPattern> refpat = new TPZRefPattern(str);
+                gelTetra->SetRefPattern(refpat);
+            }
+
             if (!gel || gel->HasSubElement()) continue;
             if (gel->Dimension() == 0) continue;
             gel->Divide(children);
