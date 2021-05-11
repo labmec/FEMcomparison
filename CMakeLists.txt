@@ -34,6 +34,11 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DFEMCOMPARISON_DEBUG)
 endif()
 
+option(FEMCOMPARISON_TIMER "Measure simulation time" OFF)
+if(FEMCOMPARISON_TIMER)
+    add_definitions(-DFEMCOMPARISON_TIMER)
+endif()
+
 # Allow for static analysis options
 include(cmake/StaticAnalyzers.cmake)
 

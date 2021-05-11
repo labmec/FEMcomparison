@@ -92,7 +92,9 @@ int LCC_MatLaplacianHybrid::NSolutionVariables(int var){
     }
 }
 
-extern double contributeTimeMaterial;
+#ifdef FEMCOMPARISON_TIMER
+    extern double contributeTimeMaterial;
+#endif
 void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
     /**
@@ -217,7 +219,9 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     }
 #endif
     timer.stop();
+#ifdef FEMCOMPARISON_TIMER
     contributeTimeMaterial += timer.seconds();
+#endif
 }
 
 void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef)

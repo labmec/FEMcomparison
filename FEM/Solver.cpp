@@ -19,8 +19,11 @@
 #include "pzvisualmatrix.h"
 #include "MeshInit.h"
 #include "TPZTimer.h"
-extern double solveTime;
-extern double assembleTime;
+
+#ifdef FEMCOMPARISON_TIMER
+    extern double solveTime;
+    extern double assembleTime;
+#endif
 
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
@@ -43,16 +46,22 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             timer.start();
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             timer.stop();
+#ifdef FEMCOMPARISON_TIMER
             solveTime+=timer.seconds();
+#endif
             }
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
-            {TPZTimer timer;
+            {
+                TPZTimer timer;
                 timer.start();
-            SolveMixedProblem(multiCmesh, config, preConfig);
-            timer.stop();
-            solveTime+=timer.seconds();}
+                SolveMixedProblem(multiCmesh, config, preConfig);
+                timer.stop();
+#ifdef FEMCOMPARISON_TIMER
+                solveTime+=timer.seconds();
+#endif
+            }
             break;
         default:
             DebugStop();
@@ -261,7 +270,10 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     timer.start();
     an.Assemble();
     timer.stop();
+
+#ifdef FEMCOMPARISON_TIMER
     assembleTime+=timer.seconds();
+#endif
     
     an.Solve();
 
@@ -336,7 +348,10 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     timer.start();
     an.Assemble();
     timer.stop();
+
+#ifdef FEMCOMPARISON_TIMER
     assembleTime += timer.seconds();
+#endif
     
 #ifdef FEMCOMPARISON_DEBUG2
     const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
