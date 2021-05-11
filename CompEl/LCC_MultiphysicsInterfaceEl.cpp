@@ -18,7 +18,7 @@
 #include "pzgraphmesh.h"
 #include "TPZMultiphysicsCompMesh.h"
 #include "LCC_LagrangeMultiplier.h"
-
+#include "TPZTimer.h"
 #include "pzlog.h"
 
 #ifdef PZ_LOG
@@ -57,7 +57,12 @@ TPZMultiphysicsInterfaceElement(mesh, copy, gl2lcConMap,gl2lcElMap)
 }
 
 void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) {
-
+#ifdef FEMCOMPARISON_TIMER
+    extern double interfaceTime;
+#endif
+    
+    TPZTimer timer;
+    timer.start();
     if (this->NConnects() == 0) return;//boundary discontinuous elements have this characteristic
     TPZMultiphysicsElement *leftel = dynamic_cast<TPZMultiphysicsElement *> (fLeftElSide.Element());
     TPZMultiphysicsElement *rightel = dynamic_cast<TPZMultiphysicsElement *>(fRightElSide.Element());
@@ -84,7 +89,7 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
         }
     }
 
-    if(NNodes == 1){
+    if(NNodes == 2){
         if(this->Dimension() != 1){
             DebugStop();
         }
@@ -173,6 +178,11 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
     else{
         ComputingCalcStiff(ek, ef);
     }
+    timer.stop();
+#ifdef FEMCOMPARISON_TIMER
+    interfaceTime+=timer.seconds();
+#endif
+    
 }
 
 void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex){
@@ -199,6 +209,7 @@ void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElemen
     }
     else{
 #ifdef FEMCOMPARISON_DEBUG
+        DebugStop();
         ComputingCalcStiff(ek,ef);
         if(ek.fMat.Cols() != M.Cols() || ek.fMat.Rows() != M.Rows()){
             DebugStop();
