@@ -93,7 +93,6 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
         if(this->Dimension() != 1){
             DebugStop();
         }
-
         if(leftNodeIndices[0] < leftNodeIndices[1]){ // Matrix A/MinusA
             ChoosingOptimizedComputation( ek, ef,0);
         }
