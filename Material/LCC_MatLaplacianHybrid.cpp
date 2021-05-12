@@ -114,8 +114,9 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
      f2 = int_partialK g*mu_j dx
      
      **/
-    TPZTimer timer;
-    timer.start();
+    //TPZTimer timer;
+    //timer.start();
+    double start = clock();
     TPZFMatrix<REAL>  &phi = datavec[1].phi;
     TPZFMatrix<REAL> &dphi = datavec[1].dphix;
     TPZVec<REAL>  &x = datavec[1].x;
@@ -219,10 +220,13 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         LOGPZ_DEBUG(logger,valuenn.str());
     }
 #endif
-    timer.stop();
+    //timer.stop();
+    double end = clock();
 #ifdef FEMCOMPARISON_TIMER
-    contributeTimeMaterial += timer.seconds();
+    contributeTimeMaterial += (end-start)/CLOCKS_PER_SEC;
     contadorTimeMaterial++;
+    extern int64_t contributeMaterialCounter;
+    contributeMaterialCounter++;
 #endif
     
 }
@@ -265,11 +269,14 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     }
     ef(phr,0) += weight*(-datavec[1].sol[0][0]+ datavec[3].sol[0][0]);
     ef(phr+1,0) += weight*datavec[2].sol[0][0];
+    
 
 }
-
 void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc)
 {
+    extern double contributeTimeBoundary;
+    TPZTimer timer;
+    timer.start();
     TPZFMatrix<REAL>  &phi_u = datavec[1].phi;
     TPZFMatrix<REAL>  &phi_flux = datavec[0].phi;
     //    TPZFMatrix<REAL> &axes = data.axes;
@@ -351,6 +358,10 @@ void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
                 break;
         }
     }
+    timer.stop();
+    contributeTimeBoundary+=timer.seconds();
+    extern int64_t contributeBoundaryCounter;
+    contributeBoundaryCounter++;
 }
 
 void LCC_MatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout)

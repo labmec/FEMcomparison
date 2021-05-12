@@ -15,11 +15,17 @@ double assembleTime =0.;
 extern double calcstiffTime;
 extern double contributeTime; //  Total contribute time
 double contributeTimeMaterial=0.;
+double contributeTimeBoundary=0;
 double contributeTimeInterface=0.;
 int64_t contadorCalcstiff=0;
 int64_t contadorTimeMaterial=0;
 double interfaceTime=0.;
 extern int64_t contributeCounter;
+int64_t contributeMaterialCounter=0;
+int64_t contributeBoundaryCounter=0;
+int64_t contributeCounter=0;
+
+//static TPZTimer globalTimer.start();
 #endif
 
 using namespace std;
@@ -60,7 +66,7 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 3;                        //// How many refinements
+    pConfig.refLevel = 6;                        //// How many refinements
     pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
@@ -102,13 +108,18 @@ int main(int argc, char *argv[]) {
         archivo.close();*/
     std::cout<<"contributeTimeInterface= "<< contributeTimeInterface << std::endl;
     std::cout<<"contributeTimeMaterial= "<< contributeTimeMaterial << std::endl;
+    std::cout<<"contributeTimeBoundary= "<< contributeTimeBoundary << std::endl;
+    
     std::cout<<"solveTime= "<< solveTime << std::endl;
     std::cout<<"assembleTime= "<< assembleTime << std::endl;
 //#ifdef OPTIMIZE_RUN_TIME
    std::cout<<"contributeTime= "<< contributeTime << std::endl;
 //#endif
-    cout<<"contadorTimeMaterial"<<contadorTimeMaterial<<endl;
-    cout<<"contributeCounter="<<contributeCounter<<endl;
+    cout<<"contadorTimeMaterial= "<<contadorTimeMaterial<<endl;
+    cout<<"contributeCounter= "<<contributeCounter<<endl;
+    cout<<"contributeMaterialCounter= "<<contributeMaterialCounter<<endl;
+    cout<<"contributeBoundaryCounter= "<<contributeBoundaryCounter<<endl;
+
 #endif
 
     return 0;
