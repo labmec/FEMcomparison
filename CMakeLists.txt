@@ -34,7 +34,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DFEMCOMPARISON_DEBUG)
 endif()
 
-option(FEMCOMPARISON_TIMER "Measure simulation time" OFF)
+option(FEMCOMPARISON_TIMER "Timer measurement" OFF)
 if(FEMCOMPARISON_TIMER)
     add_definitions(-DFEMCOMPARISON_TIMER)
 endif()

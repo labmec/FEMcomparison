@@ -12,15 +12,12 @@
 #include "DataStructure.h"
 #include "Tools.h"
 #include <tuple>
-
-#ifdef FEMCOMPARISON_TIMER
-    double solveTime =0.;
-    double assembleTime =0.;
-    extern double calcstiffTime;
-    extern double contributeTime; //  Total contribute time
-    double contributeTimeMaterial=0.;
-    double contributeTimeInterface=0;
-#endif
+double solveTime =0.;
+double assembleTime =0.;
+extern double calcstiffTime;
+extern double contributeTime; //  Total contribute time
+double contributeTimeMaterial=0.;
+double contributeTimeInterface=0;
 
 
 int main(int argc, char *argv[]) {
@@ -33,8 +30,8 @@ int main(int argc, char *argv[]) {
     pConfig.n = 2;
     pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Quadrilateral";           //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 3;                        //// How many refinements
+    pConfig.topology = "Tetrahedral";           //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.refLevel = 2;                        //// How many refinements
     pConfig.debugger = true;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
