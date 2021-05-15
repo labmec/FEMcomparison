@@ -6,21 +6,14 @@
 #include "DataStructure.h"
 #include "Tools.h"
 #include <tuple>
-
-#ifdef FEMCOMPARISON_TIMER
-    double solveTime =0.;
-    double assembleTime =0.;
-    extern double calcstiffTime;
-    extern double contributeTime;
-#endif
+double solveTime =0.;
+double assembleTime =0.;
+extern double calcstiffTime;
+extern double contributeTime;
 
 int main(int argc, char *argv[]) {
-
-#ifdef FEMCOMPARISON_TIMER
     calcstiffTime = 0.;
     contributeTime = 0.;
-#endif
-
 #ifdef PZ_LOG
     TPZLogger::InitializePZLOG();
 #endif
@@ -49,10 +42,7 @@ int main(int argc, char *argv[]) {
         system(command.c_str());
         FlushTable(pConfig,argv);
     }
-
-#ifdef FEMCOMPARISON_TIMER
     std::cout<<"calcstiffTime= "<< calcstiffTime << std::endl;
-#endif
 
     return 0.;
 }

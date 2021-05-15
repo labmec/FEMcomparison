@@ -78,7 +78,7 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @since June 5, 2012
  */
 #ifdef FEMCOMPARISON_TIMER
-    extern double contributeTimeInterface;
+extern double contributeTimeInterface;
 #endif
 
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
