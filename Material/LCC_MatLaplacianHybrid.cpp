@@ -10,11 +10,18 @@
 #include "pzaxestools.h"
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
+#include "pzlog.h"
 #endif
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("MaterialHybrid"));
 #endif
 #include "TPZTimer.h"
+#ifdef PZ_LOG
+static TPZLogger loggerCTM("contributeTimeMaterial");
+#endif
+#ifdef PZ_LOG
+static TPZLogger loggerCTB("contributeTimeBoundary");
+#endif
 
 LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid(int matid, int dim)
 : TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian(matid, dim)
@@ -91,10 +98,6 @@ int LCC_MatLaplacianHybrid::NSolutionVariables(int var){
         
     }
 }
-#ifdef FEMCOMPARISON_TIMER
-    extern double contributeTimeMaterial;
-    extern int64_t contadorTimeMaterial;
-#endif
 
 void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
@@ -112,11 +115,19 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
      f1 = int_K f*v dx = int_K f*phi_j dx
      ck = int_partialK phi_i*mu_j dx
      f2 = int_partialK g*mu_j dx
-     
      **/
-    //TPZTimer timer;
-    //timer.start();
-    double start = clock();
+#ifdef FEMCOMPARISON_TIMER
+    extern double contributeTimeMaterial;
+    extern int64_t contributeMaterialCounter;
+    //double start = clock();
+#endif
+    
+#ifdef PZ_LOG
+    TPZTimer timer;
+    if (loggerCTM.isDebugEnabled()){
+        timer.start();}
+#endif
+    
     TPZFMatrix<REAL>  &phi = datavec[1].phi;
     TPZFMatrix<REAL> &dphi = datavec[1].dphix;
     TPZVec<REAL>  &x = datavec[1].x;
@@ -220,15 +231,15 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
         LOGPZ_DEBUG(logger,valuenn.str());
     }
 #endif
-    //timer.stop();
-    double end = clock();
-#ifdef FEMCOMPARISON_TIMER
-    contributeTimeMaterial += (end-start)/CLOCKS_PER_SEC;
-    contadorTimeMaterial++;
-    extern int64_t contributeMaterialCounter;
-    contributeMaterialCounter++;
-#endif
     
+#ifdef PZ_LOG
+    //double end = clock();
+    //contributeTimeMaterial += (end-start)/CLOCKS_PER_SEC;
+    if (loggerCTM.isDebugEnabled()){
+    timer.stop();
+    contributeTimeMaterial += timer.seconds();
+    contributeMaterialCounter++;}
+#endif
 }
 
 void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef)
@@ -272,11 +283,21 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     
 
 }
+
 void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc)
 {
+#ifdef FEMCOMPARISON_TIMER
     extern double contributeTimeBoundary;
+    extern int64_t contributeBoundaryCounter;
+#endif
+    
+#ifdef PZ_LOG
     TPZTimer timer;
-    timer.start();
+    if (loggerCTB.isDebugEnabled()){
+        timer.start();}
+
+#endif
+    
     TPZFMatrix<REAL>  &phi_u = datavec[1].phi;
     TPZFMatrix<REAL>  &phi_flux = datavec[0].phi;
     //    TPZFMatrix<REAL> &axes = data.axes;
@@ -358,11 +379,15 @@ void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
                 break;
         }
     }
-    timer.stop();
-    contributeTimeBoundary+=timer.seconds();
-    extern int64_t contributeBoundaryCounter;
-    contributeBoundaryCounter++;
+#ifdef PZ_LOG
+    if(loggerCTB.isDebugEnabled()){
+        timer.stop();
+        contributeTimeBoundary+=timer.seconds();
+        contributeBoundaryCounter++;
+    }
+#endif
 }
+
 
 void LCC_MatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout)
 {

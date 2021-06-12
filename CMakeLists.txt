@@ -30,6 +30,11 @@ if(OPTMIZE_RUN_TIME)
     add_definitions(-DOPTMIZE_RUN_TIME)
 endif(OPTMIZE_RUN_TIME)
 
+option(TIMER_CONTRIBUTE_VOL "Whether timer measures is required." OFF)
+if(TIMER_CONTRIBUTE_VOL)
+    add_definitions(-DTIMER_CONTRIBUTE_VOL)
+endif(TIMER_CONTRIBUTE_VOL)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DFEMCOMPARISON_DEBUG)
 endif()

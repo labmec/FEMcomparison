@@ -19,14 +19,16 @@
 #include "pzvisualmatrix.h"
 #include "MeshInit.h"
 #include "TPZTimer.h"
-
-#ifdef FEMCOMPARISON_TIMER
-    extern double solveTime;
-    extern double assembleTime;
+#ifdef PZ_LOG
+static TPZLogger loggerST("solveTime");
+static TPZLogger loggerAT("assembleTime");
 #endif
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
+#ifdef FEMCOMPARISON_TIMER
+    extern double solveTime;
+#endif
     TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
     TPZMultiphysicsCompMesh *multiCmesh = new TPZMultiphysicsCompMesh(config.gmesh);
     int interfaceMatID = -10;
@@ -41,30 +43,43 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-            { TPZTimer timer;
-            
-            timer.start();
-                
+            {
+#ifdef PZ_LOG
+                TPZTimer timer;
+                if (loggerST.isDebugEnabled()){
+                    timer.start();
+                }
+#endif
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
-            timer.stop();
+            
             //timer.reset();
-#ifdef FEMCOMPARISON_TIMER
-                solveTime+=timer.seconds();
+//#ifdef FEMCOMPARISON_TIMER
+#ifdef PZ_LOG
+                if (loggerST.isDebugEnabled()){
+                    timer.stop();
+                    solveTime+=timer.seconds();
+                }
 #endif
             }
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
-            {TPZTimer timer;
+            {
+#ifdef PZ_LOG
+                TPZTimer timer;
+                if(loggerST.isDebugEnabled())
                 timer.start();
+#endif
             SolveMixedProblem(multiCmesh, config, preConfig);
-            timer.stop();
-#ifdef FEMCOMPARISON_TIMER
+#ifdef PZ_LOG
+                if(loggerST.isDebugEnabled()){
+                timer.stop();
                 solveTime+=timer.seconds();
+                }
 #endif
             }
             break;
-        default:
+            default:
             DebugStop();
             break;
     }
@@ -233,7 +248,10 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 }
 
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
-
+#ifdef FEMCOMPARISON_TIMER
+    extern double solveTime;
+    extern double assembleTime;
+#endif
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
 #endif
@@ -266,13 +284,16 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
-    
+#ifdef PZ_LOG
     TPZTimer timer;
-    timer.start();
+    if (loggerAT.isDebugEnabled()){
+        timer.start();}
+#endif
     an.Assemble();
+#ifdef PZ_LOG
     timer.stop();
-#ifdef FEMCOMPARISON_TIMER
-    assembleTime+=timer.seconds();
+    if (loggerAT.isDebugEnabled()){
+        assembleTime+=timer.seconds();}
 #endif
     
     
@@ -317,7 +338,10 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 using namespace std;
 
 void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig config,struct PreConfig &pConfig) {
-
+#ifdef FEMCOMPARISON_TIMER
+    extern double solveTime;
+    extern double assembleTime;
+#endif
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
 #endif
@@ -344,13 +368,17 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
-    
+#ifdef PZ_LOG
     TPZTimer timer;
-    timer.start();
+    if(loggerAT.isDebugEnabled()){
+        timer.start();}
+#endif
     an.Assemble();
+#ifdef PZ_LOG
+    if(loggerAT.isDebugEnabled()){
     timer.stop();
-#ifdef FEMCOMPARISON_TIMER
     assembleTime += timer.seconds();
+    }
 #endif
     
 #ifdef FEMCOMPARISON_DEBUG2
