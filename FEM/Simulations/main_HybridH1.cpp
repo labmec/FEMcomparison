@@ -10,8 +10,6 @@
 #include <TPZTimer.h>
 
 #ifdef FEMCOMPARISON_TIMER
-bool ContributeVOL=true;
-bool ContributeBC=true;
 double solveTime =0.;
 double assembleTime =0.;
 extern double calcstiffTime;
@@ -40,7 +38,7 @@ int main(int argc, char *argv[]) {
 #endif
     PreConfig pConfig;
     //Lectura por ficheros
-       /*string line;
+       string line;
        ifstream myfile ("config.txt");
        getline (myfile,line);
        pConfig.k=stoi(line);
@@ -57,15 +55,15 @@ int main(int argc, char *argv[]) {
        getline (myfile,line);
        pConfig.refLevel=stoi(line);
        getline (myfile,line);
-       myfile.close();*/
-       //Fin LEctura Fichero
+       myfile.close();
+       //Fin Lectura Fichero
 
-    pConfig.k = 1;//
+    /*pConfig.k = 1;//
     pConfig.n = 2;
     pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 5;                       //// How many refinements
+    pConfig.refLevel = 5;*/                       //// How many refinements
     pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
@@ -107,7 +105,11 @@ int main(int argc, char *argv[]) {
         archivo<<pConfig.n<<endl;
         archivo<<pConfig.dim<<endl;
         archivo<<pConfig.refLevel<<endl;
+#ifdef FEMCOMPARISON_USING_MKL
+        archivo<<"MKL"<<endl;
+#else
         archivo<<"NoMKL"<<endl;
+#endif
         archivo.close();
     
     std::cout<<"solveglobaltime= "<< solveglobaltime << std::endl;
