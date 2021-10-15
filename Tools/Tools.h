@@ -14,7 +14,7 @@
 #include "TPZVTKGeoMesh.h"
 #include "DataStructure.h"
 
-#include "mixedpoisson.h"
+#include "TPZMixedDarcyFlow.h"
 #include "TPZVecL2.h"
 #include "pzbndcond.h"
 

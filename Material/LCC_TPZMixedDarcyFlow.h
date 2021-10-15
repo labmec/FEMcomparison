@@ -1,9 +1,9 @@
 
 
-#ifndef LCC_mixedpoisson_h
-#define LCC_mixedpoisson_h
+#ifndef LCC_TPZMixedDarcyFlow_h
+#define LCC_TPZMixedDarcyFlow_h
 
-#include "mixedpoisson.h"
+#include "DarcyFlow/TPZMixedDarcyFlow.h"
 
 /**
  * @ingroup material
@@ -21,24 +21,24 @@
  */
 
 
-class LCCMixedPoisson : public TPZMixedPoisson {
+class LCCTPZMixedDarcyFlow : public TPZMixedDarcyFlow {
     
 protected:
   
     
 public:
-    LCCMixedPoisson();
+    LCCTPZMixedDarcyFlow();
     
-    LCCMixedPoisson(int matid, int dim);
+    LCCTPZMixedDarcyFlow(int matid, int dim);
     
-    virtual ~LCCMixedPoisson();
+    virtual ~LCCTPZMixedDarcyFlow();
     
-    LCCMixedPoisson(const TPZMixedPoisson &cp);
+    LCCTPZMixedDarcyFlow(const TPZMixedDarcyFlow &cp);
     
-    LCCMixedPoisson &operator=(const TPZMixedPoisson &copy);
+    LCCTPZMixedDarcyFlow &operator=(const TPZMixedDarcyFlow &copy);
     
     virtual TPZMaterial * NewMaterial() override{
-        return new LCCMixedPoisson(*this);
+        return new LCCTPZMixedDarcyFlow(*this);
     }
   
     /**

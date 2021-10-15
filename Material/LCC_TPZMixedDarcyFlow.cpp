@@ -1,11 +1,11 @@
 /**
  * @file
- * @brief Contains the methods of the TPZMixedPoisson class (multiphysics environment)
+ * @brief Contains the methods of the TPZMixedDarcyFlow class (multiphysics environment)
  * @author Agnaldo Farias
  * @date 2012/05/28
  */
 
-#include "LCC_MixedPoisson.h"
+#include "LCC_TPZMixedDarcyFlow.h"
 #include "pzlog.h"
 #include "pzbndcond.h"
 #include "pzfmatrix.h"
@@ -17,8 +17,8 @@
 #include <iostream>
 
 #ifdef LOG4CXX
-static LoggerPtr logdata(Logger::getLogger("pz.mixedpoisson.data"));
-static LoggerPtr logerror(Logger::getLogger("pz.mixedpoisson.error"));
+static LoggerPtr logdata(Logger::getLogger("pz.TPZMixedDarcyFlow.data"));
+static LoggerPtr logerror(Logger::getLogger("pz.TPZMixedDarcyFlow.error"));
 #endif
 
 #ifdef PZ_LOG
@@ -26,27 +26,27 @@ static TPZLogger loggerCTM("contributeTimeMaterial");
 static TPZLogger loggerCTB("contributeTimeBoundary");
 #endif
 
-LCCMixedPoisson::LCCMixedPoisson(): TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson() {
+LCCTPZMixedDarcyFlow::LCCTPZMixedDarcyFlow(): TPZRegisterClassId(&TPZMixedDarcyFlow::ClassId), TPZMixedDarcyFlow() {
 }
 
-LCCMixedPoisson::LCCMixedPoisson(int matid, int dim): TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson(matid,dim) {
+LCCTPZMixedDarcyFlow::LCCTPZMixedDarcyFlow(int matid, int dim): TPZRegisterClassId(&TPZMixedDarcyFlow::ClassId), TPZMixedDarcyFlow(matid,dim) {
     if (dim < 1) {
         DebugStop();
     }
 }
 
-LCCMixedPoisson::~LCCMixedPoisson() {
+LCCTPZMixedDarcyFlow::~LCCTPZMixedDarcyFlow() {
 }
 
-LCCMixedPoisson::LCCMixedPoisson(const TPZMixedPoisson &cp) :TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson(cp) {}
+LCCTPZMixedDarcyFlow::LCCTPZMixedDarcyFlow(const TPZMixedDarcyFlow &cp) :TPZRegisterClassId(&TPZMixedDarcyFlow::ClassId), TPZMixedDarcyFlow(cp) {}
 
-LCCMixedPoisson & LCCMixedPoisson::operator=(const TPZMixedPoisson &copy){
-    TPZMixedPoisson::operator=(copy);
+LCCTPZMixedDarcyFlow & LCCTPZMixedDarcyFlow::operator=(const TPZMixedDarcyFlow &copy){
+    TPZMixedDarcyFlow::operator=(copy);
     return *this;
 }
 
 
-void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
+void LCCTPZMixedDarcyFlow::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
 #ifdef FEMCOMPARISON_TIMER
     extern double contributeTimeMaterial;
     extern int64_t contributeMaterialCounter;
@@ -232,7 +232,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
 }
 
 
-void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
+void LCCTPZMixedDarcyFlow::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
     
 #ifdef FEMCOMPARISON_TIMER
     extern double contributeTimeBoundary;
@@ -382,7 +382,7 @@ void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight
 #endif
 }
 
-int LCCMixedPoisson::ClassId() const{
-    return Hash("LCCMixedPoisson") ^ TPZMatPoisson3d::ClassId() << 1;
+int LCCTPZMixedDarcyFlow::ClassId() const{
+    return Hash("LCCTPZMixedDarcyFlow") ^ TPZMatPoisson3d::ClassId() << 1;
 }
 

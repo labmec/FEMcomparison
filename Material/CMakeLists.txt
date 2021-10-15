@@ -2,8 +2,8 @@
 target_sources(Tools PUBLIC
     LCC_MatLaplacianHybrid.cpp
     LCC_MatLaplacianHybrid.h
-    LCC_MixedPoisson.h
-    LCC_MixedPoisson.cpp
+    LCC_TPZMixedDarcyFlow.h
+    LCC_TPZMixedDarcyFlow.cpp
     LCC_LagrangeMultiplier.h
     LCC_LagrangeMultiplier.cpp
 )

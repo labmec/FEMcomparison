@@ -117,7 +117,7 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
 //    invK.Print(std::cout);
     
     for (auto matid : problem.materialids) {
-        TPZMixedPoisson *mix = new TPZMixedPoisson(matid, cmesh->Dimension());
+        TPZMixedDarcyFlow *mix = new TPZMixedDarcyFlow(matid, cmesh->Dimension());
 #ifndef OPTMIZE_RUN_TIME
     mix->SetForcingFunction(problem.exact.operator*().ForcingFunction());
         mix->SetExactSol(problem.exact.operator*().Exact());
@@ -147,7 +147,7 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
             break;
             }
             case -3:{
-            bctype = 4;// different from mixed (bctype 2) already implemented on TPZMixedPoisson3d
+            bctype = 4;// different from mixed (bctype 2) already implemented on TPZMixedDarcyFlow3d
             val1(0,0) = Km ;
 
                 
@@ -673,7 +673,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
             an.SetThreadsForError(0);
             an.SetExact(problem.exact.operator*().ExactSolution());
             an.PostProcessError(errors, false);
-            /*Error on MixedPoisson
+            /*Error on TPZMixedDarcyFlow
              [0] L2 for pressure
              [1] L2 for flux
              [2] L2 for div(flux)
@@ -854,7 +854,7 @@ void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
 
         // Erro
         ofstream myfile;
-        /*Error on MixedPoisson
+        /*Error on TPZMixedDarcyFlow
            [0] L2 for pressure
            [1] L2 for flux
            [2] L2 for div(flux)

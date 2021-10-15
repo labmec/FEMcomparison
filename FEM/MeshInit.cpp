@@ -5,12 +5,12 @@
 #include "MeshInit.h"
 #include "DataStructure.h"
 #include <TPZMultiphysicsCompMesh.h>
-#include "mixedpoisson.h"
+#include "TPZMixedDarcyFlow.h"
 #include "LCC_MatLaplacianHybrid.h"
 #include "TPZNullMaterial.h"
 #include "pzbndcond.h"
 #include "TPZGenGrid2D.h"
-#include "LCC_MixedPoisson.h"
+#include "LCC_TPZMixedDarcyFlow.h"
 #include "TPZCompMeshTools.h"
 #include "TPZCompElDisc.h"
 
@@ -41,8 +41,8 @@ void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemCon
     invK(0,0) = invK(1,1) =  1./pConfig.perm_Q2;
     mat2->setPermeabilyTensor(K,invK);
 #endif
-    TPZMixedPoisson *material_Q1 = new TPZMixedPoisson(matID_Q1,dim); //Using standard PermealityTensor = Identity.
-    TPZMixedPoisson *material_Q2 = new TPZMixedPoisson(matID_Q2,dim);
+    TPZMixedDarcyFlow *material_Q1 = new TPZMixedDarcyFlow(matID_Q1,dim); //Using standard PermealityTensor = Identity.
+    TPZMixedDarcyFlow *material_Q2 = new TPZMixedDarcyFlow(matID_Q2,dim);
 #ifndef OPTMIZE_RUN_TIME
     material_Q1->SetForcingFunction(config.exact.operator*().ForcingFunction());
     material_Q1->SetExactSol(config.exact.operator*().Exact());
@@ -447,7 +447,7 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
         cmesh_mixed->SetDimModel(dim);
         cmesh_mixed->SetAllCreateFunctionsMultiphysicElem();
 
-        LCCMixedPoisson *material = new LCCMixedPoisson(matID, dim); //Using standard PermealityTensor = Identity.
+        LCCTPZMixedDarcyFlow *material = new LCCTPZMixedDarcyFlow(matID, dim); //Using standard PermealityTensor = Identity.
         if(pConfig.debugger) {
 #ifndef OPTMIZE_RUN_TIME
             material->SetForcingFunction(config.exact.operator*().ForcingFunction());
