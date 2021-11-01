@@ -24,10 +24,14 @@ static TPZLogger loggerST("solveTime");
 static TPZLogger loggerAT("assembleTime");
 #endif
 
+extern std::vector<double> assembleTimeVec;
+extern std::vector<double> solveTimeVec;
+
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
 #ifdef FEMCOMPARISON_TIMER
     extern double solveTime;
+    extern int nTestsSolve;
 #endif
     TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
     TPZMultiphysicsCompMesh *multiCmesh = new TPZMultiphysicsCompMesh(config.gmesh);
@@ -46,19 +50,24 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             {
 #ifdef PZ_LOG
                 TPZTimer timer;
-                if (loggerST.isDebugEnabled()){
+                for(int i=0;i<nTestsSolve;i++){
+                /*if (loggerST.isDebugEnabled()){
                     timer.start();
-                }
+                }*/
+                timer.start();
+
 #endif
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             
             //timer.reset();
 //#ifdef FEMCOMPARISON_TIMER
 #ifdef PZ_LOG
-                if (loggerST.isDebugEnabled()){
+                /*if (loggerST.isDebugEnabled()){
                     timer.stop();
                     solveTime+=timer.seconds();
-                }
+                }*/
+                timer.stop();
+                solveTimeVec.push_back(static_cast<double>(timer.seconds()));
 #endif
             }
             break;
@@ -251,6 +260,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 #ifdef FEMCOMPARISON_TIMER
     extern double solveTime;
     extern double assembleTime;
+    extern int nTestsAssemble;
 #endif
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
@@ -286,14 +296,17 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     direct = 0;
 #ifdef PZ_LOG
     TPZTimer timer;
-    if (loggerAT.isDebugEnabled()){
-        timer.start();}
+    for(int i=0;i<nTestsAssemble;i++){
+    /*if (loggerAT.isDebugEnabled()){
+        timer.start();}*/
 #endif
     an.Assemble();
 #ifdef PZ_LOG
     timer.stop();
-    if (loggerAT.isDebugEnabled()){
-        assembleTime+=timer.seconds();}
+    /*if (loggerAT.isDebugEnabled()){
+        assembleTime+=timer.seconds();}*/
+    assembleTimeVec.push_back(static_cast<double>(timer.seconds()))
+        
 #endif
     
     
