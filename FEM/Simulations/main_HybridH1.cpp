@@ -8,6 +8,7 @@
 #include <tuple>
 #include "pzvisualmatrix.h"
 #include <TPZTimer.h>
+#include "computStatist.h"
 using namespace std;
 
 #ifdef FEMCOMPARISON_TIMER
@@ -29,11 +30,12 @@ int64_t contributeBoundaryCounter=0;
 double solveglobaltime;
 
 vector<double> assembleTimeVec, solveTimeVec;
+bool contributeTest=false;// To activate the time measure of the three contributes
 bool assembleTest=false;
 bool solveTest=true;
 int nThreads=0;
-int nTestsAssemble=1;//number of tests for assemble
-int nTestsSolve=5;//number of tests for assemble
+int nTestsAssemble=4;//number of tests for assemble
+int nTestsSolve=1;//number of tests for assemble
 #endif
 
 int main(int argc, char *argv[]) {
@@ -62,7 +64,7 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 4;                       //// How many refinements
+    pConfig.refLevel = 6;                       //// How many refinements
     pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
@@ -83,34 +85,34 @@ int main(int argc, char *argv[]) {
     timer.stop();
     solveglobaltime = timer.seconds();
     
-    if(assembleTest==true){
-    cout<<"*********** Statistics for the assembly time ****************"<<endl;
-    if(atypical1 == true)
-        cout<<"Atypical experiment!!"<<endl;
-    cout<<"reflevel: "<<pConfig.refLevel<<endl;
-    if(MKL_contribute)
-        cout<<"Using MKL in contributes: "<<"TRUE"<<endl;
-    else
-        cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
-    cout<<"Number of assembly threads: "<<nThreads<<endl;
-    cout<<"Number of tests: "<<nTestsAssemble<<endl;
-    cout<<"Average time(seconds): "<<mean(assembleTimeVec)<<endl;
-    //cout<<"Coef. of variation: "<<100*CoefVariation(assembleTimeVec)<<"%"<<endl;
-    }
-    if(solveTest==true){
-    cout<<"*********** Statistics for the solve time ****************"<<endl;
-    if(atypical1 == true)
-        cout<<"Atypical experiment!!"<<endl;
-    cout<<"reflevel: "<<pConfig.refLevel<<endl;
-    if(MKL_contribute)
-        cout<<"Using MKL in contributes: "<<"TRUE"<<endl;
-    else
-        cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
-    cout<<"Number of assembly threads: "<<nThreads<<endl;
-    cout<<"Number of tests: "<<nTestsSolve<<endl;
-    //cout<<"Average time(seconds): "<<mean(solveTimeVec)<<endl;
-    //cout<<"Coef. of variation: "<<100*CoefVariation(solveTimeVec)<<"%"<<endl;
-    }
+    //if(assembleTest==true){
+        cout<<"*********** Statistics for the assembly time *****"<<endl;
+        if(atypical1 == true)
+            cout<<"Atypical experiment!!"<<endl;
+        cout<<"reflevel: "<<pConfig.refLevel<<endl;
+        if(MKL_contribute)
+            cout<<"Using MKL in contributes: "<<"TRUE"<<endl;
+        else
+            cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
+            cout<<"Number of assembly threads: "<<nThreads<<endl;
+            cout<<"Number of tests: "<<nTestsAssemble<<endl;
+            cout<<"Average time(seconds): "<<mean(assembleTimeVec)<<endl;
+            cout<<"Coef. of variation: "<<100*CoefVariation(assembleTimeVec)<<"%"<<endl;
+    //}
+    //if(solveTest==true){
+        cout<<"*********** Statistics for the solve time *****"<<endl;
+        if(atypical1 == true)
+            cout<<"Atypical experiment!!"<<endl;
+        cout<<"reflevel: "<<pConfig.refLevel<<endl;
+        if(MKL_contribute)
+            cout<<"Using MKL in contributes: "<<"TRUE"<<endl;
+        else
+            cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
+            cout<<"Number of assembly threads: "<<nThreads<<endl;
+            cout<<"Number of tests: "<<nTestsSolve<<endl;
+            cout<<"Average time(seconds): "<<mean(solveTimeVec)<<endl;
+            cout<<"Coef. of variation: "<<100*CoefVariation(solveTimeVec)<<"%"<<endl;
+    //}
 
     return 0;
 }

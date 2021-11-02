@@ -99,8 +99,7 @@ int LCC_MatLaplacianHybrid::NSolutionVariables(int var){
     }
 }
 
-void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
-{
+void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
     /**
      datavec[1] L2 mesh (phi's)
      datavec[0] Hdiv mesh,
@@ -117,15 +116,13 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
      f2 = int_partialK g*mu_j dx
      **/
 #ifdef FEMCOMPARISON_TIMER
+    extern  bool contributeTest;
     extern double contributeTimeMaterial;
     extern int64_t contributeMaterialCounter;
-    //double start = clock();
-#endif
-    
-#ifdef PZ_LOG
     TPZTimer timer;
-    if (loggerCTM.isDebugEnabled()){
-        timer.start();}
+    if(contributeTest){
+        timer.start();
+    }
 #endif
     
     TPZFMatrix<REAL>  &phi = datavec[1].phi;
@@ -232,13 +229,12 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     }
 #endif
     
-#ifdef PZ_LOG
-    //double end = clock();
-    //contributeTimeMaterial += (end-start)/CLOCKS_PER_SEC;
-    if (loggerCTM.isDebugEnabled()){
-    timer.stop();
-    contributeTimeMaterial += timer.seconds();
-    contributeMaterialCounter++;}
+#ifdef FEMCOMPARISON_TIMER
+    if(contributeTest){
+        timer.stop();
+        contributeTimeMaterial += timer.seconds();
+        contributeMaterialCounter++;
+    }
 #endif
 }
 
@@ -280,22 +276,18 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     }
     ef(phr,0) += weight*(-datavec[1].sol[0][0]+ datavec[3].sol[0][0]);
     ef(phr+1,0) += weight*datavec[2].sol[0][0];
-    
-
 }
 
 void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc)
 {
 #ifdef FEMCOMPARISON_TIMER
+    extern bool contributeTest;
     extern double contributeTimeBoundary;
     extern int64_t contributeBoundaryCounter;
-#endif
-    
-#ifdef PZ_LOG
     TPZTimer timer;
-    if (loggerCTB.isDebugEnabled()){
-        timer.start();}
-
+    if(contributeTest){
+        timer.start();
+    }
 #endif
     
     TPZFMatrix<REAL>  &phi_u = datavec[1].phi;
@@ -379,8 +371,8 @@ void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
                 break;
         }
     }
-#ifdef PZ_LOG
-    if(loggerCTB.isDebugEnabled()){
+#ifdef FEMCOMPARISON_TIMER
+    if(contributeTest){
         timer.stop();
         contributeTimeBoundary+=timer.seconds();
         contributeBoundaryCounter++;
@@ -465,8 +457,6 @@ void LCC_MatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> 
 
     REAL pressure = data[1].sol[0][0];
 
-
-
     // errors[0] norm L2 || u ||_l2
 
     errors[0] = (pressure-u_exact[0])*(pressure-u_exact[0]);//exact error pressure
@@ -496,8 +486,6 @@ void LCC_MatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> 
         gradpressure(i,0) = du_exact(i,0);
     }
     PermTensor.Multiply(gradpressure,Kgradu);
-
-
 
     REAL energy = 0.;
     for (int i=0; i<fDim; i++) {

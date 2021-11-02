@@ -80,17 +80,18 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @param ef [out] is the load vector
  * @since June 5, 2012
  */
-#ifdef FEMCOMPARISON_TIMER
-extern double contributeTimeInterface;
-#endif
 
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
-#ifdef PZ_LOG
+#ifdef FEMCOMPARISON_TIMER
+    extern double contributeTimeInterface;
+    extern bool contributeTest;
     TPZTimer timer;
-    if(loggerCTI.isDebugEnabled()){
-    timer.start();}
+    if(contributeTest){
+        timer.start();
+    }
 #endif
+    
 #ifdef FEMCOMPARISON_DEBUG
     if(dataleft.size() != 1 || dataright.size() != 1) DebugStop();
 #endif
@@ -205,10 +206,11 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         LOGPZ_DEBUG(logdata,valuenn.str());
     }
 #endif
-#ifdef PZ_LOG
-    if(loggerCTI.isDebugEnabled())
-    timer.stop();
-    contributeTimeInterface += timer.seconds();
+#ifdef FEMCOMPARISON_TIMER
+    if(contributeTest){
+        timer.stop();
+        contributeTimeInterface += timer.seconds();
+    }
 #endif
 }
 

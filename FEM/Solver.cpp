@@ -47,29 +47,9 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-            {
-#ifdef PZ_LOG
-                TPZTimer timer;
-                for(int i=0;i<nTestsSolve;i++){
-                /*if (loggerST.isDebugEnabled()){
-                    timer.start();
-                }*/
-                timer.start();
 
-#endif
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             
-            //timer.reset();
-//#ifdef FEMCOMPARISON_TIMER
-#ifdef PZ_LOG
-                /*if (loggerST.isDebugEnabled()){
-                    timer.stop();
-                    solveTime+=timer.seconds();
-                }*/
-                timer.stop();
-                solveTimeVec.push_back(static_cast<double>(timer.seconds()));
-#endif
-            }
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
@@ -261,6 +241,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     extern double solveTime;
     extern double assembleTime;
     extern int nTestsAssemble;
+    extern int nTestsSolve;
 #endif
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
@@ -270,9 +251,10 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     TPZAnalysis an(cmesh_H1Hybrid);
 
+    extern int nThreads;
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
-    strmat.SetNumThreads(0);
+    strmat.SetNumThreads(nThreads);
     //        strmat.SetDecomposeType(ELDLt);
 #else
     //    TPZFrontStructMatrix<TPZFrontSym<STATE> > strmat(Hybridmesh);
@@ -294,23 +276,22 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
-#ifdef PZ_LOG
+#ifdef FEMCOMPARISON_TIMER
     TPZTimer timer;
     for(int i=0;i<nTestsAssemble;i++){
-    /*if (loggerAT.isDebugEnabled()){
-        timer.start();}*/
+        timer.start();
+        an.Assemble();
+        timer.stop();
+        assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
+    }
+
+    for(int i=0;i<nTestsSolve;i++){
+        timer.start();
+        an.Solve();
+        timer.stop();
+        solveTimeVec.push_back(static_cast<double>(timer.seconds()));
+    }
 #endif
-    an.Assemble();
-#ifdef PZ_LOG
-    timer.stop();
-    /*if (loggerAT.isDebugEnabled()){
-        assembleTime+=timer.seconds();}*/
-    assembleTimeVec.push_back(static_cast<double>(timer.seconds()))
-        
-#endif
-    
-    
-    an.Solve();
 
     int64_t nelem = cmesh_H1Hybrid->NElements();
     cmesh_H1Hybrid->LoadSolution(cmesh_H1Hybrid->Solution());
