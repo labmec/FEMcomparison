@@ -15,7 +15,7 @@ double solveTime =0.;
 double assembleTime =0.;
 extern double calcstiffTime;
 extern double contributeTime; //  Total contribute time
-double contributeTimeMaterial=0.;
+double contributeTimeVol=0.;
 double contributeTimeBoundary=0.;
 double contributeTimeInterface=0.;
 double interfaceTime=0.;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     std::cout<<"assembleTime= "<< assembleTime << std::endl;
     std::cout<<"calcstiffTime= "<< calcstiffTime << std::endl;
     std::cout<<"contributeTimeInterface= "<< contributeTimeInterface << std::endl;
-    std::cout<<"contributeTimeMaterial= "<< contributeTimeMaterial << std::endl;
+    std::cout<<"contributeTimeVol= "<< contributeTimeVol << std::endl;
     std::cout<<"contributeTimeBoundary= "<< contributeTimeBoundary << std::endl;
     //#ifdef OPTIMIZE_RUN_TIME
    std::cout<<"contributeTime= "<< contributeTime << std::endl;

@@ -16,7 +16,7 @@ double solveTime =0.;
 double assembleTime =0.;
 extern double calcstiffTime;
 extern double contributeTime; //  Total contribute time
-double contributeTimeMaterial=0.;
+double contributeTimeVol=0.;
 double contributeTimeInterface=0;
 
 

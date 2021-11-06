@@ -22,7 +22,7 @@ static LoggerPtr logerror(Logger::getLogger("pz.mixedpoisson.error"));
 #endif
 
 #ifdef PZ_LOG
-static TPZLogger loggerCTM("contributeTimeMaterial");
+static TPZLogger loggerCTM("contributeTimeVol");
 static TPZLogger loggerCTB("contributeTimeBoundary");
 #endif
 
@@ -48,7 +48,7 @@ LCCMixedPoisson & LCCMixedPoisson::operator=(const TPZMixedPoisson &copy){
 
 void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
 #ifdef FEMCOMPARISON_TIMER
-    extern double contributeTimeMaterial;
+    extern double contributeTimeVol;
     extern int64_t contributeMaterialCounter;
     //double start = clock();
 #endif
@@ -224,8 +224,8 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
 #ifdef PZ_LOG
     if(loggerCTM.isDebugEnabled()){
     timer.stop();
-    //contributeTimeMaterial += (end-start)/CLOCKS_PER_SEC;
-    contributeTimeMaterial += timer.seconds();
+    //contributeTimeVol += (end-start)/CLOCKS_PER_SEC;
+    contributeTimeVol += timer.seconds();
     contributeMaterialCounter++;
     }
 #endif

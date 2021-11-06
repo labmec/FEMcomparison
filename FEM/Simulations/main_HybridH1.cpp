@@ -20,7 +20,7 @@ double solveTime =0.;
 double assembleTime =0.;
 extern double calcstiffTime;
 extern double contributeTime; //  Total contribute time
-double contributeTimeMaterial=0.;
+double contributeTimeVol=0.;
 double contributeTimeBoundary=0.;
 double contributeTimeInterface=0.;
 double interfaceTime=0.;
@@ -31,11 +31,11 @@ double solveglobaltime;
 
 vector<double> assembleTimeVec, solveTimeVec;
 bool contributeTest=false;// To activate the time measure of the three contributes
-bool assembleTest=false;
+bool assembleTest=true;
 bool solveTest=true;
-int nThreads=0;
-int nTestsAssemble=4;//number of tests for assemble
-int nTestsSolve=1;//number of tests for assemble
+int nThreads=6;
+int nTestsAssemble=5;//number of tests for assemble
+int nTestsSolve=1;//number of tests for solving the system of equations
 #endif
 
 int main(int argc, char *argv[]) {
@@ -46,25 +46,26 @@ int main(int argc, char *argv[]) {
     contributeTime =0;
     contributeCounter=0;
     bool atypical1=false;
-    if((nTestsSolve>1) & (nTestsAssemble>1)){
+    /*if((nTestsSolve>1) & (nTestsAssemble>1)){
         atypical1=true;
-    }
+    }*/
     bool MKL_contribute;
 #ifdef FEMCOMPARISON_USING_MKL
     MKL_contribute=true;
 #endif
 #endif
+    
 #ifdef PZ_LOG
     TPZLogger::InitializePZLOG();
 #endif
-    PreConfig pConfig;
     
+    PreConfig pConfig;
     pConfig.k = 1;//
     pConfig.n = 2;
     pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 6;                       //// How many refinements
+    pConfig.refLevel = 7;                       //// How many refinements
     pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
@@ -86,6 +87,13 @@ int main(int argc, char *argv[]) {
     solveglobaltime = timer.seconds();
     
     //if(assembleTest==true){
+    for(int i=0;i<assembleTimeVec.size();i++)
+    cout<<assembleTimeVec[i]<<endl;
+    return 0;
+    cout<<"contribute time: "<<contributeTimeVol+contributeTimeBoundary+contributeTimeInterface<<endl;
+    cout<<"calcstiff time: "<<calcstiffTime<<endl;
+
+    
         cout<<"*********** Statistics for the assembly time *****"<<endl;
         if(atypical1 == true)
             cout<<"Atypical experiment!!"<<endl;
@@ -94,10 +102,10 @@ int main(int argc, char *argv[]) {
             cout<<"Using MKL in contributes: "<<"TRUE"<<endl;
         else
             cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
-            cout<<"Number of assembly threads: "<<nThreads<<endl;
-            cout<<"Number of tests: "<<nTestsAssemble<<endl;
-            cout<<"Average time(seconds): "<<mean(assembleTimeVec)<<endl;
-            cout<<"Coef. of variation: "<<100*CoefVariation(assembleTimeVec)<<"%"<<endl;
+        cout<<"Number of assembly threads: "<<nThreads<<endl;
+        cout<<"Number of tests: "<<nTestsAssemble<<endl;
+        cout<<"Average time(seconds): "<<mean(assembleTimeVec)<<endl;
+        cout<<"Coef. of variation: "<<100*CoefVariation(assembleTimeVec)<<"%"<<endl;
     //}
     //if(solveTest==true){
         cout<<"*********** Statistics for the solve time *****"<<endl;
@@ -113,7 +121,7 @@ int main(int argc, char *argv[]) {
             cout<<"Average time(seconds): "<<mean(solveTimeVec)<<endl;
             cout<<"Coef. of variation: "<<100*CoefVariation(solveTimeVec)<<"%"<<endl;
     //}
-
+    printTableAssemble(pConfig.dim,MKL_contribute,pConfig.refLevel,nThreads, nTestsAssemble,assembleTimeVec);
     return 0;
 }
 

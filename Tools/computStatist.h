@@ -4,6 +4,7 @@
 #include <vector>
 #include <math.h>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -37,14 +38,30 @@ inline double CoefVariation(vector<double>& vect){
 }
 
 
-inline void printTable(int dim,int nthreads, int refLevel, int test, bool MKL_FEMcomparison)
+inline void printTableAssemble(int dim,bool MKL_FEMcomparison, int refLevel,int nthreads, int test,vector<double> vect)
 {
-    std::ofstream ofs ("Salida.txt", std::ofstream::out);
-    ofs<<"H1Hybrid - 2D"<<endl;
-    ofs<<"MKL contribute"<<    MKL_FEMcomparison<<endl;
-    ofs<<"Number of threads"<<nthreads<<endl;
-    ofs<<"Refinement level"<<refLevel<<endl;
-    ofs<<"Number of tests"<<test<<endl;
+    auto time=std::time(nullptr);
+    std::stringstream flujo;
+    flujo<<std::put_time(std::localtime(&time), "%F_%T");
+    flujo<<".csv";
+    auto filename=flujo.str();
+    std::replace(filename.begin(),filename.end(),':','_');
+    std::ofstream ofs(filename, std::ios_base::app);
+    ofs<<"H1Hybrid - dim,";
+    ofs<<"MKL contribute,";
+    ofs<<"Refinement level,";
+    ofs<<"Number of threads,";
+    ofs<<"Number of tests,";
+    ofs<<"Assemble Average time,";
+    ofs<<"Coef. Variation %,\n";
+    
+    ofs<<dim<<",";
+    ofs<<MKL_FEMcomparison<<",";
+    ofs<<refLevel<<",  ";
+    ofs<<nthreads<<",";
+    ofs<<test<<",";
+    ofs<<mean(vect)<<",";
+    ofs<<100*CoefVariation(vect)<<",\n";
     ofs.close();
 }
 #endif
