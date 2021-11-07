@@ -12,6 +12,7 @@
 using namespace std;
 
 #ifdef FEMCOMPARISON_TIMER
+//#include <chrono>
 #include <math.h>//used only for timer statistics
 #include <fstream>//used only for timer statistics
 #include <vector>//used only for timer statistics
@@ -29,11 +30,12 @@ int64_t contributeMaterialCounter=0;
 int64_t contributeBoundaryCounter=0;
 double solveglobaltime;
 
-vector<double> assembleTimeVec, solveTimeVec;
+vector<unsigned long int> assembleTimeVec;
+vector<double> solveTimeVec;
 bool contributeTest=false;// To activate the time measure of the three contributes
 bool assembleTest=true;
 bool solveTest=true;
-int nThreads=6;
+int nThreads=3;
 int nTestsAssemble=5;//number of tests for assemble
 int nTestsSolve=1;//number of tests for solving the system of equations
 #endif
@@ -88,7 +90,7 @@ int main(int argc, char *argv[]) {
     
     //if(assembleTest==true){
     for(int i=0;i<assembleTimeVec.size();i++)
-    cout<<assembleTimeVec[i]<<endl;
+    cout<<assembleTimeVec[i]*1e-9<<endl;
     return 0;
     cout<<"contribute time: "<<contributeTimeVol+contributeTimeBoundary+contributeTimeInterface<<endl;
     cout<<"calcstiff time: "<<calcstiffTime<<endl;
@@ -118,10 +120,10 @@ int main(int argc, char *argv[]) {
             cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
             cout<<"Number of assembly threads: "<<nThreads<<endl;
             cout<<"Number of tests: "<<nTestsSolve<<endl;
-            cout<<"Average time(seconds): "<<mean(solveTimeVec)<<endl;
-            cout<<"Coef. of variation: "<<100*CoefVariation(solveTimeVec)<<"%"<<endl;
+            //cout<<"Average time(seconds): "<<mean(solveTimeVec)<<endl;
+            //cout<<"Coef. of variation: "<<100*CoefVariation(solveTimeVec)<<"%"<<endl;
     //}
-    printTableAssemble(pConfig.dim,MKL_contribute,pConfig.refLevel,nThreads, nTestsAssemble,assembleTimeVec);
+    //printTableAssemble(pConfig.dim,MKL_contribute,pConfig.refLevel,nThreads, nTestsAssemble,assembleTimeVec);
     return 0;
 }
 

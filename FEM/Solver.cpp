@@ -19,12 +19,14 @@
 #include "pzvisualmatrix.h"
 #include "MeshInit.h"
 #include "TPZTimer.h"
+#include <chrono>
+
 #ifdef PZ_LOG
 static TPZLogger loggerST("solveTime");
 static TPZLogger loggerAT("assembleTime");
 #endif
 
-extern std::vector<double> assembleTimeVec;
+extern std::vector<unsigned long int> assembleTimeVec;
 extern std::vector<double> solveTimeVec;
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
@@ -279,11 +281,15 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 #ifdef FEMCOMPARISON_TIMER
     TPZTimer timer;
     for(int i=0;i<nTestsAssemble;i++){
-        timer.start();
+        //timer.start();
+        auto begin = std::chrono::high_resolution_clock::now();
         an.Assemble();
-        timer.stop();
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        assembleTimeVec.push_back(static_cast<unsigned long int>(elapsed.count()));
+        //timer.stop();
         std::cout<<"paseiiii"<<std::endl;
-        assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
+        //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
     }
     return 0;
     for(int i=0;i<nTestsSolve;i++){
