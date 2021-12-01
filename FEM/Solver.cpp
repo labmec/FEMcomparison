@@ -291,7 +291,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         std::cout<<"paseiiii"<<std::endl;
         //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
     }
-    return 0;
+    return;
     for(int i=0;i<nTestsSolve;i++){
         timer.start();
         an.Solve();

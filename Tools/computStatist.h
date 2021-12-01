@@ -60,7 +60,7 @@ inline void printTableAssemble(int dim,bool MKL_FEMcomparison, int refLevel,int 
     ofs<<refLevel<<",  ";
     ofs<<nthreads<<",";
     ofs<<test<<",";
-    ofs<<mean(vect)<<",";
+    ofs<<mean(vect)*1e-9<<",";
     ofs<<100*CoefVariation(vect)<<",\n";
     ofs.close();
 }

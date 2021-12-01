@@ -35,7 +35,7 @@ vector<double> solveTimeVec;
 bool contributeTest=false;// To activate the time measure of the three contributes
 bool assembleTest=true;
 bool solveTest=true;
-int nThreads=3;
+int nThreads=6;
 int nTestsAssemble=5;//number of tests for assemble
 int nTestsSolve=1;//number of tests for solving the system of equations
 #endif
@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
     TPZTimer timer;
     timer.start();
     calcstiffTime=0.;
-    contributeTime =0;
-    contributeCounter=0;
+    contributeTime =0.;
+    contributeCounter=0.;
     bool atypical1=false;
     /*if((nTestsSolve>1) & (nTestsAssemble>1)){
         atypical1=true;
@@ -89,13 +89,12 @@ int main(int argc, char *argv[]) {
     solveglobaltime = timer.seconds();
     
     //if(assembleTest==true){
-    for(int i=0;i<assembleTimeVec.size();i++)
-    cout<<assembleTimeVec[i]*1e-9<<endl;
-    return 0;
-    cout<<"contribute time: "<<contributeTimeVol+contributeTimeBoundary+contributeTimeInterface<<endl;
-    cout<<"calcstiff time: "<<calcstiffTime<<endl;
+    //for(int i=0;i<assembleTimeVec.size();i++)
+    //cout<<assembleTimeVec[i]*1e-9<<endl;
+    //return 0;
+        cout<<"contribute time: "<<contributeTimeVol+contributeTimeBoundary+contributeTimeInterface<<endl;
+        cout<<"calcstiff time: "<<calcstiffTime<<endl;
 
-    
         cout<<"*********** Statistics for the assembly time *****"<<endl;
         if(atypical1 == true)
             cout<<"Atypical experiment!!"<<endl;
@@ -106,7 +105,7 @@ int main(int argc, char *argv[]) {
             cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
         cout<<"Number of assembly threads: "<<nThreads<<endl;
         cout<<"Number of tests: "<<nTestsAssemble<<endl;
-        cout<<"Average time(seconds): "<<mean(assembleTimeVec)<<endl;
+        cout<<"Average time(seconds): "<<mean(assembleTimeVec)*1e-9<<endl;
         cout<<"Coef. of variation: "<<100*CoefVariation(assembleTimeVec)<<"%"<<endl;
     //}
     //if(solveTest==true){
@@ -123,7 +122,7 @@ int main(int argc, char *argv[]) {
             //cout<<"Average time(seconds): "<<mean(solveTimeVec)<<endl;
             //cout<<"Coef. of variation: "<<100*CoefVariation(solveTimeVec)<<"%"<<endl;
     //}
-    //printTableAssemble(pConfig.dim,MKL_contribute,pConfig.refLevel,nThreads, nTestsAssemble,assembleTimeVec);
+    printTableAssemble(pConfig.dim,MKL_contribute,pConfig.refLevel,nThreads, nTestsAssemble,assembleTimeVec);
     return 0;
 }
 
