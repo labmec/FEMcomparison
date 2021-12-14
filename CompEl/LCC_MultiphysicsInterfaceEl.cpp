@@ -58,11 +58,12 @@ TPZMultiphysicsInterfaceElement(mesh, copy, gl2lcConMap,gl2lcElMap)
 
 void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) {
 #ifdef FEMCOMPARISON_TIMER
-    extern double interfaceTime;
+    //extern double interfaceTime;
+    //TPZTimer timer;
+    //timer.start();
 #endif
     
-    TPZTimer timer;
-    timer.start();
+    
     if (this->NConnects() == 0) return;//boundary discontinuous elements have this characteristic
     TPZMultiphysicsElement *leftel = dynamic_cast<TPZMultiphysicsElement *> (fLeftElSide.Element());
     TPZMultiphysicsElement *rightel = dynamic_cast<TPZMultiphysicsElement *>(fRightElSide.Element());
@@ -177,11 +178,10 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
     else{
         ComputingCalcStiff(ek, ef);
     }
-    timer.stop();
 #ifdef FEMCOMPARISON_TIMER
-    interfaceTime+=timer.seconds();
+    //timer.stop();
+    //interfaceTime+=timer.seconds();
 #endif
-    
 }
 
 void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex){

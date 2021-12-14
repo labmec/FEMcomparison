@@ -8,37 +8,38 @@
 
 using namespace std;
 
-double mean(vector<unsigned long int> vect);
-double standDeviation(vector<unsigned long int>&);
-double CoefVariation(vector<unsigned long int>&);
+double mean(vector<unsigned long long> vect);
+double standDeviation(vector<unsigned long long>&);
+double CoefVariation(vector<unsigned long long>&);
 //printTable(int dim,int nthreads, int refLevel, bool MKL_FEMcomparison);
 
-inline double mean(vector<unsigned long int> vect){
-    vector<unsigned long int>::iterator it;
-    unsigned long int sum=0;
+inline double mean(vector<unsigned long long> vect){
+    vector<unsigned long long>::iterator it;
+    unsigned long long sum=0;
     for(it=vect.begin(); it!=vect.end(); it++)
        sum+=*it;
     return sum/vect.size();
 }
 
-inline double standDeviation(vector<unsigned long int>& vect){
+
+
+inline double standDeviation(vector<unsigned long long>& vect){
     double sum=0;
-    vector<unsigned long int>::iterator it;
-    unsigned long int media=mean(vect);
+    vector<unsigned long long>::iterator it;
+    double media=mean(vect);
     for(it=vect.begin(); it!=vect.end(); it++)
         sum+=pow(*it-media,2.);
     return pow(sum/vect.size(),0.5);
 }
 
-inline double CoefVariation(vector<unsigned long int>& vect){
-    unsigned long int desvStand=standDeviation(vect);
-    unsigned long int media=mean(vect);
-
+inline double CoefVariation(vector<unsigned long long>& vect){
+    double desvStand=standDeviation(vect);
+    double media=mean(vect);
     return desvStand/media;
 }
 
 
-inline void printTableAssemble(int dim,bool MKL_FEMcomparison, int refLevel,int nthreads, int test,vector<unsigned long int> vect)
+inline void printTableAssemble(int dim,bool MKL_FEMcomparison, int refLevel,int nthreads, int test,vector<unsigned long long> vect)
 {
     auto time=std::time(nullptr);
     std::stringstream flujo;

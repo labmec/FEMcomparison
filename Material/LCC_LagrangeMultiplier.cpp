@@ -21,6 +21,11 @@ static LoggerPtr logerror(Logger::getLogger("LagrangeMultipliersError"));
 static TPZLogger loggerCTI("contributeTimeInterface");
 #endif
 
+#ifdef FEMCOMPARISON_TIMER
+    extern long long contributeTimeInterface;
+//    extern bool contributeTest;
+#endif
+
 /** @brief Unique identifier for serialization purposes */
 int LCC_LagrangeMultiplier::ClassId() const{
     return Hash("LCC_LagrangeMultiplier") ^ TPZMaterial::ClassId() << 1;
@@ -84,12 +89,12 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
 #ifdef FEMCOMPARISON_TIMER
-    extern double contributeTimeInterface;
-    extern bool contributeTest;
-    TPZTimer timer;
-    if(contributeTest){
-        timer.start();
-    }
+    auto begin = std::chrono::high_resolution_clock::now();
+//    extern bool contributeTest;
+//    TPZTimer timer;
+//    if(contributeTest){
+//        timer.start();
+//    }
 #endif
     
 #ifdef FEMCOMPARISON_DEBUG
@@ -207,10 +212,13 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
     }
 #endif
 #ifdef FEMCOMPARISON_TIMER
-    if(contributeTest){
-        timer.stop();
-        contributeTimeInterface += timer.seconds();
-    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto contribInterfaceElapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+    contributeTimeInterface += contribInterfaceElapsed.count();
+    //    if(contributeTest){
+//        timer.stop();
+//        contributeTimeInterface += timer.seconds();
+//    }
 #endif
 }
 

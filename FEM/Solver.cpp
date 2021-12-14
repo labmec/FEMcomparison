@@ -26,8 +26,15 @@ static TPZLogger loggerST("solveTime");
 static TPZLogger loggerAT("assembleTime");
 #endif
 
-extern std::vector<unsigned long int> assembleTimeVec;
-extern std::vector<double> solveTimeVec;
+#ifdef FEMCOMPARISON_TIMER
+    extern std::vector<unsigned long long> assembleTimeVec;
+    extern std::vector<unsigned long long> solveTimeVec;
+    extern std::vector<unsigned long long> contributeTimeVolVec;
+    extern std::vector<unsigned long long> contributeTimeBCVec;
+    extern long long contributeTimeVol;
+    extern long long contributeTimeBC;
+    extern long long contributeTimeInterface;
+#endif
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
@@ -279,24 +286,37 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     delete direct;
     direct = 0;
 #ifdef FEMCOMPARISON_TIMER
-    TPZTimer timer;
     for(int i=0;i<nTestsAssemble;i++){
-        //timer.start();
         auto begin = std::chrono::high_resolution_clock::now();
+#ifdef TIMER_CONTRIBUTE
+        contributeTimeVol = 0;
+        contributeTimeBC = 0;
+        contributeTimeInterface = 0;
+#endif
+#endif
         an.Assemble();
+#ifdef FEMCOMPARISON_TIMER
+#ifdef TIMER_CONTRIBUTE
+        contributeTimeVolVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
+        //std::cout<<contributeTimeInterface<<std::endl;
+        //contributeTimeBCVec.push_back(contributeTimeBC);
+#endif
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
         assembleTimeVec.push_back(static_cast<unsigned long int>(elapsed.count()));
-        //timer.stop();
-        std::cout<<"paseiiii"<<std::endl;
         //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
+#endif
     }
-    return;
+#ifdef FEMCOMPARISON_TIMER
     for(int i=0;i<nTestsSolve;i++){
-        timer.start();
+        auto begin = std::chrono::high_resolution_clock::now();
+#endif
         an.Solve();
-        timer.stop();
-        solveTimeVec.push_back(static_cast<double>(timer.seconds()));
+#ifdef FEMCOMPARISON_TIMER
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        solveTimeVec.push_back(static_cast<unsigned long int>(elapsed.count()));
+        //solveTimeVec.push_back(static_cast<double>(timer.seconds()));
     }
 #endif
 
