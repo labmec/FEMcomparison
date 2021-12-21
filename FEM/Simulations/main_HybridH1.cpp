@@ -37,7 +37,7 @@ vector<unsigned long long> contributeTimeBCVec;
 bool contributeTest=true;// To activate the time measure of the three contributes
 bool assembleTest=true;
 bool solveTest=true;
-int nThreads=6;
+int nThreads=0;
 int nTestsAssemble=5;//number of tests for assemble
 int nTestsSolve=1;//number of tests for solving the system of equations
 #endif
@@ -65,11 +65,11 @@ int main(int argc, char *argv[]) {
     
     PreConfig pConfig;
     pConfig.k = 1;//
-    pConfig.n = 2;
+    pConfig.n = 0;
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
-    pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
+    pConfig.approx = "Mixed";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 8;                     //// How many refinements
+    pConfig.refLevel = 5;                     //// How many refinements
     pConfig.debugger = false;                  //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
@@ -99,12 +99,12 @@ int main(int argc, char *argv[]) {
     else
         cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
     cout<<"Number of assembly threads: "<<nThreads<<endl;
-    
+#ifdef TIMER_CONTRIBUTE
     cout<<"*********** Statistics for the time of the three contributes *****"<<endl;
-//    cout<<"Number of assemble tests: "<<nTestsAssemble<<endl;
-//    cout<<"Average time(seconds): "<<mean(contributeTimeVolVec)*1e-9<<endl;
-//    cout<<"Coef. of variation: "<<100*CoefVariation(contributeTimeVolVec)<<"%"<<endl;
-    
+    cout<<"Number of assemble tests: "<<nTestsAssemble<<endl;
+    cout<<"Average time(seconds): "<<mean(contributeTimeVolVec)*1e-9<<endl;
+    cout<<"Coef. of variation: "<<100*CoefVariation(contributeTimeVolVec)<<"%"<<endl;
+#endif
     cout<<"*********** Statistics for the assembly time *****"<<endl;
     cout<<"Number of assemble tests: "<<nTestsAssemble<<endl;
     cout<<"Average time(seconds): "<<mean(assembleTimeVec)*1e-9<<endl;

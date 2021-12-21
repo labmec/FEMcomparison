@@ -362,6 +362,8 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
 #ifdef FEMCOMPARISON_TIMER
     extern double solveTime;
     extern double assembleTime;
+    extern int nTestsAssemble;
+    extern int nTestsSolve;
 #endif
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
@@ -373,11 +375,12 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     if(false){
         cout<<"Total ecuaciones:"<<an.Solution().Rows()<<endl;
     }
+    extern int nThreads;
     //MKL solver
 #ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_Mixed);
     //strmat.SetNumThreads(8);
-    strmat.SetNumThreads(0);
+    strmat.SetNumThreads(nThreads);
 #else
     TPZSkylineStructMatrix strmat(cmesh_Mixed);
     strmat.SetNumThreads(0);
@@ -389,25 +392,43 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
-#ifdef PZ_LOG
-    TPZTimer timer;
-    if(loggerAT.isDebugEnabled()){
-        timer.start();}
+    
+#ifdef FEMCOMPARISON_TIMER
+    for(int i=0;i<nTestsAssemble;i++){
+        auto begin = std::chrono::high_resolution_clock::now();
+#ifdef TIMER_CONTRIBUTE
+        contributeTimeVol = 0;
+        contributeTimeBC = 0;
+        contributeTimeInterface = 0;
 #endif
-    an.Assemble();
-#ifdef PZ_LOG
-    if(loggerAT.isDebugEnabled()){
-    timer.stop();
-    assembleTime += timer.seconds();
+#endif
+        an.Assemble();
+#ifdef FEMCOMPARISON_TIMER
+#ifdef TIMER_CONTRIBUTE
+        contributeTimeVolVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
+        //std::cout<<contributeTimeInterface<<std::endl;
+        //contributeTimeBCVec.push_back(contributeTimeBC);
+#endif
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        assembleTimeVec.push_back(static_cast<unsigned long int>(elapsed.count()));
+        //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
     }
 #endif
-    
-#ifdef FEMCOMPARISON_DEBUG2
-    const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
-    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
+    return 0;
+#ifdef FEMCOMPARISON_TIMER
+    for(int i=0;i<nTestsSolve;i++){
+        auto begin = std::chrono::high_resolution_clock::now();
 #endif
-    an.Solve();
+        an.Solve();
+#ifdef FEMCOMPARISON_TIMER
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        solveTimeVec.push_back(static_cast<unsigned long int>(elapsed.count()));
+        //solveTimeVec.push_back(static_cast<double>(timer.seconds()));
+    }
+#endif
+
 
     ////PostProcess
     if(pConfig.debugger) {
@@ -478,7 +499,9 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, ofstream &Erro,
     bool store_errors = false;
 
     an.PostProcessError(Errors, store_errors, Erro);
-
+    std::cout<<"nnnnnnnn"<<std::endl;
+    for(int i=0;i<Errors.size();i++)
+        std::cout<<Errors[i]<<std::endl;
     if ((*Log)[0] != -1) {
         for (int j = 0; j < 3; j++) {
             (*pConfig.rate)[j] =
