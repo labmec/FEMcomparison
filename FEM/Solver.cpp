@@ -29,7 +29,7 @@ static TPZLogger loggerAT("assembleTime");
 #ifdef FEMCOMPARISON_TIMER
     extern std::vector<unsigned long long> assembleTimeVec;
     extern std::vector<unsigned long long> solveTimeVec;
-    extern std::vector<unsigned long long> contributeTimeVolVec;
+    extern std::vector<unsigned long long> contributeTimeVec;
     extern std::vector<unsigned long long> contributeTimeBCVec;
     extern long long contributeTimeVol;
     extern long long contributeTimeBC;
@@ -56,7 +56,7 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-
+            //for(int ii=0;ii<5;ii++)
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             
             break;
@@ -287,7 +287,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     direct = 0;
 #ifdef FEMCOMPARISON_TIMER
     for(int i=0;i<nTestsAssemble;i++){
-        auto begin = std::chrono::high_resolution_clock::now();
+        auto beginAss = std::chrono::high_resolution_clock::now();
 #ifdef TIMER_CONTRIBUTE
         contributeTimeVol = 0;
         contributeTimeBC = 0;
@@ -297,16 +297,17 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         an.Assemble();
 #ifdef FEMCOMPARISON_TIMER
 #ifdef TIMER_CONTRIBUTE
-        contributeTimeVolVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
+        contributeTimeVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
         //std::cout<<contributeTimeInterface<<std::endl;
         //contributeTimeBCVec.push_back(contributeTimeBC);
 #endif
-        auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        auto endAss = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
         assembleTimeVec.push_back(static_cast<unsigned long int>(elapsed.count()));
+        }
         //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
 #endif
-    }
+    
 #ifdef FEMCOMPARISON_TIMER
     for(int i=0;i<nTestsSolve;i++){
         auto begin = std::chrono::high_resolution_clock::now();
@@ -314,8 +315,8 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        solveTimeVec.push_back(static_cast<unsigned long int>(elapsed.count()));
+        auto elapsedSol = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        solveTimeVec.push_back(static_cast<unsigned long int>(elapsedSol.count()));
         //solveTimeVec.push_back(static_cast<double>(timer.seconds()));
     }
 #endif
@@ -354,6 +355,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         an.DefineGraphMesh(dim, scalnames, vecnames, plotname);
         an.PostProcess(resolution, dim);
     }
+    
 }
 
 using namespace std;
@@ -405,7 +407,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         an.Assemble();
 #ifdef FEMCOMPARISON_TIMER
 #ifdef TIMER_CONTRIBUTE
-        contributeTimeVolVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
+        contributeTimeVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
         //std::cout<<contributeTimeInterface<<std::endl;
         //contributeTimeBCVec.push_back(contributeTimeBC);
 #endif
@@ -415,7 +417,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
     }
 #endif
-    return 0;
+    //return 0;
 #ifdef FEMCOMPARISON_TIMER
     for(int i=0;i<nTestsSolve;i++){
         auto begin = std::chrono::high_resolution_clock::now();
