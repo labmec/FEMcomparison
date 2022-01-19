@@ -37,7 +37,7 @@ public:
     
     LCCTPZMixedDarcyFlow &operator=(const TPZMixedDarcyFlow &copy);
     
-    virtual TPZMaterial * NewMaterial() override{
+0    virtual TPZMaterial * NewMaterial() override{
         return new LCCTPZMixedDarcyFlow(*this);
     }
   
