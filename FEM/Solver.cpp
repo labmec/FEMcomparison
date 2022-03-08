@@ -56,7 +56,7 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-            //for(int ii=0;ii<5;ii++)
+            for(int ii=0;ii<1;ii++)
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             
             break;
@@ -261,6 +261,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     TPZAnalysis an(cmesh_H1Hybrid);
 
     extern int nThreads;
+    
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(nThreads);
@@ -269,6 +270,8 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     //    TPZFrontStructMatrix<TPZFrontSym<STATE> > strmat(Hybridmesh);
     //    strmat.SetNumThreads(2);
     //    strmat.SetDecomposeType(ELDLt);
+    
+    
     TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(0);
 #endif
@@ -307,7 +310,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         }
         //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
 #endif
-    
+    //return 0;
 #ifdef FEMCOMPARISON_TIMER
     for(int i=0;i<nTestsSolve;i++){
         auto begin = std::chrono::high_resolution_clock::now();
