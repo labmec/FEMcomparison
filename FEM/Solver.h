@@ -8,6 +8,8 @@
 #include <TPZMultiphysicsCompMesh.h>
 #include "pzanalysis.h"
 #include "DataStructure.h"
+void calcstiffTestTBB(TPZCompMesh *cmesh, int nthreads);
+void calcstiffTestOMP(TPZCompMesh *cmesh, int nthreads);
 
 
 //// Call required methods to build a computational mesh for an Pryymal Hybrid approximation

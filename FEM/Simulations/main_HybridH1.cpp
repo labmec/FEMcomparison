@@ -37,7 +37,7 @@ vector<unsigned long long> contributeTimeBCVec;
 bool contributeTest=true;// To activate the time measure of the three contributes
 bool assembleTest=true;
 bool solveTest=true;
-int nThreads=0;//number of threads for assemble
+int nThreads=1;//number of threads for assemble
 int nTestsAssemble=1;//number of tests for assemble
 int nTestsSolve=1;//number of tests for solving the system of equations
 #endif
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 1;                     //// How many refinements
+    pConfig.refLevel = 8;                     //// How many refinements
     pConfig.debugger = false;                  //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     }
     timer.stop();
     solveglobaltime = timer.seconds();
-    
+    /*
     cout << "******* HybridH1 *******"<< endl;
     if(atypical1 == true)
         cout<<"Atypical experiment!!"<<endl;
@@ -123,7 +123,8 @@ int main(int argc, char *argv[]) {
         cout<<(*it)*1E-9<<endl;
     //}
     printTableAssemble(pConfig.dim,MKL_contribute,pConfig.refLevel,nThreads, nTestsAssemble,assembleTimeVec);
-    return 0;
+    */
+     return 0;
 }
 
 
