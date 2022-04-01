@@ -9,9 +9,9 @@ SOURCES main_HybridH1vsMixed.cpp
 #add_executable(HybridH1vsMixed main_HybridH1vsMixed.cpp)
 target_link_libraries(HybridH1vsMixed PRIVATE Methods Tools)
 
-find_package(OpenMP REQUIRED)
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
+#find_package(OpenMP REQUIRED)
+#include_directories(/usr/local/include)
+#link_directories(/usr/local/lib)
 
 
 # Project to apply error estimation for hybrid H1 approximations
@@ -19,7 +19,9 @@ add_pz_target(
   NAME HybridH1
 SOURCES main_HybridH1.cpp)
 #add_executable(HybridH1 main_HybridH1.cpp)
+
 target_link_libraries(HybridH1 PRIVATE Methods Tools OpenMP::OpenMP_CXX /usr/local/lib/libomp.a)
+
 
 add_pz_target(
   NAME ContributeTest

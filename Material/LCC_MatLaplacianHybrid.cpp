@@ -127,7 +127,7 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
       extern bool contributeTest;
 //extern double contributeTimeVol;
 #ifdef TIMER_CONTRIBUTE
-        auto begin = std::chrono::high_resolution_clock::now();
+       // auto begin = std::chrono::high_resolution_clock::now();
 #endif
 //    extern int64_t contributeMaterialCounter;
 //    TPZTimer timer;
@@ -243,9 +243,9 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     
 #ifdef FEMCOMPARISON_TIMER
 #ifdef TIMER_CONTRIBUTE
-        auto end = std::chrono::high_resolution_clock::now();
-        auto contribVolElapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        contributeTimeVol += contribVolElapsed.count();
+        //auto end = std::chrono::high_resolution_clock::now();
+        //auto contribVolElapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        //contributeTimeVol += contribVolElapsed.count();
 //        std::cout<< contributeTimeVol<<std::endl;
 //        timer.stop();
 //        contributeTimeVol += timer.seconds();

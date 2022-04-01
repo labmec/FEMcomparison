@@ -22,7 +22,7 @@
 #include <chrono>
 #include <tbb/parallel_for.h>
 #include <tbb/task_scheduler_init.h>
-#include "omp.h"
+//#include "omp.h"
 
 #ifdef PZ_LOG
 static TPZLogger loggerST("solveTime");
@@ -60,10 +60,11 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
             for(int ii=0;ii<1;ii++){
-                //SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
-                int nthread = 6;
+                SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
+                //int nthread = 1;
+                //calcstiffTestSerial(multiCmesh);
                 //calcstiffTestOMP(multiCmesh,nthread);
-                calcstiffTestTBB(multiCmesh,6);
+                calcstiffTestTBB(multiCmesh,nthread);
             }
             break;
         case 2: //Mixed
@@ -251,12 +252,12 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     std::cout << "FINISHED!" << std::endl;
 }
 
-void calcstiffTestOMP(TPZCompMesh *cmesh,int nthread){
+/*
+void calcstiffTestSerial(TPZCompMesh *cmesh){
     auto beginCalcStiff = std::chrono::high_resolution_clock::now();
-    int64_t nelem = cmesh->NElements();
-    omp_set_num_threads(nthread);
 
-#pragma omp parallel for
+    int64_t nelem = cmesh->NElements();
+    
     for (int64_t iel = 0; iel < nelem; iel++)
     {
         TPZCompEl *el = cmesh->Element(iel);
@@ -268,15 +269,43 @@ void calcstiffTestOMP(TPZCompMesh *cmesh,int nthread){
     auto endCalcStiff = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endCalcStiff - beginCalcStiff);
     unsigned long int duration = static_cast<unsigned long int>(elapsed.count());
-    std::cout << " CalcStiff duration omp = " << duration*1E-9 << " seconds" << std::endl;
+    std::cout << " CalcStiff serial duration= " << duration*1E-9 << std::endl;
 }
+*/
+/*
+void calcstiffTestOMP(TPZCompMesh *cmesh,int nthread){
+    int64_t nelem = cmesh->NElements();
+    omp_set_num_threads(nthread);
+    //int64_t iel;
+    auto beginCalcStiff = std::chrono::high_resolution_clock::now();
+    //786944
+#pragma omp parallel for schedule(dynamic,1)
+
+    for (int64_t iel = 0; iel < nelem; iel++)
+    {
+        TPZCompEl *el = cmesh->Element(iel);
+        if (!el){
+            continue;
+        }
+        TPZElementMatrix ek(cmesh, TPZElementMatrix::EK), ef(cmesh, TPZElementMatrix::EF);
+        
+        el->CalcStiff(ek, ef);
+        //int idHilo = omp_get_thread_num();
+        //printf("Hola, soy el hilo %d, en este momento se esta(n) ejecutando %d hilo(s)\n", idHilo, omp_get_num_threads());
+    }
+    auto endCalcStiff = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endCalcStiff - beginCalcStiff);
+    unsigned long int duration = static_cast<unsigned long int>(elapsed.count());
+    std::cout << " CalcStiff parallel duration omp = " << duration*1E-9 << " seconds, with nthreads= " << nthread << std::endl;
+}
+
 
 void calcstiffTestTBB(TPZCompMesh *cmesh,int nthread){
     auto beginCalcStiff = std::chrono::high_resolution_clock::now();
 
     int64_t nelem = cmesh->NElements();
-    tbb::task_scheduler_init init(nthread);
-    tbb::parallel_for( tbb::blocked_range<int64_t>(0,nelem),
+    tbb::task_scheduler_init init(nthread); //dont work in computer of LABMEC
+    tbb::parallel_for( tbb::blocked_range<int64_t>(459264,721408),
                       [&](tbb::blocked_range<int64_t> r){
     for (int64_t iel = r.begin(); iel < r.end(); iel++)
     {
@@ -290,9 +319,9 @@ void calcstiffTestTBB(TPZCompMesh *cmesh,int nthread){
     auto endCalcStiff = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endCalcStiff - beginCalcStiff);
     unsigned long int duration = static_cast<unsigned long int>(elapsed.count());
-    std::cout << " CalcStiff duration tbb= " << duration*1E-9 << " seconds" << std::endl;
+    std::cout << " CalcStiff duration tbb= " << duration*1E-9 << " seconds, with nthreads= "<<nthread << std::endl;
 }
-
+ */
                       
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
 #ifdef FEMCOMPARISON_TIMER
