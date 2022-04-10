@@ -603,7 +603,7 @@ void Prefinamento(TPZCompMesh* cmesh, int ndiv, int porder) {
     cmesh->Print(sout);
     
 }
-
+/*
 void
 SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, const ProblemConfig& problem, bool PostProcessingFEM) {
     
@@ -673,13 +673,13 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
             an.SetThreadsForError(0);
             an.SetExact(problem.exact.operator*().ExactSolution());
             an.PostProcessError(errors, false);
-            /*Error on MixedPoisson
-             [0] L2 for pressure
-             [1] L2 for flux
-             [2] L2 for div(flux)
-             [3] Grad pressure (Semi H1)
-             [4] Hdiv norm
-             */
+            //Error on MixedPoisson
+             //[0] L2 for pressure
+             //[1] L2 for flux
+             //[2] L2 for div(flux)
+             //[3] Grad pressure (Semi H1)
+             //[4] Hdiv norm
+             
 
             // Erro
             
@@ -692,7 +692,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
             std::ofstream myfile;
             myfile.open("ErrorBCFemProblem.txt", std::ios::app);
             
-            
+             
             
             myfile << "\n\n Error for Mixed formulation ";
             myfile << "\n-------------------------------------------------- \n";
@@ -712,7 +712,7 @@ SolveHybridProblem(TPZCompMesh* Hybridmesh, std::pair<int,int> InterfaceMatId, c
     
     
 }
-
+*/
 void ComputeError(TPZCompMesh *Hybridmesh, std::ofstream &out,const ProblemConfig &config)
 {
     long nel = Hybridmesh->NElements();
@@ -930,7 +930,7 @@ TPZGeoMesh* ReadGeometricMesh(struct ProblemConfig& config, bool IsgmeshReader) 
     
     
 }
-
+/*
 TPZMultiphysicsCompMesh* HybridSolveProblem(TPZMultiphysicsCompMesh* cmesh_HDiv, struct ProblemConfig& config) {
     
     TPZManVector<TPZCompMesh*, 2> hybridmeshvec;
@@ -982,7 +982,7 @@ TPZMultiphysicsCompMesh* HybridSolveProblem(TPZMultiphysicsCompMesh* cmesh_HDiv,
     
     //return HybridMesh;
     return cmesh_HDiv;
-}
+} */
 
 /// Divide lower dimensional elements
 void DivideLowerDimensionalElements(TPZGeoMesh* gmesh) {

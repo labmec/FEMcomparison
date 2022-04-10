@@ -20,8 +20,8 @@
 #include "MeshInit.h"
 #include "TPZTimer.h"
 #include <chrono>
-#include <tbb/parallel_for.h>
-#include <tbb/task_scheduler_init.h>
+//#include <tbb/parallel_for.h>
+//#include <tbb/task_scheduler_init.h>
 //#include "omp.h"
 
 #ifdef PZ_LOG
@@ -64,7 +64,7 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
                 //int nthread = 1;
                 //calcstiffTestSerial(multiCmesh);
                 //calcstiffTestOMP(multiCmesh,nthread);
-                calcstiffTestTBB(multiCmesh,nthread);
+                //calcstiffTestTBB(multiCmesh,nthread);
             }
             break;
         case 2: //Mixed
@@ -340,106 +340,21 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     extern int nThreads;
 
-//    {
-//            TPZCompMesh* fMesh = cmesh_H1Hybrid;
-//            int64_t neq = fMesh->NEquations();
-//
-//            TPZFMatrix<STATE> *stiff = new TPZFMatrix<STATE>(neq,neq);//new TPZFYsmpMatrix(neq,neq);
-//
-//            TPZFMatrix<STATE> rhs;
-//            rhs.Redim(neq,1);
-//
-//            int64_t iel;
-//            int64_t nelem = fMesh->NElements();
-//            TPZElementMatrix ek(fMesh, TPZElementMatrix::EK), ef(fMesh, TPZElementMatrix::EF);
-//
-//            TPZAdmChunkVector<TPZCompEl*> &elementvec = fMesh->ElementVec();
-//
-//            std::map<int ,TPZMaterial*> matvec = fMesh->MaterialVec();
-//            std::set<int> fMaterialIds;
-//            for(std::map<int ,TPZMaterial*>::iterator it = matvec.begin(); it != matvec.end(); ++it) {
-//                fMaterialIds.insert(it->first);
-//
-//            }
-//
-//        int64_t count = 0;
-//        auto beginCalcStiff = std::chrono::high_resolution_clock::now();
-//
-//        for (iel = 0; iel < nelem; iel++)
-//        {
-//                TPZCompEl *el = elementvec[iel];
-//                if (!el) continue;
-//                int matid = 0;
-//                TPZGeoEl *gel = el->Reference();
-//                if (gel) {
-//                    matid = gel->MaterialId();
-//                }
-//                int matidsize = fMaterialIds.size();
-//                if(matidsize){
-//                    if(!el->NeedsComputing(fMaterialIds)) continue;
-//                }
-//
-//                count++;
-//                if (!(count % 1000)) {
-//                    std::cout << '*';
-//                    std::cout.flush();
-//                }
-//                if (!(count % 20000)) {
-//                    std::cout << "\n";
-//                }
-//
-//                //calcstiff.start();
-//                ek.Reset();
-//                ef.Reset();
-//
-//                el->CalcStiff(ek,ef);
-//
-//                //calcstiff.stop();
-//                //assemble.start();
-//                /*
-//                if (!ek.HasDependency()) {
-//                    ek.ComputeDestinationIndices();
-//                    fEquationFilter.Filter(ek.fSourceIndex, ek.fDestinationIndex);
-//
-//                    stiffness.AddKel(ek.fMat, ek.fSourceIndex, ek.fDestinationIndex);
-//
-//                    rhs.AddFel(ef.fMat, ek.fSourceIndex, ek.fDestinationIndex);
-//                              test2.Print("matriz de rigidez interface",std::cout);
-//
-//                } else {
-//                    // the element has dependent nodes
-//                    ek.ApplyConstraints();
-//                    ef.ApplyConstraints();
-//                    ek.ComputeDestinationIndices();
-//                    fEquationFilter.Filter(ek.fSourceIndex, ek.fDestinationIndex);
-//                    stiffness.AddKel(ek.fConstrMat, ek.fSourceIndex, ek.fDestinationIndex);
-//                    rhs.AddFel(ef.fConstrMat, ek.fSourceIndex, ek.fDestinationIndex);
-//
-//                }*/
-//
-//                //assemble.stop();
-//            }
-//        auto endCalcStiff = std::chrono::high_resolution_clock::now();
-//        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endCalcStiff - beginCalcStiff);
-//        unsigned long int duration = static_cast<unsigned long int>(elapsed.count());
-//        std::cout << " CalcStiff duration = " << duration*1E-9 << " seconds" << std::endl;
-//
-//    }
-        //return 0;
     
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(nThreads);
     //        strmat.SetDecomposeType(ELDLt);
 #else
-    //    TPZFrontStructMatrix<TPZFrontSym<STATE> > strmat(Hybridmesh);
-    //    strmat.SetNumThreads(2);
-    //    strmat.SetDecomposeType(ELDLt);
+//        TPZFrontStructMatrix<TPZFrontSym<STATE> > strmat(Hybridmesh);
+//        strmat.SetNumThreads(2);
+//        strmat.SetDecomposeType(ELDLt);
     
     
     TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(0);
 #endif
+    
     std::set<int> matIds;
     for (auto matid : config.materialids) matIds.insert(matid);
     for (auto matidbc : config.bcmaterialids) matIds.insert(matidbc);
@@ -523,7 +438,6 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         an.DefineGraphMesh(dim, scalnames, vecnames, plotname);
         an.PostProcess(resolution, dim);
     }
-    
 }
 
 using namespace std;
@@ -687,3 +601,20 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, ofstream &Erro,
         (*Log)[i] = Errors[i];
     Errors.clear();
 }
+
+/*
+void assemble(TPZCompMesh *cmesh){
+    
+    TPZEquationFilter equationFilter;
+    equationFilter.SetNumEq(cmesh ? cmesh->NEquations() : 0);
+
+    TPZFMatrix<STATE> rhs;
+    TPZMatrix<STATE> *stiff = Create();
+    
+    //int64_t neq = stiff->Rows();
+    int64_t cols = MAX(1, rhs.Cols());
+    rhs.Redim(fEquationFilter.NEqExpand(),cols);
+    Assemble(*stiff,rhs,guiInterface);
+    
+}
+*/
