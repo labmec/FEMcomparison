@@ -45,8 +45,8 @@ struct ProblemConfig
     std::set<int> materialids;
     /// set of boundary condition material ids
     std::set<int> bcmaterialids;
+    
     /// exact solution
-
     TPZAutoPointer<TLaplaceExample1> exact;
 
     

@@ -5,6 +5,8 @@ target_sources(Tools PUBLIC
     TPZCreateMultiphysicsSpace.h
     Tools.h
     Tools.cpp
+    computStatist.cpp
+    computStatist.h
 )
 
 target_link_libraries(Tools PUBLIC NeoPZ::pz)

@@ -10,7 +10,7 @@
 #include "TPZCompMeshTools.h"
 #include "TPZCreateMultiphysicsSpace.h"
 #include "TPZSSpStructMatrix.h"
-#include "TPZSSpStructMatrix.h"
+//#include "TPZSSpStructMatrix.h"
 #include "TPZParFrontStructMatrix.h"
 #include "pzskylstrmatrix.h"
 #include "pzstepsolver.h"
@@ -19,15 +19,20 @@
 #include "pzvisualmatrix.h"
 #include "MeshInit.h"
 #include "TPZTimer.h"
+#include <vector>
+
 #ifdef PZ_LOG
 static TPZLogger loggerST("solveTime");
 static TPZLogger loggerAT("assembleTime");
 #endif
+extern std::vector<double> assembleTimeV;
+extern std::vector<double> solveTimeV;
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
 #ifdef FEMCOMPARISON_TIMER
     extern double solveTime;
+    extern int nTestsSolve;
 #endif
     TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
     TPZMultiphysicsCompMesh *multiCmesh = new TPZMultiphysicsCompMesh(config.gmesh);
@@ -44,20 +49,25 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
             {
-#ifdef PZ_LOG
+#ifdef FEMCOMPARISON_TIMER
                 TPZTimer timer;
-                if (loggerST.isDebugEnabled()){
+                for(int i=0;i<nTestsSolve;i++){
+                /*if (loggerST.isDebugEnabled()){
                     timer.start();
-                }
+                }*/
+                timer.start();
 #endif
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             
             //timer.reset();
 //#ifdef FEMCOMPARISON_TIMER
-#ifdef PZ_LOG
-                if (loggerST.isDebugEnabled()){
+#ifdef FEMCOMPARISON_TIMER
+                //if (loggerST.isDebugEnabled()){
                     timer.stop();
+                    solveTimeV.push_back(static_cast<double>(timer.seconds()));
                     solveTime+=timer.seconds();
+                //}
+                    //solveTime=solveTime/4;
                 }
 #endif
             }
@@ -249,8 +259,10 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
 #ifdef FEMCOMPARISON_TIMER
-    extern double solveTime;
+    //extern double solveTime;
+    extern int nTestsAssemble;
     extern double assembleTime;
+    extern int nThreads;
 #endif
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
@@ -262,7 +274,8 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
-    strmat.SetNumThreads(0);
+    strmat.SetNumThreads(nThreads);
+    
     //        strmat.SetDecomposeType(ELDLt);
 #else
     //    TPZFrontStructMatrix<TPZFrontSym<STATE> > strmat(Hybridmesh);
@@ -284,16 +297,22 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
-#ifdef PZ_LOG
+#ifdef FEMCOMPARISON_TIMER
     TPZTimer timer;
-    if (loggerAT.isDebugEnabled()){
-        timer.start();}
+    for(int i=0;i<nTestsAssemble;i++){
+    //if (loggerAT.isDebugEnabled()){
+        timer.start();
+    //}
 #endif
     an.Assemble();
-#ifdef PZ_LOG
+#ifdef FEMCOMPARISON_TIMER
     timer.stop();
-    if (loggerAT.isDebugEnabled()){
-        assembleTime+=timer.seconds();}
+    //if (loggerAT.isDebugEnabled()){
+        assembleTimeV.push_back(static_cast<double>(timer.seconds()));
+        assembleTime+=timer.seconds();
+    //}
+    }
+    //assembleTime=assembleTime/4;
 #endif
     
     
@@ -370,12 +389,14 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     direct = 0;
 #ifdef PZ_LOG
     TPZTimer timer;
-    if(loggerAT.isDebugEnabled()){
+    
+    if(loggerAT.isDebugEnabled() ){
         timer.start();}
+    
 #endif
     an.Assemble();
 #ifdef PZ_LOG
-    if(loggerAT.isDebugEnabled()){
+    if(loggerAT.isDebugEnabled() ){
     timer.stop();
     assembleTime += timer.seconds();
     }
@@ -473,3 +494,19 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, ofstream &Erro,
         (*Log)[i] = Errors[i];
     Errors.clear();
 }
+/*
+void assemble(TPZCompMesh *cmesh){
+    
+    TPZEquationFilter equationFilter;
+    equationFilter.SetNumEq(cmesh ? cmesh->NEquations() : 0);
+
+    TPZFMatrix<STATE> rhs;
+    TPZMatrix<STATE> *stiff = Create();
+    
+    //int64_t neq = stiff->Rows();
+    int64_t cols = MAX(1, rhs.Cols());
+    rhs.Redim(fEquationFilter.NEqExpand(),cols);
+    Assemble(*stiff,rhs,guiInterface);
+    
+}
+*/

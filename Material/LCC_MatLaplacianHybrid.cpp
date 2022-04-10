@@ -8,14 +8,14 @@
 #include "LCC_MatLaplacianHybrid.h"
 #include "pzbndcond.h"
 #include "pzaxestools.h"
+#include "TPZTimer.h"
+#include "pzlog.h"
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
-#include "pzlog.h"
 #endif
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("MaterialHybrid"));
 #endif
-#include "TPZTimer.h"
 #ifdef PZ_LOG
 static TPZLogger loggerCTM("contributeTimeMaterial");
 #endif
