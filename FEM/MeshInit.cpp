@@ -527,10 +527,10 @@ TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
 
     TPZCompMesh* cmesh = new TPZCompMesh(config.gmesh);
     TPZMaterial* mat = 0;
-    int matID_Q1 = 2;
-    int matID_Q2 = 3;
-    int dirichlet = 0;
-    int neumann = 1;
+    int matID_Q1 = 1;
+    int matID_Q2 = 1;
+    int dirichlet = -1;
+    int neumann = -2;
     int dim = config.gmesh->Dimension();
 
     if(pConfig.type != 2) {

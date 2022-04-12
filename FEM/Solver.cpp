@@ -46,15 +46,21 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
     extern int nTestsSolve;
 #endif
     TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
+    std::ofstream outTXT("ZH1_insert_cmeshH1.txt");
+    cmesh->Print(outTXT);
+    
     TPZMultiphysicsCompMesh *multiCmesh = new TPZMultiphysicsCompMesh(config.gmesh);
+    
     int interfaceMatID = -10;
     int hybridLevel = 1;
 
     const clock_t start = clock();
+    //std::ofstream outTXT2("ZCreatedCondensedElements.txt");
 
     switch(preConfig.mode){
         case 0: //H1
-            TPZCompMeshTools::CreatedCondensedElements(cmesh, false, false);
+            //TPZCompMeshTools::CreatedCondensedElements(cmesh, false, false);
+            //cmesh->Print(outTXT2);
             SolveH1Problem(cmesh, config, preConfig);
             break;
         case 1: //Hybrid
