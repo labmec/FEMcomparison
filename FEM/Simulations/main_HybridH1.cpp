@@ -37,7 +37,7 @@ vector<unsigned long long> contributeTimeBCVec;
 bool contributeTest=true;// To activate the time measure of the three contributes
 bool assembleTest=true;
 bool solveTest=true;
-int nThreads=4;//number of threads for assemble
+int nThreads=0;//number of threads for assemble
 int nTestsAssemble=1;//number of tests for assemble
 int nTestsSolve=1;//number of tests for solving the system of equations
 #endif

@@ -38,11 +38,11 @@ int main(int argc, char *argv[]) {
 #endif
     PreConfig pConfig;
     pConfig.k = 1;//
-    pConfig.n = 0;
+    pConfig.n = 2;
     pConfig.problem = "ESinSin";        //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Mixed";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 5;                        //// How many refinements
+    pConfig.refLevel = 8;                        //// How many refinements
     pConfig.debugger = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
