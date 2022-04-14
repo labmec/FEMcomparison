@@ -46,8 +46,8 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
     extern int nTestsSolve;
 #endif
     TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
-    std::ofstream outTXT("ZH1_insert_cmeshH1.txt");
-    cmesh->Print(outTXT);
+    //std::ofstream outTXT("ZH1_insert_cmeshH1.txt");
+    //cmesh->Print(outTXT);
     
     TPZMultiphysicsCompMesh *multiCmesh = new TPZMultiphysicsCompMesh(config.gmesh);
     
@@ -357,7 +357,9 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 //        strmat.SetDecomposeType(ELDLt);
     
     
-    TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
+    //TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
+    TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
+
     strmat.SetNumThreads(0);
 #endif
     
