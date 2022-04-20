@@ -359,7 +359,6 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     
     //TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
-
     strmat.SetNumThreads(0);
 #endif
     
