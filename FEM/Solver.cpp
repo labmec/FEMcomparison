@@ -20,6 +20,7 @@
 #include "MeshInit.h"
 #include "TPZTimer.h"
 #include <chrono>
+#include "pzstrmatrixLCC.h"
 //#include <tbb/parallel_for.h>
 //#include <tbb/task_scheduler_init.h>
 //#include "omp.h"
@@ -350,7 +351,15 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(nThreads);
-    //        strmat.SetDecomposeType(ELDLt);
+    
+    TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
+    
+    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
+        
+        strmat.SetShouldColor(pConfig.shouldColor);
+        strmat.SetTBBorOMP(pConfig.isTBB);
+    }
+    //strmat.SetDecomposeType(ELDLt);
 #else
 //        TPZFrontStructMatrix<TPZFrontSym<STATE> > strmat(Hybridmesh);
 //        strmat.SetNumThreads(2);
@@ -590,9 +599,9 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, ofstream &Erro,
     bool store_errors = false;
 
     an.PostProcessError(Errors, store_errors, Erro);
-    std::cout<<"nnnnnnnn"<<std::endl;
-    for(int i=0;i<Errors.size();i++)
-        std::cout<<Errors[i]<<std::endl;
+    //std::cout<<"nnnnnnnn"<<std::endl;
+    //for(int i=0;i<Errors.size();i++)
+        //std::cout<<Errors[i]<<std::endl;
     if ((*Log)[0] != -1) {
         for (int j = 0; j < 3; j++) {
             (*pConfig.rate)[j] =

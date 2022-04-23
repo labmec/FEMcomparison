@@ -85,6 +85,9 @@ struct PreConfig{
 
     bool debugger = true;
     int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)
+    
+    bool shouldColor = true;
+    bool isTBB = true;
 };
 
 #endif /* ProblemConfig_h */

@@ -68,17 +68,76 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 6;                     //// How many refinements
-    pConfig.debugger = true;                  //// Print geometric and computational mesh
-
+    pConfig.refLevel = 2;                     //// How many refinements
+    pConfig.debugger = false;                  //// Print geometric and computational mesh
+    pConfig.shouldColor =false;
+    pConfig.isTBB = true;
+    
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
+    
+    for (int approxMethod=0; approxMethod < 3; approxMethod++){
+        for (int topologyType=0; topologyType<4; topologyType++){
+            switch (topologyType) {
+                case 0:
+                    pConfig.topology = "Triangular";
+                    pConfig.refLevel = 8;
+                    break;
+                case 1:
+                    pConfig.topology = "Quadrilateral";
+                    pConfig.refLevel = 8;
+                    break;
+                case 2:
+                    pConfig.topology = "Tetrahedral";
+                    pConfig.refLevel = 5;
+                    break;
+                case 3:
+                    pConfig.topology = "Hexahedral";
+                    pConfig.refLevel = 5;
+                    break;
+                default:
+                    DebugStop();
+                    break;
+            }
+            switch (approxMethod) {
+                case 0:
+                    pConfig.approx = "Mixed";
+                    pConfig.n=0;
+                    break;
+                case 1:
+                    pConfig.approx = "Mixed";
+                    pConfig.n=1;
+                    break;
+                case 2:
+                    pConfig.approx = "Hybrid";
+                    if(topologyType < 2){
+                        pConfig.n=2;
+                    } else{
+                        pConfig.n=3;
+                    }
+                    break;
+                default:
+                    DebugStop();
+                    break;
+            }
+            
+            for (int nthreads=0; nthreads < 33; nthreads+=2){
+                pConfig.h = 1./pConfig.exp;
+                ProblemConfig config;
+                Configure(config,pConfig.refLevel,pConfig,argv);
 
+                Solve(config,pConfig);
+
+                pConfig.hLog = pConfig.h;
+            }
+        }
+    }
+    
+    /*
     pConfig.exp *= pow(2,pConfig.refLevel-1);
     pConfig.h = 1./pConfig.exp;
     ProblemConfig config;
     Configure(config,pConfig.refLevel,pConfig,argv);
-    DrawGeoMesh(config,pConfig);
     Solve(config,pConfig);
     pConfig.hLog = pConfig.h;
     if(pConfig.debugger){
@@ -87,6 +146,7 @@ int main(int argc, char *argv[]) {
             FlushTable(pConfig,argv);
     }
     timer.stop();
+    */
     solveglobaltime = timer.seconds();
     
     cout << "******* HybridH1 *******"<< endl;
