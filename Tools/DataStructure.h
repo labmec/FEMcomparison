@@ -59,6 +59,8 @@ struct ProblemConfig
 
 struct PreConfig{
     std::ofstream Erro, timer;
+    std::ofstream *speedUpOfstream;
+
     TPZVec<REAL> *rate, *Log;
     int refLevel = -1;
 
@@ -79,6 +81,7 @@ struct PreConfig{
     int numErrors = 4;
 
     std::string plotfile;
+    std::string speedUpFilePath;
     int mode = -1;           // 0 = "H1"; 1 = "Hybrid"; 2 = "Mixed";
     int argc = 1;
     int type= -1;

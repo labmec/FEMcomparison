@@ -6,6 +6,7 @@
 #include "DataStructure.h"
 #include "MeshInit.h"
 #include "Tools.h"
+#include <algorithm>
 
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     ReadEntry(config, pConfig);
@@ -90,8 +91,11 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 
     ProblemConfig config;
     Configure(config,0,pConfig,argv);
-
+    
+    InitializeSpeedUp(pConfig);
+    
     std::stringstream out;
+    
     switch (pConfig.topologyMode) {
         case 1:
             pConfig.topologyFileName = "2D-Tri";
@@ -223,3 +227,31 @@ void IsInteger(char *argv){
         std::cerr << "Trailing characters after number: " << argv << '\n';
     }
 }
+
+void CharReplace(std::string &str, char find, char replace ) {
+  std::replace(str.begin(), str.end(), find, replace);
+}
+
+void InitializeSpeedUp(PreConfig &pConfig){
+    
+    std::stringstream currentTime;
+    auto end = std::chrono::system_clock::now();
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    currentTime << std::ctime(&end_time);
+    
+    std::string time = currentTime.str();
+    time.pop_back();
+    CharReplace(time, ' ', '_');
+    CharReplace(time, ':', '-');
+    
+    std::string resultsFile="SpeedUpResults";
+    std::string command = "mkdir -p " + resultsFile;
+    system(command.c_str());
+    resultsFile += '/' +time;
+    pConfig.speedUpFilePath = resultsFile+'/';
+    
+    command = "mkdir -p " + resultsFile;
+    system(command.c_str());
+    
+}
+

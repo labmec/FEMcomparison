@@ -1540,16 +1540,12 @@ void VectorEnergyNorm(TPZCompMesh *hdivmesh, std::ostream &out,  const ProblemCo
              }
          }
      }
-    
-    
-    //
-    
-    
-    
-//        nkaux[iel] = residuo2;
-//        out << "\nErrors associated with flux on element Ek\n";
-//        out << "L2 Norm flux = "    << nkaux[iel] << endl;
-        
-      
-
 }
+
+void FlushSpeedUpResults(unsigned long int &assembleTime,unsigned long int &solveTime, PreConfig &pConfig, const int &nthreads){
+    
+    *pConfig.speedUpOfstream << nthreads << "," << assembleTime*1E-9 << "," << solveTime*1E-9 << "," << assembleTime*1E-9+solveTime*1E-9 << std::endl;
+}
+
+
+          

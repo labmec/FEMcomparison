@@ -30,10 +30,20 @@ if(OPTMIZE_RUN_TIME)
     add_definitions(-DOPTMIZE_RUN_TIME)
 endif(OPTMIZE_RUN_TIME)
 
+option(USING_SPEEDUP "Whether target speedUp is been used" OFF)
+if(USING_SPEEDUP)
+    add_definitions(-DUSING_SPEEDUP)
+endif(USING_SPEEDUP)
+
 option(TIMER_CONTRIBUTE "Whether timer measures is required." OFF)
 if(TIMER_CONTRIBUTE)
     add_definitions(-DTIMER_CONTRIBUTE)
 endif(TIMER_CONTRIBUTE)
+
+option(USING_LCCMATRIX "For use LCCMATRIX." OFF)
+if(USING_LCCMATRIX)
+    add_definitions(-DUSING_LCCMATRIX)
+endif(USING_LCCMATRIX)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DFEMCOMPARISON_DEBUG)

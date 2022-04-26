@@ -43,15 +43,8 @@ int nTestsSolve=1;//number of tests for solving the system of equations
 #endif
 int main(int argc, char *argv[]) {
 #ifdef FEMCOMPARISON_TIMER
-    TPZTimer timer;
-    timer.start();
-    //calcstiffTime=0.;
     contributeTime =0.;
-    //contributeCounter=0.;
     bool atypical1=false;
-    /*if((nTestsSolve>1) & (nTestsAssemble>1)){
-        atypical1=true;
-    }*/
     bool MKL_contribute;
 #ifdef FEMCOMPARISON_USING_MKL
     MKL_contribute=true;
@@ -68,7 +61,6 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 8;                     //// How many refinements
     pConfig.debugger = false;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
@@ -76,21 +68,77 @@ int main(int argc, char *argv[]) {
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
     
-    
-    pConfig.exp *= pow(2,pConfig.refLevel-1);
-    pConfig.h = 1./pConfig.exp;
-    ProblemConfig config;
-    Configure(config,pConfig.refLevel,pConfig,argv);
-    Solve(config,pConfig);
-    pConfig.hLog = pConfig.h;
-    if(pConfig.debugger){
-        std::string command = "cp ErroHybrid.txt " + pConfig.plotfile + "/Erro.txt";
-        system(command.c_str());
-            FlushTable(pConfig,argv);
+    for (int approxMethod=0; approxMethod < 3; approxMethod++){
+        int ref2D = 2, ref3D = 1, maxThreads = 8;
+        for (int topologyType=0; topologyType<4; topologyType++){
+            std::stringstream sufix;
+            switch (topologyType) {
+                case 0:
+                    pConfig.topology = "Triangular";
+                    pConfig.refLevel = ref2D;
+                    break;
+                case 1:
+                    pConfig.topology = "Quadrilateral";
+                    pConfig.refLevel = ref2D;
+                    break;
+                case 2:
+                    pConfig.topology = "Tetrahedral";
+                    pConfig.refLevel = ref3D;
+                    break;
+                case 3:
+                    pConfig.topology = "Hexahedral";
+                    pConfig.refLevel = ref3D;
+                    break;
+                default:
+                    DebugStop();
+                    break;
+            }
+            
+            sufix << pConfig.topology << "_" << pConfig.approx << "_";
+            switch (approxMethod) {
+                case 0:
+                    pConfig.approx = "Mixed";
+                    pConfig.n=0;
+                    sufix << "n0";
+                    break;
+                case 1:
+                    pConfig.approx = "Mixed";
+                    pConfig.n=1;
+                    sufix << "n1";
+                    break;
+                case 2:
+                    pConfig.approx = "Hybrid";
+                    if(topologyType < 2){
+                        pConfig.n=2;
+                        sufix << "n2";
+                    } else{
+                        pConfig.n=3;
+                        sufix << "n3";
+                    }
+                    break;
+                default:
+                    DebugStop();
+                    break;
+            }
+            sufix << "_ref" << pConfig.refLevel;
+            std::ofstream fileStream;
+            pConfig.speedUpOfstream = &fileStream;
+            pConfig.speedUpOfstream->open(pConfig.speedUpFilePath+sufix.str()+".csv",std::ofstream::app);
+            *pConfig.speedUpOfstream << "threadNum," << "Assemble," << "Solver," << "Total\n";
+            
+            for (int nthreads=0; nthreads < maxThreads+1; nthreads+=2){
+                nThreads = nthreads;
+                pConfig.h = 1./pConfig.exp;
+                ProblemConfig config;
+                Configure(config,pConfig.refLevel,pConfig,argv);
+
+                Solve(config,pConfig);
+
+                pConfig.hLog = pConfig.h;
+            }
+            pConfig.speedUpOfstream->close();
+        }
     }
-    timer.stop();
-    
-    solveglobaltime = timer.seconds();
     
     cout << "******* HybridH1 *******"<< endl;
     if(atypical1 == true)
