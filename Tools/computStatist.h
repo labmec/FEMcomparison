@@ -1,10 +1,12 @@
 #ifndef computStatist_h
 #define computStatist_h
+#include<iomanip>
 #include<iostream>
 #include <vector>
 #include <math.h>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -15,13 +17,11 @@ double CoefVariation(vector<unsigned long long>&);
 
 inline double mean(vector<unsigned long long> vect){
     vector<unsigned long long>::iterator it;
-    unsigned long long sum=0;
+    double sum=0;
     for(it=vect.begin(); it!=vect.end(); it++)
        sum+=*it;
     return sum/vect.size();
 }
-
-
 
 inline double standDeviation(vector<unsigned long long>& vect){
     double sum=0;
@@ -35,6 +35,7 @@ inline double standDeviation(vector<unsigned long long>& vect){
 inline double CoefVariation(vector<unsigned long long>& vect){
     double desvStand=standDeviation(vect);
     double media=mean(vect);
+
     return desvStand/media;
 }
 
@@ -61,7 +62,7 @@ inline void printTableAssemble(int dim,bool MKL_FEMcomparison, int refLevel,int 
     ofs<<refLevel<<",  ";
     ofs<<nthreads<<",";
     ofs<<test<<",";
-    ofs<<mean(vect)*1e-9<<",";
+    ofs<<mean(vect)<<",";
     ofs<<100*CoefVariation(vect)<<",\n";
     ofs.close();
 }
