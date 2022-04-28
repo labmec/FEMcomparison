@@ -30,15 +30,6 @@ static TPZLogger loggerST("solveTime");
 static TPZLogger loggerAT("assembleTime");
 #endif
 
-#ifdef FEMCOMPARISON_TIMER
-    extern std::vector<unsigned long long> assembleTimeVec;
-    extern std::vector<unsigned long long> solveTimeVec;
-    extern std::vector<unsigned long long> contributeTimeVec;
-    extern std::vector<unsigned long long> contributeTimeBCVec;
-    extern long long contributeTimeVol;
-    extern long long contributeTimeBC;
-    extern long long contributeTimeInterface;
-#endif
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
@@ -259,76 +250,6 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     std::cout << "FINISHED!" << std::endl;
 }
 
-/*
-void calcstiffTestSerial(TPZCompMesh *cmesh){
-    auto beginCalcStiff = std::chrono::high_resolution_clock::now();
-
-    int64_t nelem = cmesh->NElements();
-    
-    for (int64_t iel = 0; iel < nelem; iel++)
-    {
-        TPZCompEl *el = cmesh->Element(iel);
-        if (!el) continue;
-        TPZElementMatrix ek(cmesh, TPZElementMatrix::EK), ef(cmesh, TPZElementMatrix::EF);
-
-        el->CalcStiff(ek, ef);
-    }
-    auto endCalcStiff = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endCalcStiff - beginCalcStiff);
-    unsigned long int duration = static_cast<unsigned long int>(elapsed.count());
-    std::cout << " CalcStiff serial duration= " << duration*1E-9 << std::endl;
-}
-*/
-/*
-void calcstiffTestOMP(TPZCompMesh *cmesh,int nthread){
-    int64_t nelem = cmesh->NElements();
-    omp_set_num_threads(nthread);
-    //int64_t iel;
-    auto beginCalcStiff = std::chrono::high_resolution_clock::now();
-    //786944
-#pragma omp parallel for schedule(dynamic,1)
-
-    for (int64_t iel = 0; iel < nelem; iel++)
-    {
-        TPZCompEl *el = cmesh->Element(iel);
-        if (!el){
-            continue;
-        }
-        TPZElementMatrix ek(cmesh, TPZElementMatrix::EK), ef(cmesh, TPZElementMatrix::EF);
-        
-        el->CalcStiff(ek, ef);
-        //int idHilo = omp_get_thread_num();
-        //printf("Hola, soy el hilo %d, en este momento se esta(n) ejecutando %d hilo(s)\n", idHilo, omp_get_num_threads());
-    }
-    auto endCalcStiff = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endCalcStiff - beginCalcStiff);
-    unsigned long int duration = static_cast<unsigned long int>(elapsed.count());
-    std::cout << " CalcStiff parallel duration omp = " << duration*1E-9 << " seconds, with nthreads= " << nthread << std::endl;
-}
-
-
-void calcstiffTestTBB(TPZCompMesh *cmesh,int nthread){
-    auto beginCalcStiff = std::chrono::high_resolution_clock::now();
-
-    int64_t nelem = cmesh->NElements();
-    tbb::task_scheduler_init init(nthread); //dont work in computer of LABMEC
-    tbb::parallel_for( tbb::blocked_range<int64_t>(459264,721408),
-                      [&](tbb::blocked_range<int64_t> r){
-    for (int64_t iel = r.begin(); iel < r.end(); iel++)
-    {
-        TPZCompEl *el = cmesh->Element(iel);
-        if (!el) continue;
-        TPZElementMatrix ek(cmesh, TPZElementMatrix::EK), ef(cmesh, TPZElementMatrix::EF);
-
-        el->CalcStiff(ek, ef);
-    }
-    });
-    auto endCalcStiff = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endCalcStiff - beginCalcStiff);
-    unsigned long int duration = static_cast<unsigned long int>(elapsed.count());
-    std::cout << " CalcStiff duration tbb= " << duration*1E-9 << " seconds, with nthreads= "<<nthread << std::endl;
-}
- */
                       
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
 #ifdef FEMCOMPARISON_TIMER
@@ -352,7 +273,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
-    strmat.SetNumThreads(nThreads);
+    strmat.SetNumThreads(pConfig.tData.nThreads);
     
     TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
     
@@ -387,43 +308,29 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     delete direct;
     direct = 0;
 #ifdef FEMCOMPARISON_TIMER
-    for(int i=0;i<nTestsAssemble;i++){
         auto beginAss = std::chrono::high_resolution_clock::now();
-#ifdef TIMER_CONTRIBUTE
-        contributeTimeVol = 0;
-        contributeTimeBC = 0;
-        contributeTimeInterface = 0;
-#endif
+
 #endif
         an.Assemble();
         
 #ifdef FEMCOMPARISON_TIMER
-#ifdef TIMER_CONTRIBUTE
-        contributeTimeVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
-#endif
         
         auto endAss = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
         assembleDuration = static_cast<unsigned long int>(elapsed.count());
-        assembleTimeVec.push_back(assembleDuration);
-        }
 #endif
     
 #ifdef FEMCOMPARISON_TIMER
-    
-    for(int i=0;i<nTestsSolve;i++){
-        auto begin = std::chrono::high_resolution_clock::now();
+            auto begin = std::chrono::high_resolution_clock::now();
 #endif
         an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        solveDuration = static_cast<unsigned long int>(elapsed.count());
-        solveTimeVec.push_back(solveDuration);
-        //solveTimeVec.push_back(static_cast<double>(timer.seconds()));
-    }
+        auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        solveDuration = static_cast<unsigned long int>(elapsedSolve.count());
+    
 #ifdef USING_SPEEDUP
-    FlushSpeedUpResults(assembleDuration, solveDuration, pConfig, nThreads);
+    FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
 #endif
 #endif
 
@@ -484,12 +391,11 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     if(false){
         cout<<"Total ecuaciones:"<<an.Solution().Rows()<<endl;
     }
-    extern int nThreads;
     //MKL solver
 #ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_Mixed);
     //strmat.SetNumThreads(8);
-    strmat.SetNumThreads(nThreads);
+    strmat.SetNumThreads(pConfig.tData.nThreads);
 #else
     TPZSkylineStructMatrix strmat(cmesh_Mixed);
     strmat.SetNumThreads(0);
@@ -505,28 +411,17 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
 #ifdef FEMCOMPARISON_TIMER
     for(int i=0;i<nTestsAssemble;i++){
         auto begin = std::chrono::high_resolution_clock::now();
-#ifdef TIMER_CONTRIBUTE
-        contributeTimeVol = 0;
-        contributeTimeBC = 0;
-        contributeTimeInterface = 0;
-#endif
+
 #endif
         an.Assemble();
         
 #ifdef FEMCOMPARISON_TIMER
-#ifdef TIMER_CONTRIBUTE
-        contributeTimeVec.push_back(contributeTimeVol+contributeTimeBC+contributeTimeInterface);
-        //std::cout<<contributeTimeInterface<<std::endl;
-        //contributeTimeBCVec.push_back(contributeTimeBC);
-#endif
+
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
         assembleDuration = static_cast<unsigned long int>(elapsed.count());
-        assembleTimeVec.push_back(assembleDuration);
-        //assembleTimeVec.push_back(static_cast<double>(timer.seconds()));
     }
 #endif
-    //return 0;
 #ifdef FEMCOMPARISON_TIMER
     for(int i=0;i<nTestsSolve;i++){
         auto begin = std::chrono::high_resolution_clock::now();
@@ -536,10 +431,9 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
         solveDuration = static_cast<unsigned long int>(elapsed.count());
-        solveTimeVec.push_back(solveDuration);
     }
 #ifdef USING_SPEEDUP
-    FlushSpeedUpResults(assembleDuration, solveDuration, pConfig, nThreads);
+    FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
 #endif
 #endif
 

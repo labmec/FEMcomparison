@@ -17,41 +17,14 @@ using namespace std;
 #include <fstream>//used only for timer statistics
 #include <vector>//used only for timer statistics
 
-double solveTime =0.; //Time spent solving the linear system
-double assembleTime =0.;
-extern double calcstiffTime;
-extern double contributeTime; //  Total contribute time
-//extern int64_t contributeCounter;
-//int64_t contributeMaterialCounter=0;
-//int64_t contributeBoundaryCounter=0;
-double solveglobaltime;
-long long contributeTimeVol = 0;
-long long contributeTimeBC = 0;
-long long contributeTimeInterface = 0;
-//vector<unsigned long int> contributeTimeVolVec; //Total volumetric contribute time
-vector<unsigned long long> assembleTimeVec;
-vector<unsigned long long> solveTimeVec;
-vector<unsigned long long> contributeTimeVec;
-vector<unsigned long long> contributeTimeBCVec;
-
-bool contributeTest=true;// To activate the time measure of the three contributes
-bool assembleTest=true;
-bool solveTest=true;
-int nThreads=0;//number of threads for assemble
-int nTestsAssemble=1;//number of tests for assemble
-int nTestsSolve=1;//number of tests for solving the system of equations
 #endif
 int main(int argc, char *argv[]) {
 #ifdef FEMCOMPARISON_TIMER
     TPZTimer timer;
     timer.start();
-    //calcstiffTime=0.;
-    contributeTime =0.;
-    //contributeCounter=0.;
+    
     bool atypical1=false;
-    /*if((nTestsSolve>1) & (nTestsAssemble>1)){
-        atypical1=true;
-    }*/
+    
     bool MKL_contribute;
 #ifdef FEMCOMPARISON_USING_MKL
     MKL_contribute=true;
@@ -67,11 +40,13 @@ int main(int argc, char *argv[]) {
     pConfig.n = 2;
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 4;                     //// How many refinements
+    pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.refLevel = 2;                     //// How many refinements
     pConfig.debugger = false;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
+    pConfig.tData.nThreads = 2;
+    
     
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
@@ -90,43 +65,13 @@ int main(int argc, char *argv[]) {
     }
     timer.stop();
     
-    solveglobaltime = timer.seconds();
-    
-    cout << "******* HybridH1 *******"<< endl;
-    if(atypical1 == true)
-        cout<<"Atypical experiment!!"<<endl;
-    cout<<"reflevel: "<<pConfig.refLevel<<endl;
-    if(MKL_contribute)
-        cout<<"Using MKL in contributes: "<<"TRUE"<<endl;
-    else
-        cout<<"Using MKL in contributes: "<<"FALSE"<<endl;
-    cout<<"Number of assembly threads: "<<nThreads<<endl;
-#ifdef TIMER_CONTRIBUTE
-    cout<<"*********** Statistics for the time of the three contributes *****"<<endl;
-    cout<<"Number of assemble tests: "<<nTestsAssemble<<endl;
-    cout<<"Average time(seconds): "<<mean(contributeTimeVec)*1e-9<<endl;
-    cout<<"Coef. of variation: "<<100*CoefVariation(contributeTimeVec)<<"%"<<endl;
-#endif
+    cout<<"Number of assembly threads: "<<pConfig.tData.nThreads<<endl;
     cout<<"*********** Statistics for the assembly time *****"<<endl;
-    cout<<"Number of assemble tests: "<<nTestsAssemble<<endl;
-    cout<<"Average time(seconds): "<<mean(assembleTimeVec)*1E-9<<endl;
-    cout<<"Coef. of variation: "<<100*CoefVariation(assembleTimeVec)<<"%"<<endl;
-    vector<unsigned long long>::iterator it;
-    for(it=assembleTimeVec.begin(); it!=assembleTimeVec.end(); it++)
-        cout<<(*it)*1E-9<<endl;
-    //}
-    //if(solveTest==true){
-        cout<<"*********** Statistics for the linear system solve time *****"<<endl;
-            cout<<"Number of assembly threads: "<<nThreads<<endl;
-            cout<<"Number of solve tests: "<<nTestsSolve<<endl;
-            cout<<"Average time(seconds): "<<mean(solveTimeVec)*1E-9<<endl;
-            cout<<"Coef. of variation: "<<100*CoefVariation(solveTimeVec)<<"%"<<endl;
-    for(it=solveTimeVec.begin(); it!=solveTimeVec.end(); it++)
-        cout<<(*it)*1E-9<<endl;
-    //}
-    printTableAssemble(pConfig.dim,MKL_contribute,pConfig.refLevel,nThreads, nTestsAssemble,assembleTimeVec);
+    cout<<"Average time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
+    cout<<"*********** Statistics for the linear system solve time *****"<<endl;
+    cout<<"Average time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
     
-     return 0;
+    return 0;
 }
 
 

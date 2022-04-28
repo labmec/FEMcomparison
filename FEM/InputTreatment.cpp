@@ -216,6 +216,14 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
 
     if(pConfig.topologyMode < 3) pConfig.dim = 2;
     else pConfig.dim = 3;
+    
+    if (pConfig.topologyMode < 3 && pConfig.mode ==1 && pConfig.n < 2){
+        DebugStop();
+    }
+    
+    if (pConfig.topologyMode > 2 && pConfig.mode ==1 && pConfig.n < 3){
+        DebugStop();
+    }
 }
 
 void IsInteger(char *argv){

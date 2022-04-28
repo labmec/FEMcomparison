@@ -57,6 +57,14 @@ struct ProblemConfig
     ProblemConfig &operator=(const ProblemConfig &cp) = default;
 };
 
+struct MultithreadData{
+
+    int nThreads;
+    unsigned long int assembleTime;
+    unsigned long int solveTime;
+
+};
+
 struct PreConfig{
     std::ofstream Erro, timer;
     std::ofstream *speedUpOfstream;
@@ -91,6 +99,9 @@ struct PreConfig{
     
     bool shouldColor = true;
     bool isTBB = true;
+    
+    MultithreadData tData;
 };
+
 
 #endif /* ProblemConfig_h */
