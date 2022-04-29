@@ -21,10 +21,6 @@ static LoggerPtr logerror(Logger::getLogger("LagrangeMultipliersError"));
 static TPZLogger loggerCTI("contributeTimeInterface");
 #endif
 
-#ifdef FEMCOMPARISON_TIMER
-    extern long long contributeTimeInterface;
-//    extern bool contributeTest;
-#endif
 
 /** @brief Unique identifier for serialization purposes */
 int LCC_LagrangeMultiplier::ClassId() const{
@@ -211,15 +207,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         LOGPZ_DEBUG(logdata,valuenn.str());
     }
 #endif
-#ifdef FEMCOMPARISON_TIMER
-    auto end = std::chrono::high_resolution_clock::now();
-    auto contribInterfaceElapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-    contributeTimeInterface += contribInterfaceElapsed.count();
-    //    if(contributeTest){
-//        timer.stop();
-//        contributeTimeInterface += timer.seconds();
-//    }
-#endif
+
 }
 
 /**

@@ -67,9 +67,9 @@ int main(int argc, char *argv[]) {
     
     cout<<"Number of assembly threads: "<<pConfig.tData.nThreads<<endl;
     cout<<"*********** Statistics for the assembly time *****"<<endl;
-    cout<<"Average time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
+    cout<<"Time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
     cout<<"*********** Statistics for the linear system solve time *****"<<endl;
-    cout<<"Average time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
+    cout<<"Time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
     
     return 0;
 }

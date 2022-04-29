@@ -59,10 +59,6 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
             for(int ii=0;ii<1;ii++){
                 SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
-                //int nthread = 1;
-                //calcstiffTestSerial(multiCmesh);
-                //calcstiffTestOMP(multiCmesh,nthread);
-                //calcstiffTestTBB(multiCmesh,nthread);
             }
             break;
         case 2: //Mixed
@@ -252,12 +248,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
 
                       
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
-#ifdef FEMCOMPARISON_TIMER
-    extern double solveTime;
-    extern double assembleTime;
-    extern int nTestsAssemble;
-    extern int nTestsSolve;
-#endif
+
     unsigned long int assembleDuration;
     unsigned long int solveDuration;
 #ifndef OPTMIZE_RUN_TIME
@@ -317,7 +308,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         
         auto endAss = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
-        assembleDuration = static_cast<unsigned long int>(elapsed.count());
+        pConfig.tData.assembleTime = static_cast<unsigned long int>(elapsed.count());
 #endif
     
 #ifdef FEMCOMPARISON_TIMER
@@ -327,7 +318,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        solveDuration = static_cast<unsigned long int>(elapsedSolve.count());
+        pConfig.tData.solveTime = static_cast<unsigned long int>(elapsedSolve.count());
     
 #ifdef USING_SPEEDUP
     FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
@@ -373,12 +364,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 using namespace std;
 
 void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig config,struct PreConfig &pConfig) {
-#ifdef FEMCOMPARISON_TIMER
-    extern double solveTime;
-    extern double assembleTime;
-    extern int nTestsAssemble;
-    extern int nTestsSolve;
-#endif
+
     unsigned long int assembleDuration;
     unsigned long int solveDuration;
 #ifndef OPTMIZE_RUN_TIME
@@ -409,7 +395,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     direct = 0;
     
 #ifdef FEMCOMPARISON_TIMER
-    for(int i=0;i<nTestsAssemble;i++){
+    for(int i=0;i<1;i++){
         auto begin = std::chrono::high_resolution_clock::now();
 
 #endif
@@ -423,7 +409,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     }
 #endif
 #ifdef FEMCOMPARISON_TIMER
-    for(int i=0;i<nTestsSolve;i++){
+    for(int i=0;i<1;i++){
         auto begin = std::chrono::high_resolution_clock::now();
 #endif
         an.Solve();

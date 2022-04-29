@@ -9,17 +9,8 @@
 #include "pzvisualmatrix.h"
 #include <TPZTimer.h>
 #include "computStatist.h"
-using namespace std;
-
-#ifdef FEMCOMPARISON_TIMER
-//#include <chrono>
-#include <math.h>//used only for timer statistics
-#include <fstream>//used only for timer statistics
-#include <vector>//used only for timer statistics
-#endif
 
 int main(int argc, char *argv[]) {
-
     
 #ifdef PZ_LOG
     TPZLogger::InitializePZLOG();
@@ -32,12 +23,12 @@ int main(int argc, char *argv[]) {
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.debugger = false;                  //// Print geometric and computational mesh
-    pConfig.shouldColor =false;
-    pConfig.isTBB = false;
+    pConfig.shouldColor =true;
+    pConfig.isTBB = true;
     
-    int maxThreads = 8;
-    int ref2D = 8;
-    int ref3D = 4;
+    int maxThreads = 2;
+    int ref2D = 2;
+    int ref3D = 1;
     
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
@@ -93,6 +84,7 @@ int main(int argc, char *argv[]) {
                     DebugStop();
                     break;
             }
+            
             sufix << "_ref" << pConfig.refLevel;
             std::ofstream fileStream;
             pConfig.speedUpOfstream = &fileStream;
