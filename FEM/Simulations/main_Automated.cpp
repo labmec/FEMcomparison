@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
                 }
                 
                 for (int nthreads=0; nthreads < maxThreads+1; nthreads+=2){
-                    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.k << " " << pConfig.n << pConfig.refLevel << " " << pConfig.tData.nThreads << std::endl;
+                    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << pConfig.refLevel << " " << pConfig.tData.nThreads << std::endl;
                     
                 }
                 pConfig.speedUpOfstream->close();

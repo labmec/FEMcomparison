@@ -80,6 +80,9 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
 
 void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     //Error buffer
+    InitializeSpeedUp(pConfig);
+    if (pConfig.argc == 2) return;
+
     if( remove( "Erro.txt" ) != 0) perror( "Error deleting file" );
     else puts( "Error log successfully deleted" );
 
@@ -91,11 +94,8 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 
     ProblemConfig config;
     Configure(config,0,pConfig,argv);
-    
-    InitializeSpeedUp(pConfig);
-    
+        
     std::stringstream out;
-    
     switch (pConfig.topologyMode) {
         case 1:
             pConfig.topologyFileName = "2D-Tri";
@@ -152,12 +152,22 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 }
 
 void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
+    pConfig.argc = argc;
+    
+    if (argc == 2){
+        if (std::strcmp(argv[1],"generate") == 0){
+            pConfig.makeScript = true;
+            return;
+        } else {
+            DebugStop();
+        }
+    }
+    
     if(argc != 1 && argc != 8){
         std::cout << "Invalid entry";
         DebugStop();
     }
     if(argc == 8){
-        pConfig.argc = argc;
         for(int i = 4; i < 8 ; i++)
             IsInteger(argv[i]);
         if(std::strcmp(argv[2], "H1") == 0)
@@ -255,15 +265,27 @@ void InitializeSpeedUp(PreConfig &pConfig){
     time.pop_back();
     CharReplace(time, ' ', '_');
     CharReplace(time, ':', '-');
-    
-    std::string resultsFile="SpeedUpResults";
-    std::string command = "mkdir -p " + resultsFile;
-    system(command.c_str());
-    resultsFile += '/' +time;
+
+    std::string resultsFile;
+#ifdef USING_SPEEDUP
+    resultsFile="SpeedUpResults";
     pConfig.speedUpFilePath = resultsFile+'/';
+    CreateDirectory(resultsFile,time);
+#endif
     
-    command = "mkdir -p " + resultsFile;
-    system(command.c_str());
+    if (pConfig.makeScript){
+        resultsFile = "AutomatedResults";
+        pConfig.automatedFileName = resultsFile+ '/'+ time;
+        CreateDirector(resultsFile,time);
+    }
+    
     
 }
 
+void CreateDirector(std::string &resultsFile, std::string &time){
+    std::string command = "mkdir -p " + resultsFile;
+    system(command.c_str());
+    resultsFile += '/' +time;
+    command = "mkdir -p " + resultsFile;
+    system(command.c_str());
+}

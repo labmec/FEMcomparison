@@ -15,5 +15,6 @@ void IsInteger(char *argv);
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]);
 void CharReplace(std::string &str, char find, char replace );
 void InitializeSpeedUp(PreConfig &pConfig);
+void CreateDirector(std::string &resultsFile, std::string &time);
 
 #endif //FEMCOMPARISON_INPUTTREATMENT_H
