@@ -16,6 +16,10 @@ static LoggerPtr logdata(Logger::getLogger("LagrangeMultipliersData"));
 static LoggerPtr logerror(Logger::getLogger("LagrangeMultipliersError"));
 #endif
 #include "TPZTimer.h"
+#include "pzlog.h"
+#ifdef PZ_LOG
+static TPZLogger loggerCTI("contributeTimeInterface");
+#endif
 
 
 /** @brief Unique identifier for serialization purposes */
@@ -77,11 +81,18 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @param ef [out] is the load vector
  * @since June 5, 2012
  */
-extern double contributeTimeInterface;
+
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
-    TPZTimer timer;
-    timer.start();
+#ifdef FEMCOMPARISON_TIMER
+    auto begin = std::chrono::high_resolution_clock::now();
+//    extern bool contributeTest;
+//    TPZTimer timer;
+//    if(contributeTest){
+//        timer.start();
+//    }
+#endif
+    
 #ifdef FEMCOMPARISON_DEBUG
     if(dataleft.size() != 1 || dataright.size() != 1) DebugStop();
 #endif
@@ -196,10 +207,8 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         LOGPZ_DEBUG(logdata,valuenn.str());
     }
 #endif
-    timer.stop();
-    contributeTimeInterface += timer.seconds();
-}
 
+}
 
 /**
  * @brief It computes a contribution to stiffness matrix and load vector at one integration point

@@ -1,72 +1,87 @@
 //
-//  TPZMatLaplacianHybrid.cpp
+//  LCC_MatLaplacianHybrid.cpp
 //  ErrorEstimation
 //
 //  Created by Philippe Devloo on 14/07/19.
 //
 
-#include "TPZMatLaplacianHybrid.h"
+#include "LCC_MatLaplacianHybrid.h"
 #include "pzbndcond.h"
 #include "pzaxestools.h"
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
+#include "TPZTimer.h"
+/*
+#include "pzlog.h"
 #ifdef LOG4CXX
 static LoggerPtr logger(Logger::getLogger("MaterialHybrid"));
 #endif
-#include "TPZTimer.h"
+#ifdef PZ_LOG
+static TPZLogger loggerCTM("contributeTimeVol");
+#endif
+#ifdef PZ_LOG
+static TPZLogger loggerCTB("contributeTimeBoundary");
+#endif
+*/
+#ifdef FEMCOMPARISON_TIMER
+    //extern std::vector<unsigned long int> contributeTimeVec;
+    extern long long contributeTimeVol;
+    extern long long contributeTimeBC;
 
-TPZMatLaplacianHybrid::TPZMatLaplacianHybrid(int matid, int dim)
-: TPZRegisterClassId(&TPZMatLaplacianHybrid::ClassId), TPZMatLaplacian(matid,dim)
+#endif
+
+LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid(int matid, int dim)
+: TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian(matid, dim)
 {
     
 }
 
-TPZMatLaplacianHybrid::TPZMatLaplacianHybrid() :
-TPZRegisterClassId(&TPZMatLaplacianHybrid::ClassId), TPZMatLaplacian()
+LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid() :
+        TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian()
 {
     
 }
 
-TPZMatLaplacianHybrid::TPZMatLaplacianHybrid(const TPZMatLaplacian &copy) :
-TPZRegisterClassId(&TPZMatLaplacianHybrid::ClassId), TPZMatLaplacian(copy)
+LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid(const TPZMatLaplacian &copy) :
+        TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian(copy)
 {
     
 }
 
-TPZMatLaplacianHybrid::~TPZMatLaplacianHybrid()
+LCC_MatLaplacianHybrid::~LCC_MatLaplacianHybrid()
 {
     
 }
 
-TPZMatLaplacianHybrid &TPZMatLaplacianHybrid::operator=(const TPZMatLaplacianHybrid &copy)
+LCC_MatLaplacianHybrid &LCC_MatLaplacianHybrid::operator=(const LCC_MatLaplacianHybrid &copy)
 {
     TPZMatLaplacian::operator=(copy);
     return *this;
 }
 
-TPZMaterial *TPZMatLaplacianHybrid::NewMaterial()
+TPZMaterial *LCC_MatLaplacianHybrid::NewMaterial()
 {
-    return new TPZMatLaplacianHybrid(*this);
+    return new LCC_MatLaplacianHybrid(*this);
 }
 
-int TPZMatLaplacianHybrid::ClassId() const
+int LCC_MatLaplacianHybrid::ClassId() const
 {
-    return Hash("TPZMatLaplacianHybrid") ^ TPZMatLaplacian::ClassId() << 1;
+    return Hash("LCC_MatLaplacianHybrid") ^ TPZMatLaplacian::ClassId() << 1;
 }
 
 
-void TPZMatLaplacianHybrid::Write(TPZStream &buf, int withclassid) const
+void LCC_MatLaplacianHybrid::Write(TPZStream &buf, int withclassid) const
 {
     TPZMatLaplacian::Write(buf,withclassid);
 }
 
-void TPZMatLaplacianHybrid::Read(TPZStream &buf, void *context)
+void LCC_MatLaplacianHybrid::Read(TPZStream &buf, void *context)
 {
     TPZMatLaplacian::Read(buf,context);
 }
 
-int TPZMatLaplacianHybrid::VariableIndex(const std::string &name)
+int LCC_MatLaplacianHybrid::VariableIndex(const std::string &name)
 {
 
     if(name == "Pressure") return 44;
@@ -80,7 +95,7 @@ int TPZMatLaplacianHybrid::VariableIndex(const std::string &name)
     return -1;
 }
 
-int TPZMatLaplacianHybrid::NSolutionVariables(int var){
+int LCC_MatLaplacianHybrid::NSolutionVariables(int var){
     if(var == 44 || var==45) return 1;
     if(var == 10 || var==13 || var == 23) return fDim;
     
@@ -92,9 +107,7 @@ int TPZMatLaplacianHybrid::NSolutionVariables(int var){
     }
 }
 
-extern double contributeTimeMaterial;
-void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
-{
+void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
     /**
      datavec[1] L2 mesh (phi's)
      datavec[0] Hdiv mesh,
@@ -109,10 +122,21 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
      f1 = int_K f*v dx = int_K f*phi_j dx
      ck = int_partialK phi_i*mu_j dx
      f2 = int_partialK g*mu_j dx
-     
      **/
-    TPZTimer timer;
-    timer.start();
+#ifdef FEMCOMPARISON_TIMER
+      extern bool contributeTest;
+//extern double contributeTimeVol;
+#ifdef TIMER_CONTRIBUTE
+       // auto begin = std::chrono::high_resolution_clock::now();
+#endif
+//    extern int64_t contributeMaterialCounter;
+//    TPZTimer timer;
+//    if(contributeTest){
+//        timer.start();
+//    }
+      
+#endif
+    
     TPZFMatrix<REAL>  &phi = datavec[1].phi;
     TPZFMatrix<REAL> &dphi = datavec[1].dphix;
     TPZVec<REAL>  &x = datavec[1].x;
@@ -216,11 +240,21 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
         LOGPZ_DEBUG(logger,valuenn.str());
     }
 #endif
-    timer.stop();
-    contributeTimeMaterial += timer.seconds();
+    
+#ifdef FEMCOMPARISON_TIMER
+#ifdef TIMER_CONTRIBUTE
+        //auto end = std::chrono::high_resolution_clock::now();
+        //auto contribVolElapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        //contributeTimeVol += contribVolElapsed.count();
+//        std::cout<< contributeTimeVol<<std::endl;
+//        timer.stop();
+//        contributeTimeVol += timer.seconds();
+//        contributeMaterialCounter++;
+#endif
+#endif
 }
 
-void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef)
+void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef)
 {
     TPZFMatrix<REAL>  &phi = datavec[1].phi;
     TPZFMatrix<REAL> &dphi = datavec[1].dphix;
@@ -258,11 +292,23 @@ void TPZMatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL we
     }
     ef(phr,0) += weight*(-datavec[1].sol[0][0]+ datavec[3].sol[0][0]);
     ef(phr+1,0) += weight*datavec[2].sol[0][0];
-
 }
 
-void TPZMatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc)
+void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc)
 {
+#ifdef FEMCOMPARISON_TIMER
+    extern bool contributeTest;
+#ifdef TIMER_CONTRIBUTE
+        auto begin = std::chrono::high_resolution_clock::now();
+#endif
+//    extern double contributeTimeBoundary;
+//    extern int64_t contributeBoundaryCounter;
+//    TPZTimer timer;
+//    if(contributeTest){
+//        timer.start();
+//    }
+#endif
+    
     TPZFMatrix<REAL>  &phi_u = datavec[1].phi;
     TPZFMatrix<REAL>  &phi_flux = datavec[0].phi;
     //    TPZFMatrix<REAL> &axes = data.axes;
@@ -344,9 +390,22 @@ void TPZMatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL 
                 break;
         }
     }
+#ifdef FEMCOMPARISON_TIMER
+#ifdef TIMER_CONTRIBUTE
+    auto end = std::chrono::high_resolution_clock::now();
+    auto contribBCelapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+    contributeTimeBC += contribBCelapsed.count();
+#endif
+//    if(contributeTest){
+//        timer.stop();
+//        contributeTimeBoundary+=timer.seconds();
+//        contributeBoundaryCounter++;
+//    }
+#endif
 }
 
-void TPZMatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout)
+
+void LCC_MatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout)
 {
     /**
      datavec[1] L2 mesh
@@ -404,7 +463,7 @@ void TPZMatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var, 
 
 
 
-void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &errors)
+void LCC_MatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &errors)
 {
     if(!fExactSol) return;
 
@@ -421,8 +480,6 @@ void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &
     }
 
     REAL pressure = data[1].sol[0][0];
-
-
 
     // errors[0] norm L2 || u ||_l2
 
@@ -454,8 +511,6 @@ void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &
     }
     PermTensor.Multiply(gradpressure,Kgradu);
 
-
-
     REAL energy = 0.;
     for (int i=0; i<fDim; i++) {
         for (int j=0; j<fDim; j++) {
@@ -466,7 +521,7 @@ void TPZMatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &
     errors[3] = energy;
 }
 
-void TPZMatLaplacianHybrid::FillDataRequirements(TPZVec<TPZMaterialData > &datavec)
+void LCC_MatLaplacianHybrid::FillDataRequirements(TPZVec<TPZMaterialData > &datavec)
 {
     int nref = datavec.size();
     for(int i = 0; i<nref; i++ )

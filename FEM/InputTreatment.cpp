@@ -6,6 +6,7 @@
 #include "DataStructure.h"
 #include "MeshInit.h"
 #include "Tools.h"
+#include <algorithm>
 
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     ReadEntry(config, pConfig);
@@ -42,8 +43,8 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     }
 
     if(pConfig.argc != 1) {
-        config.k = atoi(argv[3]);
-        config.n = atoi(argv[4]);
+        config.k = atoi(argv[4]);
+        config.n = atoi(argv[5]);
     }
 
     if(pConfig.debugger == true && ndiv != 0){
@@ -90,8 +91,11 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 
     ProblemConfig config;
     Configure(config,0,pConfig,argv);
-
+    
+    InitializeSpeedUp(pConfig);
+    
     std::stringstream out;
+    
     switch (pConfig.topologyMode) {
         case 1:
             pConfig.topologyFileName = "2D-Tri";
@@ -148,22 +152,18 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 }
 
 void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
-    if(argc != 1 && argc != 5){
+    if(argc != 1 && argc != 8){
         std::cout << "Invalid entry";
         DebugStop();
     }
-    if(argc == 5){
+    if(argc == 8){
         pConfig.argc = argc;
-        for(int i = 3; i < 5 ; i++)
+        for(int i = 4; i < 8 ; i++)
             IsInteger(argv[i]);
         if(std::strcmp(argv[2], "H1") == 0)
             pConfig.mode = 0;
         else if(std::strcmp(argv[2], "Hybrid") == 0) {
             pConfig.mode = 1;
-            if(pConfig.n < 1 ){
-                std::cout << "Unstable method\n";
-                DebugStop();
-            }
         }
         else if(std::strcmp(argv[2], "Mixed") == 0) {
             pConfig.mode = 2;
@@ -189,6 +189,12 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             pConfig.problem = "ESteklovNonConst";
         }
         else DebugStop();
+        
+        pConfig.topology = argv[3];
+        pConfig.refLevel = atoi(argv[6]);
+        pConfig.tData.nThreads = atoi(argv[7]);
+        pConfig.k = atoi(argv[4]);
+        pConfig.n = atoi(argv[5]);
     }
     else{
         if (pConfig.approx == "H1") pConfig.mode = 0;
@@ -212,6 +218,14 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
 
     if(pConfig.topologyMode < 3) pConfig.dim = 2;
     else pConfig.dim = 3;
+    
+    if (pConfig.topologyMode < 3 && pConfig.mode ==1 && pConfig.n < 2){
+        DebugStop();
+    }
+    
+    if (pConfig.topologyMode > 2 && pConfig.mode ==1 && pConfig.n < 3){
+        DebugStop();
+    }
 }
 
 void IsInteger(char *argv){
@@ -219,7 +233,37 @@ void IsInteger(char *argv){
     int x;
     if (!(ss >> x)) {
         std::cerr << "Invalid number: " << argv << '\n';
+        DebugStop();
     } else if (!ss.eof()) {
         std::cerr << "Trailing characters after number: " << argv << '\n';
+        DebugStop();
     }
 }
+
+void CharReplace(std::string &str, char find, char replace ) {
+  std::replace(str.begin(), str.end(), find, replace);
+}
+
+void InitializeSpeedUp(PreConfig &pConfig){
+    
+    std::stringstream currentTime;
+    auto end = std::chrono::system_clock::now();
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    currentTime << std::ctime(&end_time);
+    
+    std::string time = currentTime.str();
+    time.pop_back();
+    CharReplace(time, ' ', '_');
+    CharReplace(time, ':', '-');
+    
+    std::string resultsFile="SpeedUpResults";
+    std::string command = "mkdir -p " + resultsFile;
+    system(command.c_str());
+    resultsFile += '/' +time;
+    pConfig.speedUpFilePath = resultsFile+'/';
+    
+    command = "mkdir -p " + resultsFile;
+    system(command.c_str());
+    
+}
+

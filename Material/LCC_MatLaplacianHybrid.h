@@ -1,5 +1,5 @@
 //
-//  TPZMatLaplacianHybrid.hpp
+//  LCC_MatLaplacianHybrid.hpp
 //  ErrorEstimation
 //
 //  Created by Philippe Devloo on 14/07/19.
@@ -11,26 +11,26 @@
 #include <stdio.h>
 #include "TPZMatLaplacian.h"
 
-class TPZMatLaplacianHybrid : public TPZMatLaplacian
+class LCC_MatLaplacianHybrid : public TPZMatLaplacian
 {
     
 public:
     
-    TPZMatLaplacianHybrid(int matid, int dim);
+    LCC_MatLaplacianHybrid(int matid, int dim);
     
-    TPZMatLaplacianHybrid(int matid)
-    : TPZRegisterClassId(&TPZMatLaplacianHybrid::ClassId), TPZMatLaplacian(matid)
+    LCC_MatLaplacianHybrid(int matid)
+    : TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian(matid)
     {
         
     }
     
-    TPZMatLaplacianHybrid();
+    LCC_MatLaplacianHybrid();
     
-    TPZMatLaplacianHybrid(const TPZMatLaplacian &copy);
+    LCC_MatLaplacianHybrid(const TPZMatLaplacian &copy);
     
-    virtual ~TPZMatLaplacianHybrid();
+    virtual ~LCC_MatLaplacianHybrid();
     
-    TPZMatLaplacianHybrid &operator=(const TPZMatLaplacianHybrid &copy);
+    LCC_MatLaplacianHybrid &operator=(const LCC_MatLaplacianHybrid &copy);
     
     virtual TPZMaterial *NewMaterial() override;
     

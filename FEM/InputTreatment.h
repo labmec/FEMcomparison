@@ -13,5 +13,7 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig);
 void InitializeOutstream(PreConfig &eData,char *argv[]);
 void IsInteger(char *argv);
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]);
+void CharReplace(std::string &str, char find, char replace );
+void InitializeSpeedUp(PreConfig &pConfig);
 
 #endif //FEMCOMPARISON_INPUTTREATMENT_H

@@ -7,39 +7,55 @@
 #include "Tools.h"
 #include <tuple>
 #include "pzvisualmatrix.h"
-double solveTime =0.;
-double assembleTime =0.;
-extern double calcstiffTime;
-extern double contributeTime; //  Total contribute time
-double contributeTimeMaterial=0.;
-double contributeTimeInterface=0;
+#include <TPZTimer.h>
+#include "computStatist.h"
+using namespace std;
 
+#ifdef FEMCOMPARISON_TIMER
+//#include <chrono>
+#include <math.h>//used only for timer statistics
+#include <fstream>//used only for timer statistics
+#include <vector>//used only for timer statistics
 
-int main(int argc, char *argv[]) {
-#ifdef OPTMIZE_RUN_TIME
-    calcstiffTime=0.;
-    contributeTime =0
 #endif
+int main(int argc, char *argv[]) {
+#ifdef FEMCOMPARISON_TIMER
+    TPZTimer timer;
+    timer.start();
+    
+    bool atypical1=false;
+    
+    bool MKL_contribute;
+#ifdef FEMCOMPARISON_USING_MKL
+    MKL_contribute=true;
+#endif
+#endif
+    
 #ifdef PZ_LOG
     TPZLogger::InitializePZLOG();
 #endif
+    
     PreConfig pConfig;
     pConfig.k = 1;//
     pConfig.n = 2;
-    pConfig.problem = "ESinSin";                 //// {"ESinSin","EArcTan",ESteklovNonConst"}
-    pConfig.approx = "Hybrid";                   //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 1;                        //// How many refinements
-    pConfig.debugger = false;                    //// Print geometric and computational mesh
-
+    pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
+    pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
+    pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.refLevel = 8;                     //// How many refinements
+    pConfig.debugger = false;                  //// Print geometric and computational mesh
+    pConfig.shouldColor =false;
+    pConfig.isTBB = false;
+    pConfig.tData.nThreads = 4;
+    
+    
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
-
+    
+    
     pConfig.exp *= pow(2,pConfig.refLevel-1);
     pConfig.h = 1./pConfig.exp;
     ProblemConfig config;
-    Configure(config,pConfig.refLevel ,pConfig,argv);
-    DrawGeoMesh(config,pConfig);
+    Configure(config,pConfig.refLevel,pConfig,argv);
     Solve(config,pConfig);
     pConfig.hLog = pConfig.h;
     if(pConfig.debugger){
@@ -47,16 +63,16 @@ int main(int argc, char *argv[]) {
         system(command.c_str());
             FlushTable(pConfig,argv);
     }
-    std::cout<<"contributeTimeInterface= "<< contributeTimeInterface << std::endl;
-    std::cout<<"contributeTimeMaterial= "<< contributeTimeMaterial << std::endl;
-#ifdef OPTIMIZE_RUN_TIME
-   std::cout<<"contributeTime= "<< contributeTime << std::endl;
-#endif
-
+    timer.stop();
+    
+    cout<<"Number of assembly threads: "<<pConfig.tData.nThreads<<endl;
+    cout<<"*********** Statistics for the assembly time *****"<<endl;
+    cout<<"Time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
+    cout<<"*********** Statistics for the linear system solve time *****"<<endl;
+    cout<<"Time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
+    
     return 0;
 }
-
-
 
 
 

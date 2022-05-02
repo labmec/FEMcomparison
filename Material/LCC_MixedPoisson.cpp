@@ -13,12 +13,17 @@
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
-
+#include "TPZTimer.h"
 #include <iostream>
 
 #ifdef LOG4CXX
 static LoggerPtr logdata(Logger::getLogger("pz.mixedpoisson.data"));
 static LoggerPtr logerror(Logger::getLogger("pz.mixedpoisson.error"));
+#endif
+
+#ifdef PZ_LOG
+static TPZLogger loggerCTM("contributeTimeVol");
+static TPZLogger loggerCTB("contributeTimeBoundary");
 #endif
 
 LCCMixedPoisson::LCCMixedPoisson(): TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson() {
@@ -41,9 +46,17 @@ LCCMixedPoisson & LCCMixedPoisson::operator=(const TPZMixedPoisson &copy){
 }
 
 
-
-
 void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
+#ifdef FEMCOMPARISON_TIMER
+    extern double contributeTimeVol;
+    extern int64_t contributeMaterialCounter;
+    //double start = clock();
+#endif
+#ifdef PZ_LOG
+    TPZTimer timer;
+    if(loggerCTM.isInfoEnabled())
+    timer.start();
+#endif
 
     if(fIsStabilized)
         DebugStop();
@@ -207,12 +220,29 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         ek(phrp+phrq+1,phrq+phrp) += -weight;
         ek(phrq+phrp,phrp+phrq+1) += -weight;
     }
+    //double end = clock();
+#ifdef PZ_LOG
+    if(loggerCTM.isDebugEnabled()){
+    timer.stop();
+    //contributeTimeVol += (end-start)/CLOCKS_PER_SEC;
+    contributeTimeVol += timer.seconds();
+    contributeMaterialCounter++;
+    }
+#endif
 }
-
 
 
 void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
     
+#ifdef FEMCOMPARISON_TIMER
+    extern double contributeTimeBoundary;
+    extern int64_t contributeBoundaryCounter;
+#endif
+#ifdef PZ_LOG
+    TPZTimer timer;
+    if(loggerCTB.isDebugEnabled())
+    timer.start();
+#endif
 #ifdef FEMCOMPARISON_DEBUG
     int nref =  datavec.size();
 //    if (nref != 2 ) {
@@ -343,7 +373,13 @@ void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight
             break;
         
     }
-    
+#ifdef PZ_LOG
+    timer.stop();
+    if(loggerCTB.isDebugEnabled()){
+    contributeTimeBoundary += timer.seconds();
+    contributeBoundaryCounter++;
+    }
+#endif
 }
 
 int LCCMixedPoisson::ClassId() const{

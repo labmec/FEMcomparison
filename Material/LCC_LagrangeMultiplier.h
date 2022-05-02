@@ -11,11 +11,15 @@
 
 #include <iostream>
 #include "TPZMaterial.h"
+#include "pzvec.h"
 
 /// Material which implements a Lagrange Multiplier
 class LCC_LagrangeMultiplier : public TPZMaterial
 {
-    
+
+    /** @brief Pointer to a blocked matrix object*/
+    TPZManVector<TPZFNMatrix<1000, STATE>,8> fStiffnessMatrix;
+
     /// Number of state variables
     int fNStateVariables;
     
@@ -29,20 +33,31 @@ class LCC_LagrangeMultiplier : public TPZMaterial
     LCC_LagrangeMultiplier() : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
     TPZMaterial()
     {
-        
+        fStiffnessMatrix.Resize(14);
+        for(int iMatrix = 0; iMatrix < 14; iMatrix ++){
+            fStiffnessMatrix[iMatrix].Resize(0,0);
+        }
     }
 	/** @brief Constructor with the index of the material object within the vector */
     LCC_LagrangeMultiplier(int nummat, int dimension, int nstate) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
     TPZMaterial(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
     {
-        
+        fStiffnessMatrix.Resize(14);
+        for(int iMatrix = 0; iMatrix < 14; iMatrix ++){
+            fStiffnessMatrix[iMatrix].Resize(0,0);
+        }
     }
 	
 	/** @brief Copy constructor */
 	LCC_LagrangeMultiplier(const LCC_LagrangeMultiplier &copy) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
     TPZMaterial(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
     {
-        
+	    if(fStiffnessMatrix.size() != 14){
+	        DebugStop();
+	    }
+        for(int iMatrix = 0; iMatrix < 14; iMatrix ++){
+            fStiffnessMatrix[iMatrix] = copy.fStiffnessMatrix[iMatrix];
+        }
     }
     
     LCC_LagrangeMultiplier &operator=(const LCC_LagrangeMultiplier &copy)
@@ -51,6 +66,12 @@ class LCC_LagrangeMultiplier : public TPZMaterial
         fNStateVariables = copy.fNStateVariables;
         fDimension = copy.fDimension;
         fMultiplier = copy.fMultiplier;
+        if(fStiffnessMatrix.size() != 14){
+            DebugStop();
+        }
+        for(int iMatrix = 0; iMatrix < 14; iMatrix ++){
+            fStiffnessMatrix[iMatrix] = copy.fStiffnessMatrix[iMatrix];
+        }
         return *this;
     }
     
@@ -89,6 +110,20 @@ class LCC_LagrangeMultiplier : public TPZMaterial
 	virtual std::string Name() override
     {
         return "LCC_LagrangeMultiplier";
+    }
+
+    void GetStiffnessMatrix(TPZFMatrix<STATE> &S, int iMatrix){
+        if(iMatrix <0 || iMatrix >13){
+            DebugStop();
+        }
+        S = fStiffnessMatrix[iMatrix];
+    }
+
+    void FillStiffnessMatrix(const TPZFMatrix<STATE> &S,int iMatrix){
+        if(iMatrix <0 || iMatrix >13){
+            DebugStop();
+        }
+        fStiffnessMatrix[iMatrix] = S;
     }
 	
     // print the data in human readable form

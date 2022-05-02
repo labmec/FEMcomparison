@@ -9,6 +9,10 @@ SOURCES main_HybridH1vsMixed.cpp
 #add_executable(HybridH1vsMixed main_HybridH1vsMixed.cpp)
 target_link_libraries(HybridH1vsMixed PRIVATE Methods Tools)
 
+#find_package(OpenMP REQUIRED)
+#include_directories(/usr/local/include)
+#link_directories(/usr/local/lib)
+
 # Project to apply error estimation for hybrid H1 approximations
 add_pz_target(
   NAME HybridH1
@@ -17,10 +21,17 @@ SOURCES main_HybridH1.cpp)
 target_link_libraries(HybridH1 PRIVATE Methods Tools)
 
 add_pz_target(
-  NAME ContributeTest
-SOURCES main_ContributeTest.cpp)
-#add_executable(ContributeTest main_ContributeTest.cpp)
-target_link_libraries(ContributeTest PRIVATE Methods Tools)
+  NAME Automated
+SOURCES main_Automated.cpp)
+#add_executable(Automated main_Automated.cpp)
+target_link_libraries(Automated PRIVATE Methods Tools)
+
+# Project to compute speedup
+add_pz_target(
+  NAME SpeedUp
+SOURCES main_SpeedUp.cpp)
+#add_executable(SpeedUp main_SpeedUp.cpp)
+target_link_libraries(SpeedUp PRIVATE Methods Tools)
 
 # Project to apply error estimation for hybrid H1 approximations
 add_pz_target(

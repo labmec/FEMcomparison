@@ -11,8 +11,6 @@
 #include "pzfmatrix.h"
 
 class LCC_TPZMultiphysicsInterfaceElement : public TPZMultiphysicsInterfaceElement{
-private:
-    bool fComputeStiffnessContribution;
 
 public:
     /** @brief Default constructor */
@@ -48,6 +46,10 @@ public:
      * Compute the stiffness matrix and load vector of the interface element
      */
     void CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) override;
+
+    void ComputingCalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef);
+
+    void ChoosingOptimizedComputation( TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex);
 
 };
 

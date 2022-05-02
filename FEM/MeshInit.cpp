@@ -6,7 +6,7 @@
 #include "DataStructure.h"
 #include <TPZMultiphysicsCompMesh.h>
 #include "mixedpoisson.h"
-#include "TPZMatLaplacianHybrid.h"
+#include "LCC_MatLaplacianHybrid.h"
 #include "TPZNullMaterial.h"
 #include "pzbndcond.h"
 #include "TPZGenGrid2D.h"
@@ -99,8 +99,8 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, Proble
     invK(0,0) = invK(1,1) =  1./pConfig.perm_Q2;
     mat2->setPermeabilyTensor(K,invK);
 #endif
-    TPZMatLaplacianHybrid *material_Q1 = new TPZMatLaplacianHybrid(matID_Q1, dim);
-    TPZMatLaplacianHybrid *material_Q2 = new TPZMatLaplacianHybrid(matID_Q2, dim);
+    LCC_MatLaplacianHybrid *material_Q1 = new LCC_MatLaplacianHybrid(matID_Q1, dim);
+    LCC_MatLaplacianHybrid *material_Q2 = new LCC_MatLaplacianHybrid(matID_Q2, dim);
 
     material_Q1->SetPermeability(pConfig.perm_Q1);
     material_Q2->SetPermeability(pConfig.perm_Q2);
@@ -490,7 +490,7 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
 
     // Creates Poisson material
     if(pConfig.type != 2) {
-        TPZMatLaplacianHybrid *material = new TPZMatLaplacianHybrid(matID, dim);
+        LCC_MatLaplacianHybrid *material = new LCC_MatLaplacianHybrid(matID, dim);
         material->SetPermeability(1.);
         cmesh_H1Hybrid->InsertMaterialObject(material);
         if(pConfig.debugger) {
@@ -498,6 +498,8 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
             material->SetForcingFunction(config.exact.operator*().ForcingFunction());
             material->SetExactSol(config.exact.operator*().Exact());
 #endif
+        }else {
+            material->SetParameters(1.,1.);
         }
         // Inserts boundary conditions
         TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
@@ -525,10 +527,10 @@ TPZCompMesh* InsertCMeshH1(ProblemConfig &config, PreConfig &pConfig) {
 
     TPZCompMesh* cmesh = new TPZCompMesh(config.gmesh);
     TPZMaterial* mat = 0;
-    int matID_Q1 = 2;
-    int matID_Q2 = 3;
-    int dirichlet = 0;
-    int neumann = 1;
+    int matID_Q1 = 1;
+    int matID_Q2 = 1;
+    int dirichlet = -1;
+    int neumann = -2;
     int dim = config.gmesh->Dimension();
 
     if(pConfig.type != 2) {

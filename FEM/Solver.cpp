@@ -19,42 +19,66 @@
 #include "pzvisualmatrix.h"
 #include "MeshInit.h"
 #include "TPZTimer.h"
-extern double solveTime;
-extern double assembleTime;
+#include <chrono>
+#include "pzstrmatrixLCC.h"
+//#include <tbb/parallel_for.h>
+//#include <tbb/task_scheduler_init.h>
+//#include "omp.h"
+
+#ifdef PZ_LOG
+static TPZLogger loggerST("solveTime");
+static TPZLogger loggerAT("assembleTime");
+#endif
 
 
 void Solve(ProblemConfig &config, PreConfig &preConfig){
 
+#ifdef FEMCOMPARISON_TIMER
+    extern double solveTime;
+    extern int nTestsSolve;
+#endif
     TPZCompMesh *cmesh = InsertCMeshH1(config,preConfig);
+    //std::ofstream outTXT("ZH1_insert_cmeshH1.txt");
+    //cmesh->Print(outTXT);
+    
     TPZMultiphysicsCompMesh *multiCmesh = new TPZMultiphysicsCompMesh(config.gmesh);
+    
     int interfaceMatID = -10;
     int hybridLevel = 1;
 
     const clock_t start = clock();
+    //std::ofstream outTXT2("ZCreatedCondensedElements.txt");
 
     switch(preConfig.mode){
         case 0: //H1
-            TPZCompMeshTools::CreatedCondensedElements(cmesh, false, false);
+            //TPZCompMeshTools::CreatedCondensedElements(cmesh, false, false);
+            //cmesh->Print(outTXT2);
             SolveH1Problem(cmesh, config, preConfig);
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-            { TPZTimer timer;
-            timer.start();
-            SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
-            timer.stop();
-            solveTime+=timer.seconds();
+            for(int ii=0;ii<1;ii++){
+                SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig,hybridLevel);
             }
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
-            {TPZTimer timer;
+            {
+#ifdef PZ_LOG
+                TPZTimer timer;
+                if(loggerST.isDebugEnabled())
                 timer.start();
+#endif
             SolveMixedProblem(multiCmesh, config, preConfig);
-            timer.stop();
-            solveTime+=timer.seconds();}
+#ifdef PZ_LOG
+                if(loggerST.isDebugEnabled()){
+                timer.stop();
+                solveTime+=timer.seconds();
+                }
+#endif
+            }
             break;
-        default:
+            default:
             DebugStop();
             break;
     }
@@ -222,8 +246,11 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     std::cout << "FINISHED!" << std::endl;
 }
 
+                      
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig,int hybridLevel){
 
+    unsigned long int assembleDuration;
+    unsigned long int solveDuration;
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
 #endif
@@ -232,17 +259,30 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     TPZAnalysis an(cmesh_H1Hybrid);
 
+    
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
-    strmat.SetNumThreads(0);
-    //        strmat.SetDecomposeType(ELDLt);
+    strmat.SetNumThreads(pConfig.tData.nThreads);
+    
+    TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
+
+#ifndef USING_LCCMATRIX
+    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
+        DebugStop();
+    }
+#endif
+#ifdef USING_LCCMATRIX
+    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
+        strmat.SetShouldColor(pConfig.shouldColor);
+        strmat.SetTBBorOMP(pConfig.isTBB);
+    }
+#endif
 #else
-    //    TPZFrontStructMatrix<TPZFrontSym<STATE> > strmat(Hybridmesh);
-    //    strmat.SetNumThreads(2);
-    //    strmat.SetDecomposeType(ELDLt);
-    TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
+    //TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
+    TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(0);
 #endif
+    
     std::set<int> matIds;
     for (auto matid : config.materialids) matIds.insert(matid);
     for (auto matidbc : config.bcmaterialids) matIds.insert(matidbc);
@@ -256,20 +296,39 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
+#ifdef FEMCOMPARISON_TIMER
+        auto beginAss = std::chrono::high_resolution_clock::now();
+
+#endif
+        an.Assemble();
+        
+#ifdef FEMCOMPARISON_TIMER
+        
+        auto endAss = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
+        pConfig.tData.assembleTime = static_cast<unsigned long int>(elapsed.count());
+#endif
     
-    TPZTimer timer;
-    timer.start();
-    an.Assemble();
-    timer.stop();
-    assembleTime+=timer.seconds();
+#ifdef FEMCOMPARISON_TIMER
+            auto begin = std::chrono::high_resolution_clock::now();
+#endif
+        an.Solve();
+#ifdef FEMCOMPARISON_TIMER
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        pConfig.tData.solveTime = static_cast<unsigned long int>(elapsedSolve.count());
     
-    an.Solve();
+#ifdef USING_SPEEDUP
+    FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
+#endif
+#endif
 
     int64_t nelem = cmesh_H1Hybrid->NElements();
     cmesh_H1Hybrid->LoadSolution(cmesh_H1Hybrid->Solution());
     cmesh_H1Hybrid->ExpandSolution();
     cmesh_H1Hybrid->ElementSolution().Redim(nelem, 5);
 
+    
     if(pConfig.debugger) {
         std::cout << "Computing Error HYBRID_H1 " << std::endl;
 #ifndef OPTMIZE_RUN_TIME
@@ -305,6 +364,8 @@ using namespace std;
 
 void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig config,struct PreConfig &pConfig) {
 
+    unsigned long int assembleDuration;
+    unsigned long int solveDuration;
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
 #endif
@@ -319,7 +380,7 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
 #ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_Mixed);
     //strmat.SetNumThreads(8);
-    strmat.SetNumThreads(0);
+    strmat.SetNumThreads(pConfig.tData.nThreads);
 #else
     TPZSkylineStructMatrix strmat(cmesh_Mixed);
     strmat.SetNumThreads(0);
@@ -332,18 +393,35 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     delete direct;
     direct = 0;
     
-    TPZTimer timer;
-    timer.start();
-    an.Assemble();
-    timer.stop();
-    assembleTime += timer.seconds();
-    
-#ifdef FEMCOMPARISON_DEBUG2
-    const string matrixNamevtk("matrixRigidezMixedProblem.vtk");
-    TPZMatrix<REAL> * matrizRigidez = an.Solver().Matrix().operator->();
-    //VisualMatrixVTK((TPZFMatrix<REAL>&)(*matrizRigidez),matrixNamevtk);
+#ifdef FEMCOMPARISON_TIMER
+    for(int i=0;i<1;i++){
+        auto begin = std::chrono::high_resolution_clock::now();
+
 #endif
-    an.Solve();
+        an.Assemble();
+        
+#ifdef FEMCOMPARISON_TIMER
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        assembleDuration = static_cast<unsigned long int>(elapsed.count());
+    }
+#endif
+#ifdef FEMCOMPARISON_TIMER
+    for(int i=0;i<1;i++){
+        auto begin = std::chrono::high_resolution_clock::now();
+#endif
+        an.Solve();
+#ifdef FEMCOMPARISON_TIMER
+        auto end = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        solveDuration = static_cast<unsigned long int>(elapsed.count());
+    }
+#ifdef USING_SPEEDUP
+    FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
+#endif
+#endif
+
 
     ////PostProcess
     if(pConfig.debugger) {
@@ -414,7 +492,9 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, ofstream &Erro,
     bool store_errors = false;
 
     an.PostProcessError(Errors, store_errors, Erro);
-
+    //std::cout<<"nnnnnnnn"<<std::endl;
+    //for(int i=0;i<Errors.size();i++)
+        //std::cout<<Errors[i]<<std::endl;
     if ((*Log)[0] != -1) {
         for (int j = 0; j < 3; j++) {
             (*pConfig.rate)[j] =
@@ -430,3 +510,20 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, ofstream &Erro,
         (*Log)[i] = Errors[i];
     Errors.clear();
 }
+
+/*
+void assemble(TPZCompMesh *cmesh){
+    
+    TPZEquationFilter equationFilter;
+    equationFilter.SetNumEq(cmesh ? cmesh->NEquations() : 0);
+
+    TPZFMatrix<STATE> rhs;
+    TPZMatrix<STATE> *stiff = Create();
+    
+    //int64_t neq = stiff->Rows();
+    int64_t cols = MAX(1, rhs.Cols());
+    rhs.Redim(fEquationFilter.NEqExpand(),cols);
+    Assemble(*stiff,rhs,guiInterface);
+    
+}
+*/
