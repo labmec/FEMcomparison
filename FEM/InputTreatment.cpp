@@ -43,8 +43,8 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     }
 
     if(pConfig.argc != 1) {
-        config.k = atoi(argv[3]);
-        config.n = atoi(argv[4]);
+        config.k = atoi(argv[4]);
+        config.n = atoi(argv[5]);
     }
 
     if(pConfig.debugger == true && ndiv != 0){
@@ -152,22 +152,18 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 }
 
 void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
-    if(argc != 1 && argc != 5){
+    if(argc != 1 && argc != 8){
         std::cout << "Invalid entry";
         DebugStop();
     }
-    if(argc == 5){
+    if(argc == 8){
         pConfig.argc = argc;
-        for(int i = 3; i < 5 ; i++)
+        for(int i = 4; i < 8 ; i++)
             IsInteger(argv[i]);
         if(std::strcmp(argv[2], "H1") == 0)
             pConfig.mode = 0;
         else if(std::strcmp(argv[2], "Hybrid") == 0) {
             pConfig.mode = 1;
-            if(pConfig.n < 1 ){
-                std::cout << "Unstable method\n";
-                DebugStop();
-            }
         }
         else if(std::strcmp(argv[2], "Mixed") == 0) {
             pConfig.mode = 2;
@@ -193,6 +189,12 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             pConfig.problem = "ESteklovNonConst";
         }
         else DebugStop();
+        
+        pConfig.topology = argv[3];
+        pConfig.refLevel = atoi(argv[6]);
+        pConfig.tData.nThreads = atoi(argv[7]);
+        pConfig.k = atoi(argv[4]);
+        pConfig.n = atoi(argv[5]);
     }
     else{
         if (pConfig.approx == "H1") pConfig.mode = 0;
@@ -231,8 +233,10 @@ void IsInteger(char *argv){
     int x;
     if (!(ss >> x)) {
         std::cerr << "Invalid number: " << argv << '\n';
+        DebugStop();
     } else if (!ss.eof()) {
         std::cerr << "Trailing characters after number: " << argv << '\n';
+        DebugStop();
     }
 }
 

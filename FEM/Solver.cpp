@@ -259,15 +259,13 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 
     TPZAnalysis an(cmesh_H1Hybrid);
 
-    extern int nThreads;
-
     
 #ifdef PZ_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(pConfig.tData.nThreads);
     
     TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
-    
+
 #ifndef USING_LCCMATRIX
     if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
         DebugStop();
@@ -330,6 +328,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     cmesh_H1Hybrid->ExpandSolution();
     cmesh_H1Hybrid->ElementSolution().Redim(nelem, 5);
 
+    
     if(pConfig.debugger) {
         std::cout << "Computing Error HYBRID_H1 " << std::endl;
 #ifndef OPTMIZE_RUN_TIME

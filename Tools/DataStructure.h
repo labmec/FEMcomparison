@@ -76,9 +76,9 @@ struct PreConfig{
     int dim = 1;
     int topologyMode = -1;
 
-    std::string problem;
-    std::string approx;
-    std::string topology;           //Topology' name typed as input
+    std::string problem = "ESinSin";
+    std::string approx = "Hybrid";
+    std::string topology = "Quadrilateral";           //Topology' name typed as input
     std::string topologyFileName;   //Simplified name used for naming files/directories
 
     REAL perm_Q1 = 5;      /// Permeability coefficient of even quadrants (Steklov only)
@@ -93,6 +93,7 @@ struct PreConfig{
     int argc = 1;
     int type= -1;
 
+    bool makeScript = false;
     bool debugger = true;
     int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)
     

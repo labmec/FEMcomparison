@@ -20,6 +20,12 @@ SOURCES main_HybridH1.cpp)
 #add_executable(HybridH1 main_HybridH1.cpp)
 target_link_libraries(HybridH1 PRIVATE Methods Tools)
 
+add_pz_target(
+  NAME Automated
+SOURCES main_Automated.cpp)
+#add_executable(Automated main_Automated.cpp)
+target_link_libraries(Automated PRIVATE Methods Tools)
+
 # Project to compute speedup
 add_pz_target(
   NAME SpeedUp
