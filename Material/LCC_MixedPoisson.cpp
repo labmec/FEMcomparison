@@ -7,7 +7,8 @@
 
 #include "LCC_MixedPoisson.h"
 #include "pzlog.h"
-#include "pzbndcond.h"
+#include "TPZBndCondT.h"
+#include "TPZMaterialDataT.h"
 #include "pzfmatrix.h"
 #include "pzaxestools.h"
 #ifdef FEMCOMPARISON_USING_MKL
@@ -29,7 +30,7 @@ static TPZLogger loggerCTB("contributeTimeBoundary");
 LCCMixedPoisson::LCCMixedPoisson(): TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson() {
 }
 
-LCCMixedPoisson::LCCMixedPoisson(int matid, int dim): TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson(matid,dim) {
+LCCMixedPoisson::LCCMixedPoisson(int matid, int dim): TPZRegisterClassId(&LCCMixedPoisson::ClassId), TPZMixedDarcyFlow(matid,dim) {
     if (dim < 1) {
         DebugStop();
     }
@@ -38,10 +39,10 @@ LCCMixedPoisson::LCCMixedPoisson(int matid, int dim): TPZRegisterClassId(&TPZMix
 LCCMixedPoisson::~LCCMixedPoisson() {
 }
 
-LCCMixedPoisson::LCCMixedPoisson(const TPZMixedPoisson &cp) :TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson(cp) {}
+LCCMixedPoisson::LCCMixedPoisson(const LCCMixedPoisson &cp) :TPZRegisterClassId(&LCCMixedPoisson::ClassId), TPZMixedDarcyFlow(cp) {}
 
-LCCMixedPoisson & LCCMixedPoisson::operator=(const TPZMixedPoisson &copy){
-    TPZMixedPoisson::operator=(copy);
+LCCMixedPoisson & LCCMixedPoisson::operator=(const LCCMixedPoisson &copy){
+    TPZMixedDarcyFlow::operator=(copy);
     return *this;
 }
 
@@ -66,10 +67,10 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
     TPZFMatrix<REAL> &phip = datavec[1].phi;
     TPZFMatrix<REAL> &divQ = datavec[0].divphi;
     
-    STATE force = ff;
+    STATE force = 0.;
     if(fForcingFunction) {
         TPZManVector<STATE> res(1);
-        fForcingFunction->Execute(datavec[1].x,res);
+        fForcingFunction(datavec[1].x,res);
         force = res[0];
     }
     

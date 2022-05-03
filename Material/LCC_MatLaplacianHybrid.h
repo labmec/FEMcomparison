@@ -9,28 +9,25 @@
 #define TPZMatLaplacianHybrid_hpp
 
 #include <stdio.h>
-#include "TPZMatLaplacian.h"
+#include "DarcyFlow/TPZHybridDarcyFlow.h"
 
-class LCC_MatLaplacianHybrid : public TPZMatLaplacian
+class TPZMatLaplacianHybrid : public TPZHybridDarcyFlow
 {
     
 public:
     
-    LCC_MatLaplacianHybrid(int matid, int dim);
+    TPZMatLaplacianHybrid(int matid, int dim);
     
-    LCC_MatLaplacianHybrid(int matid)
-    : TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian(matid)
-    {
         
-    }
+
     
-    LCC_MatLaplacianHybrid();
+    TPZMatLaplacianHybrid();
     
-    LCC_MatLaplacianHybrid(const TPZMatLaplacian &copy);
+    TPZMatLaplacianHybrid(const TPZMatLaplacianHybrid &copy);
     
-    virtual ~LCC_MatLaplacianHybrid();
+    virtual ~TPZMatLaplacianHybrid();
     
-    LCC_MatLaplacianHybrid &operator=(const LCC_MatLaplacianHybrid &copy);
+    TPZMatLaplacianHybrid &operator=(const TPZMatLaplacianHybrid &copy);
     
     virtual TPZMaterial *NewMaterial() override;
     
