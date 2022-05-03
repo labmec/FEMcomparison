@@ -15,6 +15,11 @@ void IsInteger(char *argv);
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]);
 void CharReplace(std::string &str, char find, char replace );
 void InitializeSpeedUp(PreConfig &pConfig);
-void CreateDirector(std::string &resultsFile, std::string &time);
+void DirectoryCreation(std::string &resultsFile, std::string &time);
+void InitializeAutomated(PreConfig &pConfig);
+
+template <typename Out>
+void split(const std::string &s, char delim, Out result);
+std::vector<std::string> split(const std::string &s, char delim);
 
 #endif //FEMCOMPARISON_INPUTTREATMENT_H

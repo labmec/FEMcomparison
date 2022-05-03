@@ -7,6 +7,7 @@
 #include "MeshInit.h"
 #include "Tools.h"
 #include <algorithm>
+#include <thread>
 
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     ReadEntry(config, pConfig);
@@ -43,8 +44,8 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
     }
 
     if(pConfig.argc != 1) {
-        config.k = atoi(argv[4]);
-        config.n = atoi(argv[5]);
+        config.k = atoi(argv[5]);
+        config.n = atoi(argv[6]);
     }
 
     if(pConfig.debugger == true && ndiv != 0){
@@ -80,7 +81,10 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
 
 void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     //Error buffer
+#ifdef USING_SPEEDUP
     InitializeSpeedUp(pConfig);
+#endif
+    if (pConfig.makeScript) InitializeSpeedUp(pConfig);
     if (pConfig.argc == 2) return;
 
     if( remove( "Erro.txt" ) != 0) perror( "Error deleting file" );
@@ -157,18 +161,21 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
     if (argc == 2){
         if (std::strcmp(argv[1],"generate") == 0){
             pConfig.makeScript = true;
+            //IsInteger(argv[2]);
+            pConfig.tData.nThreads = std::thread::hardware_concurrency();
+ //atoi(argv[2]);
             return;
         } else {
             DebugStop();
         }
     }
     
-    if(argc != 1 && argc != 8){
+    if(argc != 1 && argc != 9){
         std::cout << "Invalid entry";
         DebugStop();
     }
-    if(argc == 8){
-        for(int i = 4; i < 8 ; i++)
+    if(argc == 9){
+        for(int i = 5; i < 9 ; i++)
             IsInteger(argv[i]);
         if(std::strcmp(argv[2], "H1") == 0)
             pConfig.mode = 0;
@@ -201,10 +208,11 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         else DebugStop();
         
         pConfig.topology = argv[3];
-        pConfig.refLevel = atoi(argv[6]);
-        pConfig.tData.nThreads = atoi(argv[7]);
-        pConfig.k = atoi(argv[4]);
-        pConfig.n = atoi(argv[5]);
+        pConfig.automatedFileName = argv[4];
+        pConfig.k = atoi(argv[5]);
+        pConfig.n = atoi(argv[6]);
+        pConfig.refLevel = atoi(argv[7]);
+        pConfig.tData.nThreads = atoi(argv[8]);
     }
     else{
         if (pConfig.approx == "H1") pConfig.mode = 0;
@@ -270,22 +278,58 @@ void InitializeSpeedUp(PreConfig &pConfig){
 #ifdef USING_SPEEDUP
     resultsFile="SpeedUpResults";
     pConfig.speedUpFilePath = resultsFile+'/';
-    CreateDirectory(resultsFile,time);
+    DirectoryCreation(resultsFile,time);
 #endif
     
     if (pConfig.makeScript){
         resultsFile = "AutomatedResults";
         pConfig.automatedFileName = resultsFile+ '/'+ time;
-        CreateDirector(resultsFile,time);
+        DirectoryCreation(resultsFile,time);
     }
-    
-    
 }
 
-void CreateDirector(std::string &resultsFile, std::string &time){
+void InitializeAutomated(PreConfig &pConfig){
+    std::stringstream fileNamess;
+
+    std::string fileName = pConfig.automatedFileName;
+    std::vector<std::string> elems = split(fileName, '/');
+    DirectoryCreation(elems[0], elems[1]);
+    
+    fileNamess<< pConfig.approx << "n" << pConfig.n << "-" << pConfig.topology;
+    fileName = fileNamess.str();
+    pConfig.automatedFilePath = pConfig.automatedFileName + "/" + fileName;
+    std::string command = "mkdir -p " + pConfig.automatedFilePath;
+    system(command.c_str());
+    
+    fileNamess.str(std::string());
+    fileNamess << pConfig.automatedFilePath << "/nthreads" << pConfig.tData.nThreads << ".csv";
+    std::cout << fileNamess.str() << std::endl;
+    
+    std::ofstream filestream;
+    filestream.open(fileNamess.str(),std::ofstream::app);
+    pConfig.speedUpOfstream = &filestream;
+
+}
+
+void DirectoryCreation(std::string &resultsFile, std::string &time){
     std::string command = "mkdir -p " + resultsFile;
     system(command.c_str());
     resultsFile += '/' +time;
     command = "mkdir -p " + resultsFile;
     system(command.c_str());
+}
+
+template <typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::istringstream iss(s);
+    std::string item;
+    while (std::getline(iss, item, delim)) {
+        *result++ = item;
+    }
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
 }

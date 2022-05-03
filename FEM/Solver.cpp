@@ -321,6 +321,11 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 #ifdef USING_SPEEDUP
     FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
 #endif
+
+    if (pConfig.targetAutomated){
+        FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
+    }
+    
 #endif
 
     int64_t nelem = cmesh_H1Hybrid->NElements();

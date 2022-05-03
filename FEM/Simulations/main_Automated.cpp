@@ -16,8 +16,8 @@ using namespace std;
 #include <math.h>//used only for timer statistics
 #include <fstream>//used only for timer statistics
 #include <vector>//used only for timer statistics
-
 #endif
+
 int main(int argc, char *argv[]) {
     
 #ifdef PZ_LOG
@@ -25,10 +25,10 @@ int main(int argc, char *argv[]) {
 #endif
     
     PreConfig pConfig;
+    pConfig.targetAutomated = true;
     pConfig.debugger = false;       // Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
-    pConfig.makeScript = false;
     
     if (argc == 1){
         std::cout << "This program isn't supposed to run this way \n";
@@ -41,12 +41,12 @@ int main(int argc, char *argv[]) {
     if (pConfig.makeScript){
         
         int maxThreads = pConfig.tData.nThreads;
-        int ref2D = 8;
-        int ref3D = 5;
+        int ref2D = 2;
+        int ref3D = 1;
         
         std::ofstream fileStream;
         pConfig.speedUpOfstream = &fileStream;
-        pConfig.speedUpOfstream->open(pConfig.speedUpFilePath+".sh",std::ofstream::app);
+        pConfig.speedUpOfstream->open(pConfig.automatedFileName +"/config.sh",std::ofstream::app);
         fileStream << "#!/bin/bash\n";
         
         for (int approxMethod=0; approxMethod < 3; approxMethod++){
@@ -101,34 +101,20 @@ int main(int argc, char *argv[]) {
                         break;
                 }
                 
-                for (int nthreads=0; nthreads < maxThreads+1; nthreads+=2){
-                    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << pConfig.refLevel << " " << pConfig.tData.nThreads << std::endl;
+                for (int nThreads=0; nThreads < maxThreads+1; nThreads+=2){
+                    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << nThreads << std::endl;
                     
                 }
-                pConfig.speedUpOfstream->close();
             }
         }
-        
+        pConfig.speedUpOfstream->close();
     } else{
-        //std::cout << "TopologyMode: " << pConfig.topologyMode << ", refLevel: " << pConfig.refLevel << ", nThreads" << pConfig.tData.nThreads << std::endl;
-        
-        pConfig.exp *= pow(2,pConfig.refLevel-1);
+        InitializeAutomated(pConfig);
+        pConfig.exp *= pow(2,pConfig.refLevel);
         pConfig.h = 1./pConfig.exp;
         ProblemConfig config;
         Configure(config,pConfig.refLevel,pConfig,argv);
         Solve(config,pConfig);
-        pConfig.hLog = pConfig.h;
-        if(pConfig.debugger){
-            std::string command = "cp ErroHybrid.txt " + pConfig.plotfile + "/Erro.txt";
-            system(command.c_str());
-                FlushTable(pConfig,argv);
-        }
-        
-        cout<<"Number of assembly threads: "<<pConfig.tData.nThreads<<endl;
-        cout<<"*********** Statistics for the assembly time *****"<<endl;
-        cout<<"Time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
-        cout<<"*********** Statistics for the linear system solve time *****"<<endl;
-        cout<<"Time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
     }
     
     return 0;

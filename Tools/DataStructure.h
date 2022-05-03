@@ -90,12 +90,14 @@ struct PreConfig{
     std::string plotfile;
     std::string speedUpFilePath;
     std::string automatedFileName;
+    std::string automatedFilePath;
     
     int mode = -1;           // 0 = "H1"; 1 = "Hybrid"; 2 = "Mixed";
     int argc = 1;
     int type= -1;
 
     bool makeScript = false;
+    bool targetAutomated = false;
     bool debugger = true;
     int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)
     
