@@ -66,7 +66,7 @@ struct MultithreadData{
 
 struct PreConfig{
     std::ofstream Erro, timer;
-    std::ofstream *speedUpOfstream;
+    std::ofstream *speedUpOfstream, *speeedUpPath;
 
     TPZVec<REAL> *rate, *Log;
     int refLevel = -1;

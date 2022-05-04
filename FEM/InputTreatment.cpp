@@ -168,7 +168,9 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             }
             pConfig.tData.nThreads = std::thread::hardware_concurrency();
             return;
-        } else {
+        } else if (std::strcmp(argv[1],"summarize")){
+            return;
+        }else {
             DebugStop();
         }
     }
@@ -339,4 +341,35 @@ std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
     split(s, delim, std::back_inserter(elems));
     return elems;
+}
+
+
+void OfstreamPath(PreConfig &pConfig){
+    
+    std::string filePath = "OfstreamPath.txt";
+
+    char* ccx = new char[filePath.length() + 1];
+    std::copy(filePath.begin(), filePath.end(), ccx);
+    
+    if( remove("OfstreamPath.txt") != 0) perror( "WARNING: FAIL TO REMOVE OFSTREAMPATH.TXT" );
+    else puts( "OFSTREAMPATH.TXT SUCCESSFULLY CLEARED");
+
+    pConfig.speeedUpPath = new std::ofstream;
+    pConfig.speeedUpPath->open(filePath,std::ios::app);
+    
+}
+
+void ManageOfstream(PreConfig &pConfig, int nThreads){
+
+    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << nThreads << std::endl;
+
+}
+
+void ManageOfstream(PreConfig &pConfig){
+
+    std::stringstream fileNamess;
+    fileNamess<< pConfig.approx << "n" << pConfig.n << "-" << pConfig.topology;
+    pConfig.automatedFilePath = pConfig.automatedFileName + '/' + fileNamess.str() + '/';
+
+    *pConfig.speeedUpPath << pConfig.automatedFilePath << std::endl;
 }

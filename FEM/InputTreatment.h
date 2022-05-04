@@ -21,5 +21,9 @@ void InitializeAutomated(PreConfig &pConfig);
 template <typename Out>
 void split(const std::string &s, char delim, Out result);
 std::vector<std::string> split(const std::string &s, char delim);
+void ManageOfstream(PreConfig &pConfig, int nThreads);
+void ManageOfstream(PreConfig &pConfig);
+
+void OfstreamPath(PreConfig &pConfig);
 
 #endif //FEMCOMPARISON_INPUTTREATMENT_H

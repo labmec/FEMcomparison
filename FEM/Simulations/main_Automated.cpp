@@ -51,6 +51,8 @@ int main(int argc, char *argv[]) {
 
         fileStream << "#!/bin/bash\n";
         
+        OfstreamPath(pConfig);
+        
         for (int approxMethod=0; approxMethod < 3; approxMethod++){
             for (int topologyType=0; topologyType<4; topologyType++){
                 std::stringstream sufix;
@@ -103,14 +105,23 @@ int main(int argc, char *argv[]) {
                         break;
                 }
                 
+                ManageOfstream(pConfig);
+
                 for (int nThreads=0; nThreads < maxThreads+1; nThreads+=2){
-                    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << nThreads << std::endl;
-                    
+                    ManageOfstream(pConfig, nThreads);
                 }
             }
         }
+        pConfig.speeedUpPath->close();
         pConfig.speedUpOfstream->close();
-    } else{
+    } else if (pConfig.argc == 2){
+        
+        std::ifstream *PathsIfs = new std::ifstream;
+        PathsIfs->open("oftreamPath.txt");
+        std::ifstream *DataIfs;
+
+        pConfig.automatedFileName = "";
+    }else{
         InitializeAutomated(pConfig);
         pConfig.exp *= pow(2,pConfig.refLevel);
         pConfig.h = 1./pConfig.exp;
