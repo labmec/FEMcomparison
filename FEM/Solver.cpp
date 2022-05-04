@@ -260,7 +260,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     TPZAnalysis an(cmesh_H1Hybrid);
 
     
-#ifdef PZ_USING_MKL
+#ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);
     strmat.SetNumThreads(pConfig.tData.nThreads);
     
@@ -319,11 +319,11 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
         pConfig.tData.solveTime = static_cast<unsigned long int>(elapsedSolve.count());
     
 #ifdef USING_SPEEDUP
-    FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
+    FlushSpeedUpResults(pConfig.tData.assembleTime, pConfig.tData.solveTime, pConfig);
 #endif
 
     if (pConfig.targetAutomated){
-        FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
+        FlushSpeedUpResults(pConfig.tData.assembleTime, pConfig.tData.solveTime, pConfig);
     }
     
 #endif
@@ -386,6 +386,20 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     TPZSymetricSpStructMatrix strmat(cmesh_Mixed);
     //strmat.SetNumThreads(8);
     strmat.SetNumThreads(pConfig.tData.nThreads);
+    
+    TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
+#ifndef USING_LCCMATRIX
+    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
+        DebugStop();
+    }
+#endif
+#ifdef USING_LCCMATRIX
+    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
+        strmat.SetShouldColor(pConfig.shouldColor);
+        strmat.SetTBBorOMP(pConfig.isTBB);
+    }
+#endif
+
 #else
     TPZSkylineStructMatrix strmat(cmesh_Mixed);
     strmat.SetNumThreads(0);
@@ -413,7 +427,6 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     }
 #endif
 #ifdef FEMCOMPARISON_TIMER
-    for(int i=0;i<1;i++){
         auto begin = std::chrono::high_resolution_clock::now();
 #endif
         an.Solve();
@@ -421,10 +434,13 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
         solveDuration = static_cast<unsigned long int>(elapsed.count());
-    }
+    
 #ifdef USING_SPEEDUP
     FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
 #endif
+    if (pConfig.targetAutomated){
+        FlushSpeedUpResults(assembleDuration, solveDuration, pConfig);
+    }
 #endif
 
 

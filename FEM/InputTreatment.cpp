@@ -88,7 +88,7 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     if (pConfig.argc == 2) return;
 
     if( remove( "Erro.txt" ) != 0) perror( "Error deleting file" );
-    else puts( "Error log successfully deleted" );
+    //else puts( "Error log successfully deleted" );
 
     pConfig.Erro.open("Erro.txt",std::ofstream::app);
     pConfig.Erro << "----------COMPUTED ERRORS----------\n";
@@ -149,8 +149,8 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 
     if( remove(timer_name.c_str()) != 0)
         perror( "Error deleting file" );
-    else
-        puts( "Error log successfully deleted" );
+//    else
+//        puts( "Error log successfully deleted" );
 
     pConfig.timer.open(timer_name, std::ofstream::app);
 }
@@ -161,9 +161,12 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
     if (argc == 2){
         if (std::strcmp(argv[1],"generate") == 0){
             pConfig.makeScript = true;
-            //IsInteger(argv[2]);
+            int maxnThreads = std::thread::hardware_concurrency();
+            if (maxnThreads > 32) {
+                std::cout << "maxnThreads = " << maxnThreads << "setting maxnThreads = 32\n";
+                maxnThreads = 32;
+            }
             pConfig.tData.nThreads = std::thread::hardware_concurrency();
- //atoi(argv[2]);
             return;
         } else {
             DebugStop();
@@ -207,6 +210,7 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         }
         else DebugStop();
         
+        pConfig.approx=argv[2];
         pConfig.topology = argv[3];
         pConfig.automatedFileName = argv[4];
         pConfig.k = atoi(argv[5]);
@@ -303,11 +307,14 @@ void InitializeAutomated(PreConfig &pConfig){
     
     fileNamess.str(std::string());
     fileNamess << pConfig.automatedFilePath << "/nthreads" << pConfig.tData.nThreads << ".csv";
-    std::cout << fileNamess.str() << std::endl;
+
+    std::string stringnom=fileNamess.str();
+    char* ccx = new char[stringnom.length() + 1];
+    std::copy(stringnom.begin(), stringnom.end(), ccx);
     
-    std::ofstream filestream;
-    filestream.open(fileNamess.str(),std::ofstream::app);
-    pConfig.speedUpOfstream = &filestream;
+    if( remove(ccx) != 0) perror( "File successfully created" );
+    pConfig.speedUpOfstream = new std::ofstream;
+    pConfig.speedUpOfstream->open(fileNamess.str(),std::ofstream::app);
 
 }
 

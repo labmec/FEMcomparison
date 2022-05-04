@@ -46,7 +46,9 @@ int main(int argc, char *argv[]) {
         
         std::ofstream fileStream;
         pConfig.speedUpOfstream = &fileStream;
-        pConfig.speedUpOfstream->open(pConfig.automatedFileName +"/config.sh",std::ofstream::app);
+        //pConfig.speedUpOfstream->open(pConfig.automatedFileName +"/config.sh",std::ofstream::app);
+        pConfig.speedUpOfstream->open("config.sh",std::ofstream::app);
+
         fileStream << "#!/bin/bash\n";
         
         for (int approxMethod=0; approxMethod < 3; approxMethod++){
