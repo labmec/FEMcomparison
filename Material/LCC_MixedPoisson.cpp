@@ -27,7 +27,7 @@ static TPZLogger loggerCTM("contributeTimeVol");
 static TPZLogger loggerCTB("contributeTimeBoundary");
 #endif
 
-LCCMixedPoisson::LCCMixedPoisson(): TPZRegisterClassId(&TPZMixedPoisson::ClassId), TPZMixedPoisson() {
+LCCMixedPoisson::LCCMixedPoisson(): TPZRegisterClassId(&LCCMixedPoisson::ClassId), TPZMixedDarcyFlow() {
 }
 
 LCCMixedPoisson::LCCMixedPoisson(int matid, int dim): TPZRegisterClassId(&LCCMixedPoisson::ClassId), TPZMixedDarcyFlow(matid,dim) {
@@ -47,7 +47,7 @@ LCCMixedPoisson & LCCMixedPoisson::operator=(const LCCMixedPoisson &copy){
 }
 
 
-void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
+void LCCMixedPoisson::Contribute(const TPZVec<TPZMaterialDataT<STATE>> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) {
 #ifdef FEMCOMPARISON_TIMER
     extern double contributeTimeVol;
     extern int64_t contributeMaterialCounter;
@@ -59,8 +59,6 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
     timer.start();
 #endif
 
-    if(fIsStabilized)
-        DebugStop();
     
     // Setting the phis
     TPZFMatrix<REAL> &phiQ = datavec[0].phi;
@@ -74,15 +72,14 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         force = res[0];
     }
     
-    TPZFNMatrix<9,STATE> PermTensor;
-    TPZFNMatrix<9,STATE> InvPermTensor;
+    const STATE perm = GetPermeability(datavec[0].x);
+    const STATE inv_perm = 1 / perm;
+
+    TPZFNMatrix<9,STATE> PermTensor(3,3);
+    TPZFNMatrix<9,STATE> InvPermTensor(3,3);
+    PermTensor.Diagonal(perm);
+    InvPermTensor.Diagonal(inv_perm);
     
-    GetPermeabilities(datavec[1].x, PermTensor, InvPermTensor);
-        
-    
-    if(fUseHdois==true){
-        DebugStop();
-    }
     
     int phrq, phrp;
     phrp = phip.Rows();
@@ -188,7 +185,7 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
         for (int jq=0; jq<phrq; jq++)
         {
             REAL prod1 = ivec(0,iq)*ivec(0,jq) + ivec(1,iq)*ivec(1,jq) + ivec(2,iq)*ivec(2,jq);
-            ek(iq,jq) += InvPermTensor(0,0)*weight*prod1;
+            ek(iq,jq) += inv_perm*weight*prod1;
         }
     }
     
@@ -224,16 +221,18 @@ void LCCMixedPoisson::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, 
     //double end = clock();
 #ifdef PZ_LOG
     if(loggerCTM.isDebugEnabled()){
-    timer.stop();
+        timer.stop();
     //contributeTimeVol += (end-start)/CLOCKS_PER_SEC;
-    contributeTimeVol += timer.seconds();
-    contributeMaterialCounter++;
+#ifdef FEMCOMPARISON_TIMER
+        contributeTimeVol += timer.seconds();
+        contributeMaterialCounter++;
+#endif
     }
 #endif
 }
 
 
-void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc){
+void LCCMixedPoisson::ContributeBC(const TPZVec<TPZMaterialDataT<STATE>> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCondT<STATE> &bc){
     
 #ifdef FEMCOMPARISON_TIMER
     extern double contributeTimeBoundary;
@@ -262,18 +261,21 @@ void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight
     TPZFMatrix<REAL>  &phiQ = datavec[0].phi;
     int phrq = phiQ.Rows();
 
-    REAL v2 = bc.Val2()(0,0);
+    REAL v2 = bc.Val2()[0];
     REAL v1 = bc.Val1()(0,0);
     REAL u_D = 0;
     REAL normflux = 0.;
     
-    if(bc.HasForcingFunction())
+    if(bc.HasForcingFunctionBC())
     {
         TPZManVector<STATE> res(3);
         TPZFNMatrix<9,STATE> gradu(dim,1);
-        bc.ForcingFunction()->Execute(datavec[0].x,res,gradu);
+        bc.ForcingFunctionBC()(datavec[0].x,res,gradu);
         TPZFNMatrix<9,STATE> PermTensor, InvPermTensor;
-        GetPermeabilities(datavec[0].x, PermTensor, InvPermTensor);
+        REAL perm;
+        perm = GetPermeability(datavec[0].x);
+        PermTensor.Diagonal(perm);
+        InvPermTensor.Diagonal(1./perm);
         
         
         for(int i=0; i<3; i++)
@@ -305,7 +307,7 @@ void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight
         }
     }else
     {
-        v2 = bc.Val2()(0,0);
+        v2 = bc.Val2()[0];
     }
 
     switch (bc.Type()) {
@@ -322,10 +324,10 @@ void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight
             //primeira equacao
             for(int iq=0; iq<phrq; iq++)
             {
-                ef(iq,0)+= gBigNumber*v2*phiQ(iq,0)*weight;
+                ef(iq,0)+= fBigNumber*v2*phiQ(iq,0)*weight;
                 for (int jq=0; jq<phrq; jq++) {
                     
-                    ek(iq,jq)+= gBigNumber*phiQ(iq,0)*phiQ(jq,0)*weight;
+                    ek(iq,jq)+= fBigNumber*phiQ(iq,0)*phiQ(jq,0)*weight;
                 }
             }
             break;
@@ -349,10 +351,10 @@ void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight
                 
                 for(int iq=0; iq<phrq; iq++)
                 {
-                    ef(iq,0)+= gBigNumber*normflux*phiQ(iq,0)*weight;
+                    ef(iq,0)+= fBigNumber*normflux*phiQ(iq,0)*weight;
                     for (int jq=0; jq<phrq; jq++) {
                         
-                        ek(iq,jq)+= gBigNumber*phiQ(iq,0)*phiQ(jq,0)*weight;
+                        ek(iq,jq)+= fBigNumber*phiQ(iq,0)*phiQ(jq,0)*weight;
                     }
                 }
                 
@@ -376,14 +378,17 @@ void LCCMixedPoisson::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight
     }
 #ifdef PZ_LOG
     timer.stop();
+#ifdef FEMCOMPARISON_TIMER
     if(loggerCTB.isDebugEnabled()){
     contributeTimeBoundary += timer.seconds();
     contributeBoundaryCounter++;
     }
 #endif
+
+#endif
 }
 
 int LCCMixedPoisson::ClassId() const{
-    return Hash("LCCMixedPoisson") ^ TPZMatPoisson3d::ClassId() << 1;
+    return Hash("LCCMixedPoisson") ^ TPZMixedDarcyFlow::ClassId() << 1;
 }
 
