@@ -257,16 +257,15 @@ int main(int argc, char *argv[]) {
                         loopSize = -1;
                     }
                     
-                    std::cout << std::endl;
                     lineCounter++;
                 }
-                DataIfs->close();
-                std::cout << std::endl;
                 
+                DataIfs->close();
                 for (int i = 0; i < 3; i++){
                     pConfig.stat.csv[i]->close();
                 }
                 
+                *pConfig.stat.txt << "}" << std::endl;
                 pConfig.stat.txt->close();
             }
     }else{
