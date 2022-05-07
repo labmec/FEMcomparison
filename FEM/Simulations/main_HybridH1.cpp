@@ -34,14 +34,15 @@ int main(int argc, char *argv[]) {
 #ifdef PZ_LOG
     TPZLogger::InitializePZLOG();
 #endif
-    
+    for (int ii=0; ii<4; ii++){
+        std::cout << "ii =" << ii << std::endl;
     PreConfig pConfig;
     pConfig.k = 1;//
     pConfig.n = 2;
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 2;                     //// How many refinements
+    pConfig.refLevel = 8;                     //// How many refinements
     pConfig.debugger = false;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
@@ -70,7 +71,7 @@ int main(int argc, char *argv[]) {
     cout<<"Time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
     cout<<"*********** Statistics for the linear system solve time *****"<<endl;
     cout<<"Time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
-    
+    }
     return 0;
 }
 

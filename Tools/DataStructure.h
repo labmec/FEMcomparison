@@ -1,4 +1,4 @@
-//
+
 //  ProblemConfig.h
 //  ErrorEstimation
 //
@@ -19,7 +19,7 @@ struct ProblemConfig
     /// polynomial order of the original mesh
     int k = -1;
     int n = -1;
-
+    
     /// option to compute the error based on continuous pressures or not
     bool makepressurecontinuous = true;
     
@@ -59,9 +59,24 @@ struct ProblemConfig
 struct MultithreadData{
 
     int nThreads;
+    int maxThreads;
     unsigned long int assembleTime;
     unsigned long int solveTime;
 
+};
+
+struct Statistics{
+    int nLoops;
+    int iterNum;
+    TPZFMatrix<double> timeVec;
+    TPZVec<double> avg, spu, cvar, serialTime;
+    std::vector<std::ofstream*> csv;
+    std::ofstream* txt;
+};
+
+struct RdAutomated {
+    int nThreads, maxThreads, iterNum;
+    double assembleTime, solveTime, totalTime;
 };
 
 struct PreConfig{
@@ -105,7 +120,11 @@ struct PreConfig{
     bool isTBB = true;
     
     MultithreadData tData;
+    Statistics stat;
+    RdAutomated rAutomated;
+    
+    int ref2D = -1;
+    int ref3D = -1;
 };
-
 
 #endif /* ProblemConfig_h */

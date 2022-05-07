@@ -85,7 +85,7 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     InitializeSpeedUp(pConfig);
 #endif
     if (pConfig.makeScript) InitializeSpeedUp(pConfig);
-    if (pConfig.argc == 2) return;
+    if (pConfig.argc == 5 || pConfig.argc == 2) return;
 
     if( remove( "Erro.txt" ) != 0) perror( "Error deleting file" );
     //else puts( "Error log successfully deleted" );
@@ -158,29 +158,43 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
     pConfig.argc = argc;
     
-    if (argc == 2){
+    if (argc == 5){
         if (std::strcmp(argv[1],"generate") == 0){
             pConfig.makeScript = true;
             int maxnThreads = std::thread::hardware_concurrency();
+            
             if (maxnThreads > 32) {
                 std::cout << "maxnThreads = " << maxnThreads << "setting maxnThreads = 32\n";
                 maxnThreads = 32;
             }
-            pConfig.tData.nThreads = std::thread::hardware_concurrency();
-            return;
-        } else if (std::strcmp(argv[1],"summarize")){
+            pConfig.tData.maxThreads = maxnThreads;
+            for(int i = 2; i < 5 ; i++)
+                IsInteger(argv[i]);
+            pConfig.ref2D = atoi(argv[2]);
+            pConfig.ref3D = atoi(argv[3]);
+            pConfig.stat.nLoops = atoi(argv[4]);
+            
+            if (pConfig.stat.nLoops < 1) {
+                DebugStop();
+            }
             return;
         }else {
             DebugStop();
         }
     }
-    
-    if(argc != 1 && argc != 9){
+    if (argc == 2){
+        if (std::strcmp(argv[1],"summarize") == 0){
+            return;
+        } else {
+            DebugStop();
+        }
+    }
+    if(argc != 1 && argc != 11){
         std::cout << "Invalid entry";
         DebugStop();
     }
-    if(argc == 9){
-        for(int i = 5; i < 9 ; i++)
+    if(argc == 11){
+        for(int i = 5; i < 11 ; i++)
             IsInteger(argv[i]);
         if(std::strcmp(argv[2], "H1") == 0)
             pConfig.mode = 0;
@@ -219,6 +233,9 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         pConfig.n = atoi(argv[6]);
         pConfig.refLevel = atoi(argv[7]);
         pConfig.tData.nThreads = atoi(argv[8]);
+        pConfig.tData.maxThreads = atoi(argv[9]);
+        pConfig.stat.iterNum = atoi(argv[10]);
+
     }
     else{
         if (pConfig.approx == "H1") pConfig.mode = 0;
@@ -264,6 +281,27 @@ void IsInteger(char *argv){
     }
 }
 
+void IsInteger(std::string str){
+    int n = str.length();
+    // declaring character array
+    char char_array[n + 1];
+    // copying the contents of the
+    // string to char array
+    strcpy(char_array, str.c_str());
+    IsInteger(char_array);
+    return;
+}
+
+
+void isFloat( std::string myString ) {
+    std::istringstream iss(myString);
+    float f;
+    iss >> std::noskipws >> f; // noskipws considers leading whitespace invalid
+    // Check the entire string was consumed and if either failbit or badbit is set
+    if (!(iss.eof() && !iss.fail())) {DebugStop();}
+    return;
+}
+
 void CharReplace(std::string &str, char find, char replace ) {
   std::replace(str.begin(), str.end(), find, replace);
 }
@@ -307,17 +345,20 @@ void InitializeAutomated(PreConfig &pConfig){
     std::string command = "mkdir -p " + pConfig.automatedFilePath;
     system(command.c_str());
     
+    pConfig.speedUpOfstream = new std::ofstream;
     fileNamess.str(std::string());
-    fileNamess << pConfig.automatedFilePath << "/nthreads" << pConfig.tData.nThreads << ".csv";
+    fileNamess << pConfig.automatedFilePath << "/speedUp.csv";
 
-    std::string stringnom=fileNamess.str();
-    char* ccx = new char[stringnom.length() + 1];
-    std::copy(stringnom.begin(), stringnom.end(), ccx);
-    
-    if( remove(ccx) != 0) perror( "File successfully created" );
+    if (pConfig.tData.nThreads == 0 && pConfig.stat.iterNum > 0){
+        std::string stringnom = fileNamess.str();
+        if( remove(stringnom.c_str()) != 0) perror( "File successfully created" );
+    }
     pConfig.speedUpOfstream = new std::ofstream;
     pConfig.speedUpOfstream->open(fileNamess.str(),std::ofstream::app);
 
+    if (pConfig.tData.nThreads == 0 && pConfig.stat.iterNum > 0){
+        *pConfig.speedUpOfstream << "nThreads,assembleTime,solveTime,totalTime,maxNthreads,iterNum" << std::endl;
+    }
 }
 
 void DirectoryCreation(std::string &resultsFile, std::string &time){
@@ -348,10 +389,10 @@ void OfstreamPath(PreConfig &pConfig){
     
     std::string filePath = "OfstreamPath.txt";
 
-    char* ccx = new char[filePath.length() + 1];
-    std::copy(filePath.begin(), filePath.end(), ccx);
+    //char* ccx = new char[filePath.length() + 1];
+    //std::copy(filePath.begin(), filePath.end(), ccx);
     
-    if( remove("OfstreamPath.txt") != 0) perror( "WARNING: FAIL TO REMOVE OFSTREAMPATH.TXT" );
+    if( remove(filePath.c_str()) != 0) perror( "WARNING: FAIL TO REMOVE OFSTREAMPATH.TXT" );
     else puts( "OFSTREAMPATH.TXT SUCCESSFULLY CLEARED");
 
     pConfig.speeedUpPath = new std::ofstream;
@@ -359,10 +400,9 @@ void OfstreamPath(PreConfig &pConfig){
     
 }
 
-void ManageOfstream(PreConfig &pConfig, int nThreads){
+void ManageOfstream(PreConfig &pConfig, int nThreads, int iterNum){
 
-    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << nThreads << std::endl;
-
+    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << nThreads << " " << pConfig.tData.maxThreads << " " << iterNum << std::endl;
 }
 
 void ManageOfstream(PreConfig &pConfig){
@@ -372,4 +412,24 @@ void ManageOfstream(PreConfig &pConfig){
     pConfig.automatedFilePath = pConfig.automatedFileName + '/' + fileNamess.str() + '/';
 
     *pConfig.speeedUpPath << pConfig.automatedFilePath << std::endl;
+}
+
+void ReadAutomated(std::vector<std::string> &cellVec, PreConfig &pConfig){
+    if (cellVec.size() != 6) {DebugStop(); }
+
+    IsInteger(cellVec[0]);
+    IsInteger(cellVec[4]);
+    IsInteger(cellVec[5]);
+    
+    isFloat(cellVec[1]);
+    isFloat(cellVec[2]);
+    isFloat(cellVec[3]);
+
+    pConfig.rAutomated.nThreads = atoi(cellVec[0].c_str());
+    pConfig.rAutomated.assembleTime = atof(cellVec[1].c_str());
+    pConfig.rAutomated.solveTime = atof(cellVec[2].c_str());
+    pConfig.rAutomated.totalTime = atof(cellVec[3].c_str());
+    pConfig.rAutomated.maxThreads = atoi(cellVec[4].c_str());
+    pConfig.rAutomated.iterNum = atoi(cellVec[5].c_str());
+    
 }

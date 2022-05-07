@@ -12,6 +12,9 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &eData);
 void ReadEntry(ProblemConfig &config, PreConfig &preConfig);
 void InitializeOutstream(PreConfig &eData,char *argv[]);
 void IsInteger(char *argv);
+void IsInteger(std::string str);
+void isFloat( std::string myString );
+
 void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]);
 void CharReplace(std::string &str, char find, char replace );
 void InitializeSpeedUp(PreConfig &pConfig);
@@ -21,9 +24,10 @@ void InitializeAutomated(PreConfig &pConfig);
 template <typename Out>
 void split(const std::string &s, char delim, Out result);
 std::vector<std::string> split(const std::string &s, char delim);
-void ManageOfstream(PreConfig &pConfig, int nThreads);
+void ManageOfstream(PreConfig &pConfig, int nThreads, int iterNum);
 void ManageOfstream(PreConfig &pConfig);
 
 void OfstreamPath(PreConfig &pConfig);
+void ReadAutomated(std::vector<std::string> &cellVec, PreConfig &pConfig);
 
 #endif //FEMCOMPARISON_INPUTTREATMENT_H

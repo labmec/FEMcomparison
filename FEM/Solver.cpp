@@ -258,7 +258,6 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     std::cout << "Solving HYBRID_H1 " << std::endl;
 
     TPZAnalysis an(cmesh_H1Hybrid);
-
     
 #ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(cmesh_H1Hybrid);

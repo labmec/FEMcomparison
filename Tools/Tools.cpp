@@ -1544,7 +1544,8 @@ void VectorEnergyNorm(TPZCompMesh *hdivmesh, std::ostream &out,  const ProblemCo
 
 void FlushSpeedUpResults(unsigned long int &assembleTime,unsigned long int &solveTime, PreConfig &pConfig){
     
-    *pConfig.speedUpOfstream << pConfig.tData.nThreads << ", " << assembleTime*1E-9 << ", " << solveTime*1E-9 << ", " << assembleTime*1E-9+solveTime*1E-9 << ", " << pConfig.tData.nThreads;
+    *pConfig.speedUpOfstream << pConfig.tData.nThreads << "," << assembleTime*1E-9 << "," << solveTime*1E-9 << "," << assembleTime*1E-9+solveTime*1E-9 << "," << pConfig.tData.maxThreads << ","<< pConfig.stat.iterNum << std::endl << std::flush;
+    pConfig.speedUpOfstream->close();
 }
 
 
