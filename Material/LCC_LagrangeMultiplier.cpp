@@ -42,34 +42,6 @@ void LCC_LagrangeMultiplier::Read(TPZStream &buf, void *context)
     
 }
 
-//Contribution of skeletal elements.
-void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
-{
-    int nmesh = datavec.size();
-    if (nmesh!=2) DebugStop();
-
-    TPZFMatrix<REAL>  &phiQ = datavec[0].phi;
-    TPZFMatrix<REAL> &phiP = datavec[1].phi;
-    int phrq = phiQ.Rows();
-    int phrp = phiP.Rows();
-    
-//------- Block of matrix B ------
-    int iq, jp;
-	for(iq = 0; iq<phrq; iq++) {
-		for(jp=0; jp<phrp; jp++) {
-            ek(iq, phrq+jp) += fMultiplier*weight*phiQ(iq,0)*phiP(jp,0);
-		}
-	}
-    
-    
-//------- Block of matrix B^T ------
-    int ip, jq;
-	for(ip=0; ip<phrp; ip++) {
-		for(jq=0; jq<phrq; jq++) {
-			ek(ip + phrq,jq) += fMultiplier*weight*phiP(ip,0)*phiQ(jq,0);
-		}
-	}
-}
 
 /**
  * @brief Computes a contribution to the stiffness matrix and load vector at one integration point to multiphysics simulation
@@ -82,7 +54,7 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @since June 5, 2012
  */
 
-void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &data, const std::map<int, TPZMaterialDataT<STATE>> &dataleft, const std::map<int, TPZMaterialDataT<STATE>> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
 #ifdef FEMCOMPARISON_TIMER
     auto begin = std::chrono::high_resolution_clock::now();
@@ -114,8 +86,8 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
 //    {
 //        DebugStop();
 //    }
-    TPZFMatrix<REAL> &phiL = dataleft.begin()->second.phi;
-    TPZFMatrix<REAL> &phiR = dataright.begin()->second.phi;
+    const TPZFMatrix<REAL> &phiL = dataleft.begin()->second.phi;
+    const TPZFMatrix<REAL> &phiR = dataright.begin()->second.phi;
     
     
     int nrowl = phiL.Rows();
@@ -184,7 +156,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
     for(il=0; il<nrowl; il++) {
         for(jr=0; jr<nrowr; jr++) {
             for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * (phiL(il) * phiR(jr));
+                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * (phiL.g(il,0) * phiR.g(jr,0));
             }
         }
     }
@@ -193,7 +165,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
     for(ir=0; ir<nrowr; ir++) {
         for(jl=0; jl<nrowl; jl++) {
             for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phiR(ir) * phiL(jl));
+                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phiR.g(ir,0) * phiL.g(jl,0));
             }
         }
     }
@@ -220,6 +192,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
  * @param ef [out] is the load vector
  * @since April 16, 2007
  */
+/*
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
 //	TPZFMatrix<REAL> &dphiLdAxes = dataleft.dphix;
@@ -263,27 +236,13 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMater
 	}
     
 }
-
-/**
- * @brief It computes a contribution to residual vector at one integration point
- * @param data [in]
- * @param dataleft [in]
- * @param dataright [in]
- * @param weight [in]
- * @param ef [out] is the load vector
- * @since April 16, 2007
- */
-
-void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
-{
-    DebugStop();
-}
+*/
 
 // print the data in human readable form
-void LCC_LagrangeMultiplier::Print(std::ostream &out)
+void LCC_LagrangeMultiplier::Print(std::ostream &out) const
 {
     out << __PRETTY_FUNCTION__ << std::endl;
-    TPZMaterial::Print(out);
+    TPZLagrangeMultiplierCS<STATE>::Print(out);
     out << "NStateVariables " << this->fNStateVariables << std::endl;
     out << "fDimension " << this->fDimension << std::endl;
     out << "fMultiplier " << this->fMultiplier << std::endl;

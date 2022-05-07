@@ -6,7 +6,7 @@
 #define FEMCOMPARISON_ANALYTICS_H
 
 #include <TPZMultiphysicsCompMesh.h>
-#include "pzanalysis.h"
+#include "TPZLinearAnalysis.h"
 #include "DataStructure.h"
 void calcstiffTestTBB(TPZCompMesh *cmesh, int nthreads);
 void calcstiffTestOMP(TPZCompMesh *cmesh, int nthreads);
