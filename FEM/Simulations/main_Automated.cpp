@@ -133,11 +133,13 @@ int main(int argc, char *argv[]) {
         std::ifstream *DataIfs = new std::ifstream;
         
         pConfig.stat.csv.resize(3);
+        pConfig.stat.txt.resize(3);
+
         for (int i = 0; i < 3; i++){
             pConfig.stat.csv[i] = new std::ofstream;
+            pConfig.stat.txt[i] = new std::ofstream;
         }
 
-        pConfig.stat.txt = new std::ofstream;
         
         PathsIfs->open("ofstreamPath.txt");
             std::string pathLine;
@@ -152,18 +154,18 @@ int main(int argc, char *argv[]) {
                 std::string dataLine;
                 
                 std::vector<std::string> avgName;
-                avgName.push_back(path + "/assemAvg.csv");
-                avgName.push_back(path + "/solveAvg.csv");
-                avgName.push_back(path + "/totalAvg.csv");
+                avgName.push_back(path + "/assem");
+                avgName.push_back(path + "/solve");
+                avgName.push_back(path + "/total");
 
                 if (avgName.size() != 3) {DebugStop();}
                 for (int i = 0; i < 3; i++){
-                    pConfig.stat.csv[i]->open(avgName[i]);
+                    pConfig.stat.csv[i]->open(avgName[i]+"Avg.csv");
                     *pConfig.stat.csv[i] << "nThreads,avg,cvar,speedUp" << std::endl;
+                    
+                    pConfig.stat.txt[i]->open(avgName[i] + "SpeedUp.txt");
+                    *pConfig.stat.txt[i] << "{" << std::endl;
                 }
-                
-                pConfig.stat.txt->open(path + "/assemSpeedUp");
-                *pConfig.stat.txt << "{" << std::endl;
                 
                 int lineCounter = 0;
                 int nThreads = -1;
@@ -249,9 +251,8 @@ int main(int argc, char *argv[]) {
                         
                         for (int i = 0; i < 3; i++){
                             *pConfig.stat.csv[i] << pConfig.rAutomated.nThreads << "," << pConfig.stat.avg[i] << "," << pConfig.stat.cvar[i]<< "," <<pConfig.stat.spu[i] << std::endl;
+                            *pConfig.stat.txt[i] << "(" << pConfig.rAutomated.nThreads << "," << pConfig.stat.spu[i] << ")\n";
                         }
-
-                        *pConfig.stat.txt << "(" << pConfig.rAutomated.nThreads << "," << pConfig.stat.spu[0] << ")\n";
 
                         pConfig.stat.timeVec.Resize(0,0);
                         loopSize = -1;
@@ -263,10 +264,9 @@ int main(int argc, char *argv[]) {
                 DataIfs->close();
                 for (int i = 0; i < 3; i++){
                     pConfig.stat.csv[i]->close();
+                    *pConfig.stat.txt[i] << "}" << std::endl;
+                    pConfig.stat.txt[i]->close();
                 }
-                
-                *pConfig.stat.txt << "}" << std::endl;
-                pConfig.stat.txt->close();
             }
     }else{
         InitializeAutomated(pConfig);

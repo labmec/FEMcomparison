@@ -34,8 +34,7 @@ int main(int argc, char *argv[]) {
 #ifdef PZ_LOG
     TPZLogger::InitializePZLOG();
 #endif
-    for (int ii=0; ii<4; ii++){
-        std::cout << "ii =" << ii << std::endl;
+    
     PreConfig pConfig;
     pConfig.k = 1;//
     pConfig.n = 2;
@@ -46,7 +45,7 @@ int main(int argc, char *argv[]) {
     pConfig.debugger = false;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
-    pConfig.tData.nThreads = 4;
+    pConfig.tData.nThreads = 8;
     
     
     EvaluateEntry(argc,argv,pConfig);
@@ -71,7 +70,7 @@ int main(int argc, char *argv[]) {
     cout<<"Time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
     cout<<"*********** Statistics for the linear system solve time *****"<<endl;
     cout<<"Time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
-    }
+    
     return 0;
 }
 

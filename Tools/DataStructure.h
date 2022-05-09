@@ -70,8 +70,7 @@ struct Statistics{
     int iterNum;
     TPZFMatrix<double> timeVec;
     TPZVec<double> avg, spu, cvar, serialTime;
-    std::vector<std::ofstream*> csv;
-    std::ofstream* txt;
+    std::vector<std::ofstream*> csv, txt;
 };
 
 struct RdAutomated {

@@ -21,9 +21,6 @@
 #include "TPZTimer.h"
 #include <chrono>
 #include "pzstrmatrixLCC.h"
-//#include <tbb/parallel_for.h>
-//#include <tbb/task_scheduler_init.h>
-//#include "omp.h"
 
 #ifdef PZ_LOG
 static TPZLogger loggerST("solveTime");
@@ -264,7 +261,6 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     strmat.SetNumThreads(pConfig.tData.nThreads);
     
     TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
-
 #ifndef USING_LCCMATRIX
     if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
         DebugStop();
