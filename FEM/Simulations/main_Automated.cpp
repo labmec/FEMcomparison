@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
         OfstreamPath(pConfig);
         
         for (int approxMethod=0; approxMethod < 3; approxMethod++){
-            for (int topologyType=0; topologyType<4; topologyType++){
+            for (int topologyType=1; topologyType < 4; topologyType += 2){
                 std::stringstream sufix;
                 switch (topologyType) {
                     case 0:
@@ -141,10 +141,13 @@ int main(int argc, char *argv[]) {
         }
 
         
-        PathsIfs->open("ofstreamPath.txt");
+        PathsIfs->open("OfstreamPath.txt");
             std::string pathLine;
+            int counter = 0;
             while (std::getline(*PathsIfs,pathLine))
             {
+                std::cout << "line " << counter << std::endl << std::endl << std::endl;
+                counter++;
                 std::string path;
                 
                 std::istringstream iss(pathLine);
@@ -173,7 +176,11 @@ int main(int argc, char *argv[]) {
                 int iterCounter = -1;
                 bool iterEnd = true;
                 
+                int counter2 = 0;
                 while (std::getline(*DataIfs,dataLine)){
+                
+                std::cout << "cmd " << counter2 << std::endl;
+                counter2++;
                     if (lineCounter == 0){
                         lineCounter++;
                         continue;
@@ -192,7 +199,7 @@ int main(int argc, char *argv[]) {
                         loopSize = pConfig.rAutomated.iterNum;
                         
                         if (loopSize < 1)
-                            DebugStop();
+                            break;
                         
                         iterCounter = 1;
                         iterEnd = false;
@@ -200,9 +207,11 @@ int main(int argc, char *argv[]) {
                         
                     } else {
                         if (loopSize < 1)
-                            DebugStop();
-                        if (pConfig.rAutomated.iterNum != -iterCounter)
-                                DebugStop();
+                            break;
+                        if (loopSize != 1 && pConfig.rAutomated.iterNum != -iterCounter){
+                          std::cout << "loopsize " << loopSize << " pConfig.rAutomated.iterNum " << pConfig.rAutomated.iterNum << "iterCounter " << iterCounter << "iterEnd" << iterEnd << std::endl;
+                                break;
+                        }        
                         if (pConfig.rAutomated.iterNum == 1-loopSize){
                             iterEnd = true;
                         } else {

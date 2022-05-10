@@ -21,6 +21,9 @@
 #include "TPZTimer.h"
 #include <chrono>
 #include "pzstrmatrixLCC.h"
+//#include <tbb/parallel_for.h>
+//#include <tbb/task_scheduler_init.h>
+//#include "omp.h"
 
 #ifdef PZ_LOG
 static TPZLogger loggerST("solveTime");
@@ -261,6 +264,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
     strmat.SetNumThreads(pConfig.tData.nThreads);
     
     TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
+
 #ifndef USING_LCCMATRIX
     if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
         DebugStop();
@@ -307,6 +311,7 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 #ifdef FEMCOMPARISON_TIMER
             auto begin = std::chrono::high_resolution_clock::now();
 #endif
+        an.setNumThreads(pConfig.tData.nThreads);
         an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
@@ -424,6 +429,9 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
 #ifdef FEMCOMPARISON_TIMER
         auto begin = std::chrono::high_resolution_clock::now();
 #endif
+        //int effNthreads = pConfig.tData.nThreads;
+        //if (effNthreads == 0) effNthreads =1;
+        //an.setNumThreads(effNthreads);
         an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();

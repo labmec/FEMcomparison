@@ -163,9 +163,10 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             pConfig.makeScript = true;
             int maxnThreads = std::thread::hardware_concurrency();
             
-            if (maxnThreads > 32) {
-                std::cout << "maxnThreads = " << maxnThreads << "setting maxnThreads = 32\n";
-                maxnThreads = 32;
+            int hardCodedMaxThreads = 16;
+            if (maxnThreads > hardCodedMaxThreads) {
+                //std::cout << "maxnThreads = " << maxnThreads << "setting maxnThreads = 32\n";
+                maxnThreads = hardCodedMaxThreads;
             }
             pConfig.tData.maxThreads = maxnThreads;
             for(int i = 2; i < 5 ; i++)
