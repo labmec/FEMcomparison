@@ -26,12 +26,11 @@ SOURCES main_Automated.cpp)
 #add_executable(Automated main_Automated.cpp)
 target_link_libraries(Automated PRIVATE Methods Tools)
 
-# Project to compute speedup
 add_pz_target(
-  NAME SpeedUp
-SOURCES main_SpeedUp.cpp)
-#add_executable(SpeedUp main_SpeedUp.cpp)
-target_link_libraries(SpeedUp PRIVATE Methods Tools)
+  NAME TimeEfficiency
+SOURCES main_TimeEfficiency.cpp)
+#add_executable(TimeEfficiency main_TimeEfficiency.cpp)
+target_link_libraries(TimeEfficiency PRIVATE Methods Tools)
 
 # Project to apply error estimation for hybrid H1 approximations
 add_pz_target(

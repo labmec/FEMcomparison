@@ -81,9 +81,6 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
 
 void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     //Error buffer
-#ifdef USING_SPEEDUP
-    InitializeSpeedUp(pConfig);
-#endif
     if (pConfig.makeScript) InitializeSpeedUp(pConfig);
     if (pConfig.argc == 5 || pConfig.argc == 2) return;
 
@@ -320,11 +317,6 @@ void InitializeSpeedUp(PreConfig &pConfig){
     CharReplace(time, ':', '-');
 
     std::string resultsFile;
-#ifdef USING_SPEEDUP
-    resultsFile="SpeedUpResults";
-    pConfig.speedUpFilePath = resultsFile+'/';
-    DirectoryCreation(resultsFile,time);
-#endif
     
     if (pConfig.makeScript){
         resultsFile = "AutomatedResults";
@@ -401,9 +393,20 @@ void OfstreamPath(PreConfig &pConfig){
     
 }
 
-void ManageOfstream(PreConfig &pConfig, int nThreads, int iterNum){
+void ManageOfstream(PreConfig &pConfig, int spanVar, int iterNum){
 
-    *pConfig.speedUpOfstream << "./Automated " << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << nThreads << " " << pConfig.tData.maxThreads << " " << iterNum << std::endl;
+    std::string executable;
+    if (pConfig.target.automated){
+        executable = "./Automated ";
+        pConfig.tData.nThreads = spanVar;
+    } else if (pConfig.target.timeEfficiency){
+        executable = "./TimeEfficiency ";
+        pConfig.refLevel = spanVar;
+        pConfig.tData.nThreads = pConfig.tData.maxThreads;
+    } else {
+        DebugStop();
+    }
+    *pConfig.speedUpOfstream << executable << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << pConfig.tData.nThreads << " " <<  pConfig.tData.maxThreads << " " << iterNum << std::endl;
 }
 
 void ManageOfstream(PreConfig &pConfig){

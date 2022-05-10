@@ -23,7 +23,7 @@ void CreateCondensedMixedElements(TPZMultiphysicsCompMesh *cmesh_Mixed);
 void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct PreConfig &eData);
 
 //// Solve Primal Hybrid problem
-void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, int InterfaceMatId, struct ProblemConfig config, struct PreConfig &eData,int hybridLevel);
+void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, int InterfaceMatId, struct ProblemConfig config, struct PreConfig &eData);
 
 //// Solve Mixed problem
 void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig config,struct PreConfig &eData);
@@ -40,5 +40,6 @@ void Solve(ProblemConfig &config, PreConfig &preConfig);
 //// Draw geometric and computational mesh
 void DrawMesh(ProblemConfig &config, PreConfig &preConfig, TPZCompMesh *cmesh, TPZMultiphysicsCompMesh *multiCmesh);
 
+void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig, bool isHybridH1);
 
 #endif //FEMCOMPARISON_ANALYTICS_H

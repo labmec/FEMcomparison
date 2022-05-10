@@ -78,6 +78,11 @@ struct RdAutomated {
     double assembleTime, solveTime, totalTime;
 };
 
+struct Target{
+    bool automated = false;
+    bool timeEfficiency = false;
+};
+
 struct PreConfig{
     std::ofstream Erro, timer;
     std::ofstream *speedUpOfstream, *speeedUpPath;
@@ -111,7 +116,6 @@ struct PreConfig{
     int type= -1;
 
     bool makeScript = false;
-    bool targetAutomated = false;
     bool debugger = true;
     int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)
     
@@ -121,6 +125,7 @@ struct PreConfig{
     MultithreadData tData;
     Statistics stat;
     RdAutomated rAutomated;
+    Target target;
     
     int ref2D = -1;
     int ref3D = -1;

@@ -10,6 +10,8 @@ target_sources(Methods PUBLIC
         Output.h
         Solver.cpp
         Solver.h
+	ScriptTools.cpp
+	ScriptTools.h
         )
 
 target_link_libraries(Methods PUBLIC Tools)
