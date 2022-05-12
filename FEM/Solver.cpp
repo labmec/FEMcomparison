@@ -57,9 +57,7 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
-            for(int ii=0;ii<1;ii++){
-                SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig);
-            }
+            SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig);
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
@@ -252,8 +250,6 @@ void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceM
 #ifndef OPTMIZE_RUN_TIME
     config.exact.operator*().fSignConvention = 1;
 #endif
-    
-    std::cout << "Solving HYBRID_H1 " << std::endl;
     NonConformAssemblage(cmesh_H1Hybrid,InterfaceMatId,config,pConfig,1);
 }
 
@@ -263,8 +259,6 @@ void SolveMixedProblem(TPZMultiphysicsCompMesh *cmesh_Mixed,struct ProblemConfig
     config.exact.operator*().fSignConvention = 1;
 #endif
 
-    std::cout << "Solving Mixed " << std::endl;
-    
     NonConformAssemblage(cmesh_Mixed,-1,config,pConfig,0);
 
 }
@@ -330,6 +324,8 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     unsigned long int assembleDuration;
     unsigned long int solveDuration;
     
+    std::cout << "Solving " << pConfig.approx << " " << pConfig.topology << " ref " << pConfig.refLevel << " nThreads " << pConfig.tData.nThreads << " isColoring " << pConfig.shouldColor << " isTBB " << pConfig.isTBB << std::endl;
+    
     TPZAnalysis an(multiCmesh);
     
 #ifdef FEMCOMPARISON_USING_MKL
@@ -390,13 +386,13 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     //int effNthreads = pConfig.tData.nThreads;
     //if (effNthreads == 0) effNthreads =1;
     //an.setNumThreads(effNthreads);
-        an.Solve();
+        //an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
         pConfig.tData.solveTime = static_cast<unsigned long int>(elapsedSolve.count());
 
-    if (pConfig.target.automated){
+    if (pConfig.target.automated || pConfig.target.timeEfficiency){
         FlushSpeedUpResults(pConfig.tData.assembleTime, pConfig.tData.solveTime, pConfig);
     }
     

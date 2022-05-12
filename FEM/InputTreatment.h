@@ -19,7 +19,7 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]);
 void CharReplace(std::string &str, char find, char replace );
 void InitializeSpeedUp(PreConfig &pConfig);
 void DirectoryCreation(std::string &resultsFile, std::string &time);
-void InitializeAutomated(PreConfig &pConfig);
+void InitializeOfsSim(PreConfig &pConfig);
 
 template <typename Out>
 void split(const std::string &s, char delim, Out result);
@@ -28,6 +28,6 @@ void ManageOfstream(PreConfig &pConfig, int nThreads, int iterNum);
 void ManageOfstream(PreConfig &pConfig);
 
 void OfstreamPath(PreConfig &pConfig);
-void ReadAutomated(std::vector<std::string> &cellVec, PreConfig &pConfig);
+void ReadSimFile(std::vector<std::string> &cellVec, PreConfig &pConfig);
 
 #endif //FEMCOMPARISON_INPUTTREATMENT_H

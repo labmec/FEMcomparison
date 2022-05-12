@@ -78,7 +78,6 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
     config.problemname = preConfig.problem;
 }
 
-
 void InitializeOutstream(PreConfig &pConfig, char *argv[]){
     //Error buffer
     if (pConfig.makeScript) InitializeSpeedUp(pConfig);
@@ -182,6 +181,9 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
     }
     if (argc == 2){
         if (std::strcmp(argv[1],"summarize") == 0){
+            pConfig.stat.avg.Resize(3,0);
+            pConfig.stat.spu.Resize(3,0);
+            pConfig.stat.cvar.Resize(3,0);
             return;
         } else {
             DebugStop();
@@ -231,7 +233,17 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         pConfig.n = atoi(argv[6]);
         pConfig.refLevel = atoi(argv[7]);
         pConfig.tData.nThreads = atoi(argv[8]);
-        pConfig.tData.maxThreads = atoi(argv[9]);
+        
+        if (pConfig.target.automated){
+            pConfig.tData.maxThreads = atoi(argv[9]);
+            pConfig.rSimulation.maxRef = -999;
+        }else if (pConfig.target.timeEfficiency){
+            pConfig.tData.maxThreads = -999 ;
+            pConfig.tData.maxRef = atoi(argv[9]);
+        }else {
+            DebugStop();
+        }
+        
         pConfig.stat.iterNum = atoi(argv[10]);
 
     }
@@ -318,14 +330,18 @@ void InitializeSpeedUp(PreConfig &pConfig){
 
     std::string resultsFile;
     
-    if (pConfig.makeScript){
-        resultsFile = "AutomatedResults";
-        pConfig.automatedFileName = resultsFile+ '/'+ time;
-        DirectoryCreation(resultsFile,time);
+    if (pConfig.target.automated){
+        resultsFile = "OfsAutomated";
+    }else if (pConfig.target.timeEfficiency){
+        resultsFile = "OfsTimeEfficiency";
+    }else{
+        DebugStop();
     }
+    pConfig.automatedFileName = resultsFile+ '/'+ time;
+    DirectoryCreation(resultsFile,time);
 }
 
-void InitializeAutomated(PreConfig &pConfig){
+void InitializeOfsSim(PreConfig &pConfig){
     std::stringstream fileNamess;
 
     std::string fileName = pConfig.automatedFileName;
@@ -339,18 +355,32 @@ void InitializeAutomated(PreConfig &pConfig){
     system(command.c_str());
     
     pConfig.speedUpOfstream = new std::ofstream;
+    
+    bool isFirst = false;
     fileNamess.str(std::string());
-    fileNamess << pConfig.automatedFilePath << "/speedUp.csv";
+    if (pConfig.target.automated){
+        fileNamess << pConfig.automatedFilePath << "/speedUp.csv";
+        isFirst = (pConfig.tData.nThreads == 0);
+    }else if (pConfig.target.timeEfficiency) {
+        fileNamess << pConfig.automatedFilePath << "/timeEfficiency.csv";
+        isFirst = (pConfig.refLevel == 0);
+    }else {
+        DebugStop();
+    }
 
-    if (pConfig.tData.nThreads == 0 && pConfig.stat.iterNum > 0){
+    if (isFirst && pConfig.stat.iterNum > 0){
         std::string stringnom = fileNamess.str();
         if( remove(stringnom.c_str()) != 0) perror( "File successfully created" );
     }
     pConfig.speedUpOfstream = new std::ofstream;
     pConfig.speedUpOfstream->open(fileNamess.str(),std::ofstream::app);
 
-    if (pConfig.tData.nThreads == 0 && pConfig.stat.iterNum > 0){
-        *pConfig.speedUpOfstream << "nThreads,assembleTime,solveTime,totalTime,maxNthreads,iterNum" << std::endl;
+    if (isFirst && pConfig.stat.iterNum > 0){
+        if (pConfig.target.automated){
+            *pConfig.speedUpOfstream << "nThreads,assembleTime,solveTime,totalTime,maxNthreads,iterNum" << std::endl;
+        }else if (pConfig.target.timeEfficiency) {
+            *pConfig.speedUpOfstream << "nref,assembleTime,solveTime,totalTime,maxnRef,iterNum" << std::endl;
+        }
     }
 }
 
@@ -396,17 +426,20 @@ void OfstreamPath(PreConfig &pConfig){
 void ManageOfstream(PreConfig &pConfig, int spanVar, int iterNum){
 
     std::string executable;
+    int maxSpan;
     if (pConfig.target.automated){
         executable = "./Automated ";
         pConfig.tData.nThreads = spanVar;
+        maxSpan = pConfig.tData.maxThreads;
     } else if (pConfig.target.timeEfficiency){
         executable = "./TimeEfficiency ";
         pConfig.refLevel = spanVar;
         pConfig.tData.nThreads = pConfig.tData.maxThreads;
+        maxSpan = pConfig.tData.maxRef;
     } else {
         DebugStop();
     }
-    *pConfig.speedUpOfstream << executable << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << pConfig.tData.nThreads << " " <<  pConfig.tData.maxThreads << " " << iterNum << std::endl;
+    *pConfig.speedUpOfstream << executable << pConfig.problem << " " << pConfig.approx << " " << pConfig.topology << " " << pConfig.automatedFileName <<" " << pConfig.k << " " << pConfig.n << " " << pConfig.refLevel << " " << pConfig.tData.nThreads << " " <<  maxSpan << " " << iterNum << std::endl;
 }
 
 void ManageOfstream(PreConfig &pConfig){
@@ -418,7 +451,7 @@ void ManageOfstream(PreConfig &pConfig){
     *pConfig.speeedUpPath << pConfig.automatedFilePath << std::endl;
 }
 
-void ReadAutomated(std::vector<std::string> &cellVec, PreConfig &pConfig){
+void ReadSimFile(std::vector<std::string> &cellVec, PreConfig &pConfig){
     if (cellVec.size() != 6) {DebugStop(); }
 
     IsInteger(cellVec[0]);
@@ -429,11 +462,22 @@ void ReadAutomated(std::vector<std::string> &cellVec, PreConfig &pConfig){
     isFloat(cellVec[2]);
     isFloat(cellVec[3]);
 
-    pConfig.rAutomated.nThreads = atoi(cellVec[0].c_str());
-    pConfig.rAutomated.assembleTime = atof(cellVec[1].c_str());
-    pConfig.rAutomated.solveTime = atof(cellVec[2].c_str());
-    pConfig.rAutomated.totalTime = atof(cellVec[3].c_str());
-    pConfig.rAutomated.maxThreads = atoi(cellVec[4].c_str());
-    pConfig.rAutomated.iterNum = atoi(cellVec[5].c_str());
+    pConfig.rSimulation.assembleTime = atof(cellVec[1].c_str());
+    pConfig.rSimulation.solveTime = atof(cellVec[2].c_str());
+    pConfig.rSimulation.totalTime = atof(cellVec[3].c_str());
+    if (pConfig.target.automated){
+        pConfig.rSimulation.nThreads = atoi(cellVec[0].c_str());
+        pConfig.rSimulation.maxThreads = atoi(cellVec[4].c_str());
+        pConfig.rSimulation.nRef = -999;
+        pConfig.rSimulation.maxRef = -999;
+    }else if (pConfig.target.timeEfficiency){
+        pConfig.rSimulation.nThreads = -999;
+        pConfig.rSimulation.maxThreads = -999;
+        pConfig.rSimulation.nRef = atoi(cellVec[0].c_str());
+        pConfig.rSimulation.maxRef = atoi(cellVec[4].c_str());
+    }else {
+        DebugStop();
+    }
+    pConfig.rSimulation.iterNum = atoi(cellVec[5].c_str());
     
 }

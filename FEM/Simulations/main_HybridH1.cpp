@@ -20,8 +20,8 @@ using namespace std;
 #endif
 int main(int argc, char *argv[]) {
 #ifdef FEMCOMPARISON_TIMER
-    TPZTimer timer;
-    timer.start();
+    //TPZTimer timer;
+    //timer.start();
     
     bool atypical1=false;
     
@@ -37,15 +37,15 @@ int main(int argc, char *argv[]) {
     
     PreConfig pConfig;
     pConfig.k = 1;//
-    pConfig.n = 1;
+    pConfig.n = 3;
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
-    pConfig.approx = "Mixed";                //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
+    pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel = 4;                     //// How many refinements
-    pConfig.debugger = true;                  //// Print geometric and computational mesh
+    pConfig.debugger = false;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
-    pConfig.tData.nThreads = 6;
+    pConfig.tData.nThreads = 0;
     
     
     EvaluateEntry(argc,argv,pConfig);
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         system(command.c_str());
             FlushTable(pConfig,argv);
     }
-    timer.stop();
+    //timer.stop();
     
     cout<<"Number of assembly threads: "<<pConfig.tData.nThreads<<endl;
     cout<<"*********** Statistics for the assembly time *****"<<endl;

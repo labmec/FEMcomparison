@@ -59,7 +59,7 @@ struct ProblemConfig
 struct MultithreadData{
 
     int nThreads;
-    int maxThreads;
+    int maxThreads, maxRef;
     unsigned long int assembleTime;
     unsigned long int solveTime;
 
@@ -73,8 +73,8 @@ struct Statistics{
     std::vector<std::ofstream*> csv, txt;
 };
 
-struct RdAutomated {
-    int nThreads, maxThreads, iterNum;
+struct RSimulation {
+    int nThreads, maxThreads, iterNum, maxRef, nRef;
     double assembleTime, solveTime, totalTime;
 };
 
@@ -124,7 +124,7 @@ struct PreConfig{
     
     MultithreadData tData;
     Statistics stat;
-    RdAutomated rAutomated;
+    RSimulation rSimulation;
     Target target;
     
     int ref2D = -1;
