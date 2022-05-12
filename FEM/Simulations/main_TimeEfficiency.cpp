@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 #endif
     
     PreConfig pConfig;
-    pConfig.target.automated = true;
+    pConfig.target.timeEfficiency = true;
     pConfig.debugger = false;       // Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
