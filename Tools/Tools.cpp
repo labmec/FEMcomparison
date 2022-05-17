@@ -1559,5 +1559,14 @@ void FlushSpeedUpResults(unsigned long int &assembleTime,unsigned long int &solv
     pConfig.speedUpOfstream->close();
 }
 
+void FlushSpeedUpResults(const double &L2error, const double &energyError,const int &nDof, PreConfig &pConfig){
+    
+    int spanValue, maxSpan;
+
+    spanValue = pConfig.refLevel;
+    maxSpan = pConfig.tData.maxRef;
+    
+    *pConfig.speedUpOfstream << spanValue << "," << nDof << "," << L2error << "," << energyError << "," << maxSpan << "," << pConfig.stat.iterNum << std::endl << std::flush;
+}
 
           

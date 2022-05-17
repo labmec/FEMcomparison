@@ -293,6 +293,7 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, std::ofstream &
     bool store_errors = false;
 
     an.PostProcessError(Errors, store_errors, Erro);
+    //an.PostProcessError(Errors, store_errors);
     
     std::cout << "Errors =(";
     for (int i = 0; i < Errors.size(); i++){
@@ -386,7 +387,7 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     //int effNthreads = pConfig.tData.nThreads;
     //if (effNthreads == 0) effNthreads =1;
     //an.setNumThreads(effNthreads);
-        //an.Solve();
+        an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
@@ -395,8 +396,39 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     if (pConfig.target.automated || pConfig.target.timeEfficiency){
         FlushSpeedUpResults(pConfig.tData.assembleTime, pConfig.tData.solveTime, pConfig);
     }
-    
 #endif
+    
+    if (pConfig.target.errorMeasurement){
+#ifndef OPTMIZE_RUN_TIME
+        an.SetExact(config.exact.operator*().ExactSolution());
+        TPZManVector<REAL,6> Errors;
+        Errors.resize(pConfig.numErrors);
+        
+        if(pConfig.mode == 1){
+            pConfig.numErrors = 4 ;
+        } else if (pConfig.mode == 2){
+            pConfig.numErrors = 5;
+        } else DebugStop();
+
+        Errors.resize(pConfig.numErrors);
+        
+        bool store_errors = false;
+
+        an.PostProcessError(Errors,store_errors);
+        
+        double L2error, energyError;
+        int nDof = multiCmesh->NEquations();
+        if(pConfig.mode == 1){
+            L2error = Errors[0];
+            energyError = Errors[3];
+        } else if (pConfig.mode == 2){
+            L2error = Errors[0];
+            energyError = Errors[1];
+        }
+        
+        FlushSpeedUpResults(L2error, energyError,nDof, pConfig);
+#endif
+    }
     
     if(pConfig.debugger) {
         std::cout << "Computing Error " << std::endl;

@@ -152,8 +152,8 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
 }
 
 void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
-    pConfig.argc = argc;
     
+    pConfig.argc = argc;
     if (argc == 5){
         if (std::strcmp(argv[1],"generate") == 0){
             pConfig.makeScript = true;
@@ -237,7 +237,7 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         if (pConfig.target.automated){
             pConfig.tData.maxThreads = atoi(argv[9]);
             pConfig.rSimulation.maxRef = -999;
-        }else if (pConfig.target.timeEfficiency){
+        }else if (pConfig.target.timeEfficiency || pConfig.target.errorMeasurement){
             pConfig.tData.maxThreads = -999 ;
             pConfig.tData.maxRef = atoi(argv[9]);
         }else {
@@ -334,6 +334,8 @@ void InitializeSpeedUp(PreConfig &pConfig){
         resultsFile = "OfsAutomated";
     }else if (pConfig.target.timeEfficiency){
         resultsFile = "OfsTimeEfficiency";
+    } else if (pConfig.target.errorMeasurement){
+        resultsFile = "OfsErrorMeasurement";
     }else{
         DebugStop();
     }
@@ -355,15 +357,20 @@ void InitializeOfsSim(PreConfig &pConfig){
     system(command.c_str());
     
     pConfig.speedUpOfstream = new std::ofstream;
-    
     bool isFirst = false;
     fileNamess.str(std::string());
     if (pConfig.target.automated){
         fileNamess << pConfig.automatedFilePath << "/speedUp.csv";
         isFirst = (pConfig.tData.nThreads == 0);
-    }else if (pConfig.target.timeEfficiency) {
-        fileNamess << pConfig.automatedFilePath << "/timeEfficiency.csv";
-        isFirst = (pConfig.refLevel == 0);
+    }else if (pConfig.target.timeEfficiency || pConfig.target.errorMeasurement) {
+        int ref0 = -1;
+        if (pConfig.dim == 2) ref0 = 2;
+        else if (pConfig.dim == 3) ref0 = 1;
+        isFirst = (pConfig.refLevel == ref0);
+        if (pConfig.target.timeEfficiency)
+            fileNamess << pConfig.automatedFilePath << "/timeEfficiency.csv";
+        else
+            fileNamess << pConfig.automatedFilePath << "/errorMeasurement.csv";
     }else {
         DebugStop();
     }
@@ -380,6 +387,8 @@ void InitializeOfsSim(PreConfig &pConfig){
             *pConfig.speedUpOfstream << "nThreads,assembleTime,solveTime,totalTime,maxNthreads,iterNum" << std::endl;
         }else if (pConfig.target.timeEfficiency) {
             *pConfig.speedUpOfstream << "nref,assembleTime,solveTime,totalTime,maxnRef,iterNum" << std::endl;
+        }else if (pConfig.target.errorMeasurement){
+            *pConfig.speedUpOfstream << "nref,nDof,L2Error,EnergyError,maxnRef,iterNum" << std::endl;
         }
     }
 }
@@ -431,8 +440,11 @@ void ManageOfstream(PreConfig &pConfig, int spanVar, int iterNum){
         executable = "./Automated ";
         pConfig.tData.nThreads = spanVar;
         maxSpan = pConfig.tData.maxThreads;
-    } else if (pConfig.target.timeEfficiency){
-        executable = "./TimeEfficiency ";
+    } else if (pConfig.target.timeEfficiency || pConfig.target.errorMeasurement){
+        if(pConfig.target.timeEfficiency)
+            executable = "./TimeEfficiency ";
+        else
+            executable = "./ErrorMeasurement ";
         pConfig.refLevel = spanVar;
         pConfig.tData.nThreads = pConfig.tData.maxThreads;
         maxSpan = pConfig.tData.maxRef;
@@ -457,20 +469,37 @@ void ReadSimFile(std::vector<std::string> &cellVec, PreConfig &pConfig){
     IsInteger(cellVec[0]);
     IsInteger(cellVec[4]);
     IsInteger(cellVec[5]);
-    
-    isFloat(cellVec[1]);
+    if (pConfig.target.errorMeasurement){
+        IsInteger(cellVec[1]);
+    }else
+        isFloat(cellVec[1]);
     isFloat(cellVec[2]);
     isFloat(cellVec[3]);
 
-    pConfig.rSimulation.assembleTime = atof(cellVec[1].c_str());
-    pConfig.rSimulation.solveTime = atof(cellVec[2].c_str());
-    pConfig.rSimulation.totalTime = atof(cellVec[3].c_str());
+    if (!pConfig.target.errorMeasurement){
+        pConfig.rSimulation.assembleTime = atof(cellVec[1].c_str());
+        pConfig.rSimulation.solveTime = atof(cellVec[2].c_str());
+        pConfig.rSimulation.totalTime = atof(cellVec[3].c_str());
+        
+        pConfig.rSimulation.nDof = -999;
+        pConfig.rSimulation.L2Error = -999;
+        pConfig.rSimulation.energyError = -999;
+        
+    }else{
+        pConfig.rSimulation.nDof = atoi(cellVec[1].c_str());
+        pConfig.rSimulation.L2Error = atof(cellVec[2].c_str());
+        pConfig.rSimulation.energyError = atof(cellVec[3].c_str());
+        
+        pConfig.rSimulation.assembleTime = -999;
+        pConfig.rSimulation.solveTime = -999;
+        pConfig.rSimulation.totalTime = -999;
+    }
     if (pConfig.target.automated){
         pConfig.rSimulation.nThreads = atoi(cellVec[0].c_str());
         pConfig.rSimulation.maxThreads = atoi(cellVec[4].c_str());
         pConfig.rSimulation.nRef = -999;
         pConfig.rSimulation.maxRef = -999;
-    }else if (pConfig.target.timeEfficiency){
+    }else if (pConfig.target.timeEfficiency || pConfig.target.errorMeasurement){
         pConfig.rSimulation.nThreads = -999;
         pConfig.rSimulation.maxThreads = -999;
         pConfig.rSimulation.nRef = atoi(cellVec[0].c_str());

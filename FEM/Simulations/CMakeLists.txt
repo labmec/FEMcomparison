@@ -32,6 +32,12 @@ SOURCES main_TimeEfficiency.cpp)
 #add_executable(TimeEfficiency main_TimeEfficiency.cpp)
 target_link_libraries(TimeEfficiency PRIVATE Methods Tools)
 
+add_pz_target(
+  NAME ErrorMeasurement
+SOURCES main_ErrorMeasurement.cpp)
+#add_executable(ErrorMeasurement main_ErrorMeasurement.cpp)
+target_link_libraries(ErrorMeasurement PRIVATE Methods Tools)
+
 # Project to apply error estimation for hybrid H1 approximations
 add_pz_target(
   NAME Mixed

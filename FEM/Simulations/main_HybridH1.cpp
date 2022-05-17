@@ -37,12 +37,12 @@ int main(int argc, char *argv[]) {
     
     PreConfig pConfig;
     pConfig.k = 1;//
-    pConfig.n = 3;
+    pConfig.n = 2;
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel = 4;                     //// How many refinements
-    pConfig.debugger = false;                  //// Print geometric and computational mesh
+    pConfig.debugger = true;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
     pConfig.tData.nThreads = 0;

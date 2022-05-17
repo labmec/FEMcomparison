@@ -74,13 +74,14 @@ struct Statistics{
 };
 
 struct RSimulation {
-    int nThreads, maxThreads, iterNum, maxRef, nRef;
-    double assembleTime, solveTime, totalTime;
+    int nThreads, maxThreads, iterNum, maxRef, nRef, nDof;
+    double assembleTime, solveTime, totalTime, L2Error,energyError;
 };
 
 struct Target{
     bool automated = false;
     bool timeEfficiency = false;
+    bool errorMeasurement = false;
 };
 
 struct PreConfig{
@@ -103,7 +104,7 @@ struct PreConfig{
     REAL perm_Q1 = 5;      /// Permeability coefficient of even quadrants (Steklov only)
     REAL perm_Q2 = 1;
 
-    REAL hLog = -1, h = -1000;
+    REAL hLog = -1, h = -1000, href0=1;
     int numErrors = 4;
 
     std::string plotfile;
@@ -129,6 +130,7 @@ struct PreConfig{
     
     int ref2D = -1;
     int ref3D = -1;
+    int ref0 = -1;
 };
 
 #endif /* ProblemConfig_h */

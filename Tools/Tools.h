@@ -118,3 +118,5 @@ void DrawGeoMesh(ProblemConfig &config, PreConfig &preConfig);
 void DrawCompMesh(ProblemConfig &config, PreConfig &preConfig, TPZCompMesh *cmesh, TPZMultiphysicsCompMesh *multiCmesh);
 
 void FlushSpeedUpResults(unsigned long int &assembleTime, unsigned long int &solveTime, PreConfig &pConfig);
+
+void FlushSpeedUpResults(const double &L2error, const double &energyError, const int &nDof, PreConfig &pConfig);
