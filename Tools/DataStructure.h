@@ -89,6 +89,7 @@ struct PreConfig{
     std::ofstream *speedUpOfstream, *speeedUpPath;
 
     TPZVec<REAL> *rate, *Log;
+    std::vector<double> errorRate, errorLog;
     int refLevel = -1;
 
     int k = 1;
@@ -96,15 +97,15 @@ struct PreConfig{
     int dim = 1;
     int topologyMode = -1;
 
-    std::string problem = "ESinSin";
-    std::string approx = "Hybrid";
-    std::string topology = "Quadrilateral";           //Topology' name typed as input
+    std::string problem;
+    std::string approx;
+    std::string topology;           //Topology' name typed as input
     std::string topologyFileName;   //Simplified name used for naming files/directories
 
     REAL perm_Q1 = 5;      /// Permeability coefficient of even quadrants (Steklov only)
     REAL perm_Q2 = 1;
 
-    REAL hLog = -1, h = -1000, href0=1;
+    REAL hLog = -1, h = -1000, href0 = 1;
     int numErrors = 4;
 
     std::string plotfile;
@@ -117,6 +118,7 @@ struct PreConfig{
     int type= -1;
 
     bool makeScript = false;
+    bool isSimplify = false;
     bool debugger = true;
     int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)
     

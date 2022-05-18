@@ -185,7 +185,10 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             pConfig.stat.spu.Resize(3,0);
             pConfig.stat.cvar.Resize(3,0);
             return;
-        } else {
+        }else if (std::strcmp(argv[1],"simplify") == 0){
+            pConfig.isSimplify = true;
+            return;
+        }else {
             DebugStop();
         }
     }

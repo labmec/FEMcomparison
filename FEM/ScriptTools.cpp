@@ -2,7 +2,8 @@
 #include "InputTreatment.h"
 
 void Generate(PreConfig &pConfig){
-        
+    
+    pConfig.problem = "ESinSin";
     std::ofstream fileStream;
     pConfig.speedUpOfstream = &fileStream;
     //pConfig.speedUpOfstream->open(pConfig.automatedFileName +"/config.sh",std::ofstream::app);
@@ -93,6 +94,9 @@ void Summarize(PreConfig &pConfig){
         pConfig.stat.csv[i] = new std::ofstream;
         pConfig.stat.txt[i] = new std::ofstream;
     }
+    if (pConfig.target.errorMeasurement){
+        pConfig.stat.txt[3]=new std::ofstream;
+    }
 
     PathsIfs->open("OfstreamPath.txt");
         std::string pathLine;
@@ -103,17 +107,8 @@ void Summarize(PreConfig &pConfig){
             std::string path;
             std::istringstream iss(pathLine);
             iss >> path;
-            std::string fileName;
-            if (pConfig.target.automated){
-                fileName = path + "/speedUp.csv";
-            } else if (pConfig.target.timeEfficiency){
-                fileName = path + "/timeEfficiency.csv";
-            } else if (pConfig.target.errorMeasurement){
-                fileName = path + "/errorMeasurement.csv";
-            }else{
-                DebugStop();
-            }
-            
+            std::string fileName = GetDataFileName(path,pConfig);
+
             DataIfs->open(fileName);
             std::string dataLine;
             
@@ -139,14 +134,14 @@ void Summarize(PreConfig &pConfig){
                 } else {
                     csvheader = "nRef";
                     if (pConfig.target.errorMeasurement)
-                        csvheader = csvheader + ",nDof";
+                        csvheader = csvheader + ",h,nDof,error";
                 }
                 
-                csvheader =  csvheader + ",avg";
                 if (!pConfig.target.errorMeasurement){
-                    csvheader = csvheader + ",cvar";
+                    csvheader = csvheader + ",avg,cvar";
                     statType = "Avg";
                 }else{
+                    csvheader =  csvheader + ",rate";
                     statType = "Rate";
                 }
                 statType = statType + ".csv";
@@ -169,17 +164,23 @@ void Summarize(PreConfig &pConfig){
                 *pConfig.stat.txt[i] << "coordinates{" << std::endl;
             }
             
+            if (pConfig.target.errorMeasurement){
+                for (int i = nStatistics; i < nStatistics+2; i++){
+                    avgName.push_back(path + statName[i-2]+"_h.txt");
+                    pConfig.stat.txt[i]->open(avgName[i]);
+                    *pConfig.stat.txt[i] << "coordinates{" << std::endl;
+                }
+            }
+            
             int lineCounter = 0;
             int nSpan = -1;
             int loopSize = -1;
             int iterCounter = -1;
             bool iterEnd = true;
             
-            int counter2 = 0;
             int lastSpan = -1;
             while (std::getline(*DataIfs,dataLine)){
         
-            counter2++;
                 if (lineCounter == 0){
                     lineCounter++;
                     continue;
@@ -193,14 +194,7 @@ void Summarize(PreConfig &pConfig){
                 }
                 
                 ReadSimFile(cellVec,pConfig);
-                if(pConfig.target.errorMeasurement){
-                    if (lastSpan == -1){
-            //??????????????????????????
-                        if (counter2 == 2){
-                            lastSpan = pConfig.rSimulation.nRef;
-                        }
-                    }
-                }
+                
                 bool newSpanValue = false;
                 
                 if (pConfig.target.automated){
@@ -301,18 +295,59 @@ void Summarize(PreConfig &pConfig){
                     errorVec.push_back(pConfig.rSimulation.L2Error);
                     errorVec.push_back(pConfig.rSimulation.energyError);
 
-                    for (int i = 0; i < 2; i++){
+                        
+                    if (lastSpan != -1)
+                    {
+                        if (pConfig.rSimulation.nRef != lastSpan+1)
+                            DebugStop();
+                        lastSpan = pConfig.rSimulation.nRef;
+                        if (pConfig.rSimulation.nRef > pConfig.rSimulation.maxRef)
+                            DebugStop();
+                        if(pConfig.rSimulation.nRef == pConfig.rSimulation.maxRef)
+                            lastSpan = -1;
+                        for (int i=0; i<nStatistics; i++){
+                        pConfig.errorRate[i] = log10(errorVec[i]/pConfig.errorLog[i])/log10(0.5);
+                        }
+                    }else{
+                        if (lineCounter == 1){
+                            lastSpan = pConfig.rSimulation.nRef;
+                            pConfig.errorLog.clear();
+                            pConfig.errorLog.resize(2);
+                            pConfig.errorRate.clear();
+                            pConfig.errorRate.resize(2);
+                        }
+                    }
+                    
+                    pConfig.h = pConfig.href0 * pow(2,-pConfig.rSimulation.nRef);
+
+                    for (int i = 0; i < nStatistics; i++){
+                        *pConfig.stat.csv[i] << pConfig.rSimulation.nRef << "," << pConfig.h << "," << pConfig.rSimulation.nDof << "," << errorVec[i] << std::endl;
                         *pConfig.stat.txt[i] << "," << errorVec[i] << ")\n";
+                    }
+                    
+                    for (int i= nStatistics; i < nStatistics+2; i++){
+                        *pConfig.stat.txt[i] << "(" << pConfig.h<< "," << errorVec[i-2] << ")\n";
+                    }
+                    
+                    for (int i=0; i<nStatistics; i++){
+                        pConfig.errorLog[i] = errorVec[i];
+                        
                     }
                 }
                 lineCounter++;
             }
             
             DataIfs->close();
-            for (int i = 0; i < 3; i++){
+            for (int i = 0; i < nStatistics; i++){
                 pConfig.stat.csv[i]->close();
                 *pConfig.stat.txt[i] << "}" << std::endl;
                 pConfig.stat.txt[i]->close();
+            }
+            if (pConfig.target.errorMeasurement){
+                for (int i= nStatistics; i < nStatistics+2; i++){
+                    *pConfig.stat.txt[i] << "}" << std::endl;
+                    pConfig.stat.txt[i]->close();
+                }
             }
         }
 }
@@ -362,4 +397,70 @@ void GenerateRefSpan(PreConfig &pConfig){
         }
     }
 }
+std::string GetDataFileName(std::string &path, PreConfig &pConfig){
+    std::string fileName;
+    if (pConfig.target.automated){
+        fileName = path + "speedUp.csv";
+    } else if (pConfig.target.timeEfficiency){
+            fileName = path + "timeEfficiency.csv";
+    } else if (pConfig.target.errorMeasurement){
+    
+            fileName = path + "errorMeasurement.csv";
+        
+    }else{
+        
+        DebugStop();
+    }
+    return fileName;
+}
 
+void CountDataPerSetup(std::vector<std::vector<int>*> &dataPerSetup, PreConfig &pConfig){
+    std::ifstream *PathsIfs = new std::ifstream;
+    std::ifstream *DataIfs = new std::ifstream;
+    
+    std::vector<std::string> ofsPathFile;
+    ofsPathFile.push_back("OfstreamPathError.txt");
+    ofsPathFile.push_back("OfstreamPathTime.txt");
+
+    for (int i = 0; i < 2; i++){
+    
+        PathsIfs->open(ofsPathFile[i]);
+        std::string pathLine;
+        int pathCounter = 0;
+        
+        while (std::getline(*PathsIfs,pathLine))
+        {
+            pathCounter++;
+            (*(dataPerSetup[i])).resize(pathCounter);
+            std::string dataLine;
+            std::string path;
+            std::istringstream iss(pathLine);
+            iss >> path;
+            
+            std::string fileName;
+            if (i == 0){
+                fileName = path + "L2Error.txt";
+            }else{
+                fileName = path + "assemtimeEfficiency.txt";
+
+            }
+            
+            DataIfs->open(fileName);
+            int dataCounter = 0;
+            while (std::getline(*DataIfs,dataLine)){
+                dataCounter++;
+            }
+            DataIfs->close();
+            (*(dataPerSetup[i]))[pathCounter-1] = dataCounter;
+        }
+        PathsIfs->close();
+    }
+    if (dataPerSetup[0]->size() != dataPerSetup[1]->size())
+        DebugStop();
+    
+    for (int i = 0; i < dataPerSetup[0]->size(); i++){
+        if ((*(dataPerSetup[0]))[i] != (*(dataPerSetup[1]))[i]){
+            DebugStop();
+        }
+    }
+}
