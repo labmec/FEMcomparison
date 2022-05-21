@@ -37,15 +37,15 @@ int main(int argc, char *argv[]) {
     
     PreConfig pConfig;
     pConfig.k = 1;//
-    pConfig.n = 2;
-    pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst"}
+    pConfig.n = 3;
+    pConfig.problem = "ESteepWave";              //// {"ESinSin","EArcTan",ESteklovNonConst", "ESteepWave"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
-    pConfig.topology = "Quadrilateral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 4;                     //// How many refinements
+    pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
+    pConfig.refLevel = 3;                     //// How many refinements
     pConfig.debugger = true;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
-    pConfig.tData.nThreads = 0;
+    pConfig.tData.nThreads = 6;
     
     
     EvaluateEntry(argc,argv,pConfig);

@@ -68,6 +68,9 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
             config.exact.operator*().fExact = TLaplaceExample1::ESteklovNonConst;
             preConfig.h*=2;
             break;
+        case 3:
+            config.exact.operator*().fExact = TLaplaceExample1::ESteepWave;
+            break;
         default:
             DebugStop();
             break;
@@ -227,6 +230,10 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             if(pConfig.n < 0) DebugStop();
             pConfig.problem = "ESteklovNonConst";
         }
+        else if(std::strcmp(argv[1], "ESteepWave") == 0) {
+            pConfig.type = 3;
+            pConfig.problem = "ESteepWave";
+        }
         else DebugStop();
         
         pConfig.approx=argv[2];
@@ -259,6 +266,7 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         if (pConfig.problem== "ESinSin") pConfig.type= 0;
         else if (pConfig.problem=="EArcTan")  pConfig.type = 1;
         else if (pConfig.problem == "ESteklovNonConst") pConfig.type = 2;
+        else if (pConfig.problem == "ESteepWave") pConfig.type = 3;
         else DebugStop();
     }
 

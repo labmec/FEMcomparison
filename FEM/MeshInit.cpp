@@ -152,6 +152,10 @@ void SetFExact(TLaplaceExample1 *mat1, TLaplaceExample1 *mat2,PreConfig &pConfig
             mat1->fExact = TLaplaceExample1::ESteklovNonConst;
             mat2->fExact = TLaplaceExample1::ESteklovNonConst;
             break;
+        case 3:
+            mat1->fExact = TLaplaceExample1::ESteepWave;
+            mat2->fExact = TLaplaceExample1::ESteepWave;
+            break;
         default:
             DebugStop();
             break;

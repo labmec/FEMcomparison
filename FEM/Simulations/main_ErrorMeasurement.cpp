@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     PreConfig pConfig;
     pConfig.target.errorMeasurement = true;
     pConfig.debugger = true;       // Print geometric and computational mesh
-    pConfig.shouldColor =false;
+    pConfig.shouldColor = false;
     pConfig.isTBB = false;
     
     if (argc == 1){
@@ -144,7 +144,6 @@ int main(int argc, char *argv[]) {
                         if (!(j == 0 || j == (*(dataPerSetup[0]))[i]-1)){
                             rTime[k].pop_back();
                         }
-
                     }
                     
                     for (int k=0; k < 2; k++){
