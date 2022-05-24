@@ -452,26 +452,24 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
         cmesh_mixed->SetAllCreateFunctionsMultiphysicElem();
 
         LCCMixedPoisson *material = new LCCMixedPoisson(matID, dim); //Using standard PermealityTensor = Identity.
-        if(pConfig.debugger) {
+        
 #ifndef OPTMIZE_RUN_TIME
             material->SetForcingFunction(config.exact.operator*().ForcingFunction());
             material->SetExactSol(config.exact.operator*().Exact());
-#endif
-        } else {
+#else
             material->SetInternalFlux(1.);
-        }
+#endif
         cmesh_mixed->InsertMaterialObject(material);
 
         //Boundary Conditions
         TPZFMatrix<STATE> val1(2, 2, 0.), val2(2, 1, 0.);
 
         TPZMaterial *BCond0 = material->CreateBC(material, -1, dirichlet, val1, val2);
-        if(pConfig.debugger)
-        {
+        
 #ifndef OPTMIZE_RUN_TIME
             BCond0->SetForcingFunction(config.exact.operator*().Exact());
 #endif
-        }
+        
 
         TPZMaterial *BCond1 = material->CreateBC(material, -2, neumann, val1, val2);
 
@@ -497,25 +495,24 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
         LCC_MatLaplacianHybrid *material = new LCC_MatLaplacianHybrid(matID, dim);
         material->SetPermeability(1.);
         cmesh_H1Hybrid->InsertMaterialObject(material);
-        if(pConfig.debugger) {
+        
 #ifndef OPTMIZE_RUN_TIME
             material->SetForcingFunction(config.exact.operator*().ForcingFunction());
             material->SetExactSol(config.exact.operator*().Exact());
-#endif
-        }else {
+#else
             material->SetParameters(1.,1.);
-        }
+#endif
         // Inserts boundary conditions
         TPZFMatrix<STATE> val1(1, 1, 0.), val2(1, 1, 1.);
         TPZMaterial *BCond0 =
                 material->CreateBC(material, -1, dirichlet, val1, val2);
-        if(pConfig.debugger) {
+        
 #ifndef OPTMIZE_RUN_TIME
             if (config.exact.operator*().fExact != TLaplaceExample1::ENone) {
                 BCond0->SetForcingFunction(config.exact.operator*().Exact());
             }
 #endif
-        }
+        
         val2.Zero();
         TPZMaterial *BCond1 = material->CreateBC(material, -2, neumann, val1, val2);
 

@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     pConfig.approx = "Hybrid";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";           //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel = 4;                        //// How many refinements
-    pConfig.debugger = true;                    //// Print geometric and computational mesh
+    pConfig.postProcess = true;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);

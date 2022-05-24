@@ -82,7 +82,7 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
     }
     FlushTime(preConfig,start);
 
-    if(preConfig.debugger) DrawCompMesh(config,preConfig,cmesh,multiCmesh);
+    if(preConfig.postProcess) DrawCompMesh(config,preConfig,cmesh,multiCmesh);
 }
 
 void DrawMesh(ProblemConfig &config, PreConfig &preConfig, TPZCompMesh *cmesh, TPZMultiphysicsCompMesh *multiCmesh) {
@@ -219,7 +219,7 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     StockErrorsH1(an,cmeshH1,pConfig.Erro,pConfig.Log,pConfig);
 
     ////PostProcess
-    if(pConfig.debugger) {
+    if(pConfig.postProcess) {
         TPZStack<std::string> scalnames, vecnames;
         scalnames.Push("Solution");
         vecnames.Push("Derivative");
@@ -430,7 +430,7 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 #endif
     }
     
-    if(pConfig.debugger) {
+    if(pConfig.postProcess) {
         std::cout << "Computing Error " << std::endl;
 #ifndef OPTMIZE_RUN_TIME
         an.SetExact(config.exact.operator*().ExactSolution());

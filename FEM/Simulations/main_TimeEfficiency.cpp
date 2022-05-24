@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     
     PreConfig pConfig;
     pConfig.target.timeEfficiency = true;
-    pConfig.debugger = false;       // Print geometric and computational mesh
+    pConfig.postProcess = false;       // Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
     

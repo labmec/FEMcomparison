@@ -48,7 +48,7 @@ void Configure(ProblemConfig &config,int ndiv,PreConfig &pConfig,char *argv[]){
         config.n = atoi(argv[6]);
     }
 
-    if(pConfig.debugger == true && ndiv != 0){
+    if(pConfig.postProcess == true && ndiv != 0){
         DrawGeoMesh(config,pConfig);
     }
 }

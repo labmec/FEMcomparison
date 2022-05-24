@@ -3,7 +3,7 @@
 
 void Generate(PreConfig &pConfig){
     
-    pConfig.problem = "ESinSin";
+    pConfig.problem = "ESteepWave";
     std::ofstream fileStream;
     pConfig.speedUpOfstream = &fileStream;
     //pConfig.speedUpOfstream->open(pConfig.automatedFileName +"/config.sh",std::ofstream::app);

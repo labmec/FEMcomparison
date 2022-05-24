@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel = 3;                     //// How many refinements
-    pConfig.debugger = true;                  //// Print geometric and computational mesh
+    pConfig.postProcess = true;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
     pConfig.tData.nThreads = 6;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     Configure(config,pConfig.refLevel,pConfig,argv);
     Solve(config,pConfig);
     pConfig.hLog = pConfig.h;
-    if(pConfig.debugger){
+    if(pConfig.postProcess){
         std::string command = "cp ErroHybrid.txt " + pConfig.plotfile + "/Erro.txt";
         system(command.c_str());
             FlushTable(pConfig,argv);

@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     
     PreConfig pConfig;
     pConfig.target.errorMeasurement = true;
-    pConfig.debugger = true;       // Print geometric and computational mesh
+    pConfig.postProcess = false;       // Print geometric and computational mesh
     pConfig.shouldColor = false;
     pConfig.isTBB = false;
     

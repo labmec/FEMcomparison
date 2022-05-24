@@ -119,7 +119,7 @@ struct PreConfig{
 
     bool makeScript = false;
     bool isSimplify = false;
-    bool debugger = true;
+    bool postProcess = true;
     int exp = 2; // Initial exponent of mesh refinement (numElem = 2*2^exp)
     
     bool shouldColor = true;

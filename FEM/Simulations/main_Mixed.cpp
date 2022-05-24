@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     pConfig.approx = "Mixed";                    //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Quadrilateral";          //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel = 8;                        //// How many refinements
-    pConfig.debugger = false;                    //// Print geometric and computational mesh
+    pConfig.postProcess = false;                    //// Print geometric and computational mesh
 
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     Solve(config,pConfig);
     pConfig.hLog = pConfig.h;
     
-    if(pConfig.debugger)
+    if(pConfig.postProcess)
     {
         std::string command = "cp ErroMixed.txt " + pConfig.plotfile + "/Erro.txt";
         system(command.c_str());
