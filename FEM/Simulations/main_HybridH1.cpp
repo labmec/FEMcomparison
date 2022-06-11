@@ -38,16 +38,20 @@ int main(int argc, char *argv[]) {
     PreConfig pConfig;
     pConfig.k = 1;//
     pConfig.n = 3;
-    pConfig.problem = "ESteepWave";              //// {"ESinSin","EArcTan",ESteklovNonConst", "ESteepWave"}
+    pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst", "ESteepWave"}
     pConfig.approx = "Hybrid";                //// {"H1","Hybrid", "Mixed"}
     pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel = 3;                     //// How many refinements
-    pConfig.postProcess = true;                  //// Print geometric and computational mesh
-    pConfig.shouldColor =false;
+    pConfig.refLevel =5;                     //// How many refinements
+    pConfig.postProcess = false;                  //// Print geometric and computational mesh
+    pConfig.shouldColor = true;
     pConfig.isTBB = false;
-    pConfig.tData.nThreads = 6;
+    pConfig.tData.nThreads = 2;
     
     
+    if(argc == 2) {
+      argc = 1;
+      pConfig.tData.nThreads = atoi(argv[1]);
+    }
     EvaluateEntry(argc,argv,pConfig);
     InitializeOutstream(pConfig,argv);
     

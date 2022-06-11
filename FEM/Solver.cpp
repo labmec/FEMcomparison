@@ -21,6 +21,7 @@
 #include "TPZTimer.h"
 #include <chrono>
 #include "pzstrmatrixLCC.h"
+#include "mkl.h"
 //#include <tbb/parallel_for.h>
 //#include <tbb/task_scheduler_init.h>
 //#include "omp.h"
@@ -344,7 +345,7 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
         strmat.SetShouldColor(pConfig.shouldColor);
         strmat.SetTBBorOMP(pConfig.isTBB);
-    }
+    } else DebugStop();
 #endif
 #else
     //TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
@@ -372,6 +373,7 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
         auto beginAss = std::chrono::high_resolution_clock::now();
 
 #endif
+        
         an.Assemble();
         
 #ifdef FEMCOMPARISON_TIMER
@@ -384,10 +386,11 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 #ifdef FEMCOMPARISON_TIMER
             auto begin = std::chrono::high_resolution_clock::now();
 #endif
-    //int effNthreads = pConfig.tData.nThreads;
-    //if (effNthreads == 0) effNthreads =1;
-    //an.setNumThreads(effNthreads);
-        an.Solve();
+        //int effNthreads = pConfig.tData.nThreads;
+        //if (effNthreads == 0) effNthreads =1;
+        //an.setNumThreads(effNthreads);
+        mkl_set_num_threads(pConfig.tData.nThreads);
+        //an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
@@ -395,6 +398,9 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 
     if (pConfig.target.automated || pConfig.target.timeEfficiency){
         FlushSpeedUpResults(pConfig.tData.assembleTime, pConfig.tData.solveTime, pConfig);
+        std::ofstream* dofData  = new std::ofstream;
+        dofData->open(pConfig.automatedFilePath + "/dofData.csv",std::ofstream::app);
+        *dofData << pConfig.refLevel << "," << multiCmesh->NEquations() << std::endl << std::flush;
     }
 #endif
     

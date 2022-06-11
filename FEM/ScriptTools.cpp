@@ -3,7 +3,7 @@
 
 void Generate(PreConfig &pConfig){
     
-    pConfig.problem = "ESteepWave";
+    pConfig.problem = "ESinSin";
     std::ofstream fileStream;
     pConfig.speedUpOfstream = &fileStream;
     //pConfig.speedUpOfstream->open(pConfig.automatedFileName +"/config.sh",std::ofstream::app);
@@ -321,7 +321,7 @@ void Summarize(PreConfig &pConfig){
                     pConfig.h = pConfig.href0 * pow(2,-pConfig.rSimulation.nRef);
 
                     for (int i = 0; i < nStatistics; i++){
-                        *pConfig.stat.csv[i] << pConfig.rSimulation.nRef << "," << pConfig.h << "," << pConfig.rSimulation.nDof << "," << errorVec[i] << std::endl;
+                        *pConfig.stat.csv[i] << pConfig.rSimulation.nRef << "," << pConfig.h << "," << pConfig.rSimulation.nDof << "," << errorVec[i] << "," << pConfig.errorRate[i] <<std::endl;
                         *pConfig.stat.txt[i] << "," << errorVec[i] << ")\n";
                     }
                     
@@ -353,11 +353,16 @@ void Summarize(PreConfig &pConfig){
 }
 
 void GenerateThreadSpan(PreConfig &pConfig){
+pConfig.tData.maxThreads = 24;
+int iter0 = 10;
+int iter;
     for (int nThreads=0; nThreads < pConfig.tData.maxThreads+1; nThreads+=2){
-        for (int iterNum = 0; iterNum < pConfig.stat.nLoops; iterNum++){
+      if (nThreads == 0) iter = iter0;
+      else iter = pConfig.stat.nLoops;
+        for (int iterNum = 0; iterNum < iter; iterNum++){
             int iterCode = -999;
             if(iterNum == 0){
-                iterCode = pConfig.stat.nLoops;
+                iterCode = iter;
             }else {
                 iterCode = -iterNum;
             }

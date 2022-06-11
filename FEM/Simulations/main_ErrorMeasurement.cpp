@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     pConfig.target.errorMeasurement = true;
     pConfig.postProcess = false;       // Print geometric and computational mesh
     pConfig.shouldColor = false;
-    pConfig.isTBB = false;
+    pConfig.isTBB = true;
     
     if (argc == 1){
         std::cout << "This program isn't supposed to run this way \n";

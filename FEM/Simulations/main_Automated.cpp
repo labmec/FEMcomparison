@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     PreConfig pConfig;
     pConfig.target.automated = true;
     pConfig.postProcess = false;       // Print geometric and computational mesh
-    pConfig.shouldColor =false;
+    pConfig.shouldColor = true;
     pConfig.isTBB = false;
     
     if (argc == 1){
