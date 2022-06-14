@@ -340,12 +340,12 @@ void Summarize(PreConfig &pConfig){
             DataIfs->close();
             for (int i = 0; i < nStatistics; i++){
                 pConfig.stat.csv[i]->close();
-                *pConfig.stat.txt[i] << "}" << std::endl;
+                *pConfig.stat.txt[i] << "};" << std::endl;
                 pConfig.stat.txt[i]->close();
             }
             if (pConfig.target.errorMeasurement){
                 for (int i= nStatistics; i < nStatistics+2; i++){
-                    *pConfig.stat.txt[i] << "}" << std::endl;
+                    *pConfig.stat.txt[i] << "};" << std::endl;
                     pConfig.stat.txt[i]->close();
                 }
             }

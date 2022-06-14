@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
     PreConfig pConfig;
     pConfig.target.automated = true;
     pConfig.postProcess = false;       // Print geometric and computational mesh
-    pConfig.shouldColor = true;
-    pConfig.isTBB = false;
+    pConfig.shouldColor = false;
+    pConfig.isTBB = true;
     
     if (argc == 1){
         std::cout << "This program isn't supposed to run this way \n";

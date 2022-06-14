@@ -80,7 +80,9 @@ void TPZCreateMultiphysicsSpace::CreateAtomicMeshes(TPZVec<TPZCompMesh *> &meshv
         gspace->AutoBuild();
         int64_t nconnects = gspace->NConnects();
         for (int ic = 0; ic<nconnects; ic++) {
+            //gspace->ConnectVec()[ic].SetLagrangeMultiplier(2);
             gspace->ConnectVec()[ic].SetLagrangeMultiplier(2);
+
         }
         int64_t nel = gspace->NElements();
         for (int64_t el = 0; el<nel; el++) {
@@ -96,7 +98,9 @@ void TPZCreateMultiphysicsSpace::CreateAtomicMeshes(TPZVec<TPZCompMesh *> &meshv
         average->AutoBuild();
         int64_t nconnects = average->NConnects();
         for (int ic = 0; ic<nconnects; ic++) {
+            //average->ConnectVec()[ic].SetLagrangeMultiplier(5);
             average->ConnectVec()[ic].SetLagrangeMultiplier(5);
+
         }
         int64_t nel = average->NElements();
         for (int64_t el = 0; el<nel; el++) {
@@ -405,9 +409,12 @@ TPZCompMesh *TPZCreateMultiphysicsSpace::CreatePressureMesh()
         TPZCompEl *cel = pressure->Element(el);
         TPZGeoEl *gel = cel->Reference();
         int nconnects = cel->NConnects();
+        //cel->Connect(0).SetLagrangeMultiplier(3);
         cel->Connect(0).SetLagrangeMultiplier(3);
         for (int ic=1; ic<nconnects; ic++) {
+            //cel->Connect(ic).SetLagrangeMultiplier(1);
             cel->Connect(ic).SetLagrangeMultiplier(1);
+
         }
     }
 #ifdef LOG4CXX
@@ -459,7 +466,9 @@ TPZCompMesh *TPZCreateMultiphysicsSpace::CreateBoundaryFluxMesh()
     fluxmesh->AutoBuild();
     int64_t nconnects = fluxmesh->NConnects();
     for (int ic=0; ic<nconnects; ic++) {
+        //fluxmesh->ConnectVec()[ic].SetLagrangeMultiplier(4);
         fluxmesh->ConnectVec()[ic].SetLagrangeMultiplier(4);
+
     }
     return fluxmesh;
 }

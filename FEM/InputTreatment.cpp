@@ -191,7 +191,9 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         }else if (std::strcmp(argv[1],"simplify") == 0){
             pConfig.isSimplify = true;
             return;
-        }else {
+        }else if (std::strcmp(argv[1],"graphic") == 0){
+            return;
+        }else{
             DebugStop();
         }
     }
@@ -377,7 +379,7 @@ void InitializeOfsSim(PreConfig &pConfig){
         int ref0 = -1;
         if (pConfig.dim == 2) ref0 = 2;
         else if (pConfig.dim == 3) ref0 = 1;
-        isFirst = (pConfig.refLevel == ref0);
+            isFirst = (pConfig.refLevel == ref0);
         if (pConfig.target.timeEfficiency)
             fileNamess << pConfig.automatedFilePath << "/timeEfficiency.csv";
         else

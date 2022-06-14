@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
     pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel =5;                     //// How many refinements
     pConfig.postProcess = false;                  //// Print geometric and computational mesh
-    pConfig.shouldColor = true;
-    pConfig.isTBB = false;
+    pConfig.shouldColor =false;
+    pConfig.isTBB = true;
     pConfig.tData.nThreads = 2;
     
     

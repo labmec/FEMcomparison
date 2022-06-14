@@ -86,8 +86,6 @@ int main(int argc, char *argv[]) {
             timerName.push_back("assemtimeEfficiency");
             timerName.push_back("solvetimeEfficiency");
             timerName.push_back("totaltimeEfficiency");
-//            containerName[0] = errorName;
-//            containerName[1] = timerName;
 
             for (int i=0; i < errorName.size() ;i++){
                 for (int j=0; j < timerName.size() ;j++){
@@ -95,12 +93,42 @@ int main(int argc, char *argv[]) {
                 }
             }
             
-            for (int i=0; i < dataPerSetup[0]->size(); i++){
+            std::string pathMinus1, dummy;
+            std::getline(*(PathsIfs[0]),pathMinus1);
+            std::getline(*(PathsIfs[1]),dummy);
+
+            std::vector<std::ofstream*> summarizeData2D,summarizeData3D;
+            summarizeData2D.resize(nMeasurements[0]*nMeasurements[1]);
+            summarizeData3D.resize(nMeasurements[0]*nMeasurements[1]);
+
+            for (int j=0; j<nMeasurements[0]*nMeasurements[1]; j++){
+                summarizeData2D[j] = new std::ofstream;
+                summarizeData3D[j] = new std::ofstream;
+            }
+            std::string graphicsDir = "effGraphics";
+            std::string command = "mkdir -p " + pathMinus1 + graphicsDir;
+            system(command.c_str());
+            
+            for (int j=0; j< nMeasurements[0]; j++){
+                for (int k=0; k < nMeasurements[1]; k++){
+                    summarizeData2D[3*j+k]->open(pathMinus1 + graphicsDir + "/" + fileName[3*j+k]+"2D.txt");
+                    summarizeData3D[3*j+k]->open(pathMinus1 + graphicsDir + "/" + fileName[3*j+k]+"3D.txt");
+                }
+            }
+            
+            std::vector<std::ofstream*> *summarizeData;
+            for (int i=1; i < dataPerSetup[0]->size(); i++){
+                if(i%2 == 1)
+                    summarizeData= &summarizeData2D;
+                else
+                    summarizeData= &summarizeData3D;
+
                 std::vector<std::string> pathLine;
                 pathLine.resize(2);
                 for (int j=0; j < 2; j++){
                     std::getline(*(PathsIfs[j]),pathLine[j]);
                 }
+                
                 for (int j=0; j< nMeasurements[0]; j++){
                     DataIfs[j]->open(pathLine[0]+errorName[j]+".txt");
                     
@@ -122,14 +150,17 @@ int main(int argc, char *argv[]) {
                 
                 std::vector<std::ofstream*> DataOfs;
                 DataOfs.resize(nMeasurements[0]*nMeasurements[1]);
-                
-                for (int i=0; i<nMeasurements[0]*nMeasurements[1]; i++){
-                    DataOfs[i] = new std::ofstream;
+
+                for (int j=0; j<nMeasurements[0]*nMeasurements[1]; j++){
+                    DataOfs[j] = new std::ofstream;
                 }
                 
                 for (int j=0; j< nMeasurements[0]; j++){
                     for (int k=0; k < nMeasurements[1]; k++){
                         DataOfs[3*j+k]->open(pathLine[0]+errorName[j]+timerName[k]+".txt");
+                        std::string path="\\addplot\n";
+                        *DataOfs[3*j+k] << path;
+                        *(*summarizeData)[3*j+k] <<path;
                     }
                 }
 
@@ -148,15 +179,18 @@ int main(int argc, char *argv[]) {
                     
                     for (int k=0; k < 2; k++){
                         *DataIfs[k] >> rError[k];
-                        if (j == 0 || j == (*(dataPerSetup[0]))[i]-1){
+                        if (j == 0)
                             rError[k] = "";
-                        }
+                        if(j == (*(dataPerSetup[0]))[i]-1)
+                            rError[k] = ";";
+                        
                     }
                     
                     for (int k=0; k < 2; k++){
                         for (int z=0; z < 3; z++){
                             wVar[3*k+z] = rTime[z]+rError[k];
                             *DataOfs[3*k+z] << wVar[3*k+z] << "\n";
+                            *(*summarizeData)[3*k+z] << wVar[3*k+z] << "\n";
                         }
                     }
                 }
@@ -175,9 +209,13 @@ int main(int argc, char *argv[]) {
             for (int i=0; i<2; i++){
                 PathsIfs[i]->close();
             }
-            
-            
-        }else
+            for (int j=0; j< nMeasurements[0]; j++){
+                for (int k=0; k < nMeasurements[1]; k++){
+                    summarizeData2D[3*j+k]->close();
+                    summarizeData3D[3*j+k]->close();
+                }
+            }
+        } else
             
             Summarize(pConfig);
         

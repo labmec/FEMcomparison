@@ -111,7 +111,7 @@ void CreateMixedComputationalMesh(TPZMultiphysicsCompMesh *cmesh_Mixed, PreConfi
     TPZManVector<int> active(4, 1);
 
     cmesh_Mixed->BuildMultiphysicsSpace(active,meshvector);
-    CreateCondensedMixedElements(cmesh_Mixed);
+    //CreateCondensedMixedElements(cmesh_Mixed);
     cmesh_Mixed->LoadReferences();
     cmesh_Mixed->InitializeBlock();
 }
@@ -157,7 +157,7 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
     createspace.InsertLagranceMaterialObjects(cmesh_H1Hybrid);
 
     createspace.AddInterfaceElements(cmesh_H1Hybrid);
-    createspace.GroupandCondenseElements(cmesh_H1Hybrid);
+    //createspace.GroupandCondenseElements(cmesh_H1Hybrid);
 
     cmesh_H1Hybrid->InitializeBlock();
     cmesh_H1Hybrid->ComputeNodElCon();
@@ -244,7 +244,6 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     }
     std::cout << "FINISHED!" << std::endl;
 }
-
                       
 void SolveHybridH1Problem(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig){
 
@@ -327,9 +326,19 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     unsigned long int solveDuration;
     
     std::cout << "Solving " << pConfig.approx << " " << pConfig.topology << " ref " << pConfig.refLevel << " nThreads " << pConfig.tData.nThreads << " isColoring " << pConfig.shouldColor << " isTBB " << pConfig.isTBB << std::endl;
+    {
+        TPZFMatrix<REAL> mat(50,50);
+        multiCmesh->ComputeFillIn(50, mat);
+        VisualMatrix(mat, "arch1.vtk");
+    }
     
     TPZAnalysis an(multiCmesh);
     
+//    {
+//        TPZFMatrix<REAL> mat(50,50);
+//        multiCmesh->ComputeFillIn(50, mat);
+//        VisualMatrix(mat, "arch2.vtk");
+//    }
 #ifdef FEMCOMPARISON_USING_MKL
     TPZSymetricSpStructMatrix strmat(multiCmesh);
     strmat.SetNumThreads(pConfig.tData.nThreads);
@@ -395,7 +404,8 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
         pConfig.tData.solveTime = static_cast<unsigned long int>(elapsedSolve.count());
-
+        std::cout << "nDofs = " << multiCmesh->NEquations() << std::endl;
+    
     if (pConfig.target.automated || pConfig.target.timeEfficiency){
         FlushSpeedUpResults(pConfig.tData.assembleTime, pConfig.tData.solveTime, pConfig);
         std::ofstream* dofData  = new std::ofstream;
