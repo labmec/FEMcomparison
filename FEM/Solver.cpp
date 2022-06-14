@@ -111,7 +111,7 @@ void CreateMixedComputationalMesh(TPZMultiphysicsCompMesh *cmesh_Mixed, PreConfi
     TPZManVector<int> active(4, 1);
 
     cmesh_Mixed->BuildMultiphysicsSpace(active,meshvector);
-    //CreateCondensedMixedElements(cmesh_Mixed);
+    CreateCondensedMixedElements(cmesh_Mixed);
     cmesh_Mixed->LoadReferences();
     cmesh_Mixed->InitializeBlock();
 }
@@ -157,7 +157,7 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
     createspace.InsertLagranceMaterialObjects(cmesh_H1Hybrid);
 
     createspace.AddInterfaceElements(cmesh_H1Hybrid);
-    //createspace.GroupandCondenseElements(cmesh_H1Hybrid);
+    createspace.GroupandCondenseElements(cmesh_H1Hybrid);
 
     cmesh_H1Hybrid->InitializeBlock();
     cmesh_H1Hybrid->ComputeNodElCon();

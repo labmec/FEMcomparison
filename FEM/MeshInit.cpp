@@ -294,18 +294,14 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
                     DebugStop();
                 }
                 for(int ic = 0 ; ic < nSides; ic ++){
-                    //cel->Connect(ic).SetLagrangeMultiplier(3);
-                    cel->Connect(ic).SetLagrangeMultiplier(0);
-
+                    cel->Connect(ic).SetLagrangeMultiplier(3);
                 }
             }
             if(dimgel == dimgrid-1){
                 if(nconnects != nSides){
                     DebugStop();
                 }
-                //cel->Connect(0).SetLagrangeMultiplier(3);
-                cel->Connect(0).SetLagrangeMultiplier(0);
-
+                cel->Connect(0).SetLagrangeMultiplier(3);
             }
             if (dimgel > dimgrid || dimgel < dimgrid - 1){
                 DebugStop();
@@ -319,9 +315,7 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
     {
         int64_t nconnects = cmesh_p->NConnects();
         for (int ic=0; ic<nconnects; ic++) {
-            //cmesh_p->ConnectVec()[ic].SetLagrangeMultiplier(1);
-            cmesh_p->ConnectVec()[ic].SetLagrangeMultiplier(0);
-
+            cmesh_p->ConnectVec()[ic].SetLagrangeMultiplier(1);
         }
     }
 
@@ -334,9 +328,7 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
         gspace->AutoBuild();
         int64_t nconnects = gspace->NConnects();
         for (int ic = 0; ic<nconnects; ic++) {
-            //gspace->ConnectVec()[ic].SetLagrangeMultiplier(2);
-            gspace->ConnectVec()[ic].SetLagrangeMultiplier(0);
-
+            gspace->ConnectVec()[ic].SetLagrangeMultiplier(2);
         }
         int64_t nel = gspace->NElements();
         for (int64_t el = 0; el<nel; el++) {
@@ -351,10 +343,7 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
         average->SetDefaultOrder(0);
         average->AutoBuild();
         int64_t nconnects = average->NConnects();
-        for (int ic = 0; ic<nconnects; ic++) {
-            //average->ConnectVec()[ic].SetLagrangeMultiplier(4);
-            average->ConnectVec()[ic].SetLagrangeMultiplier(4);
-
+        for (int ic = 0; ic<nconnects; ic++) {            average->ConnectVec()[ic].SetLagrangeMultiplier(4);
         }
         int64_t nel = average->NElements();
         for (int64_t el = 0; el<nel; el++) {

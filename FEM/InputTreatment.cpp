@@ -191,8 +191,6 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         }else if (std::strcmp(argv[1],"simplify") == 0){
             pConfig.isSimplify = true;
             return;
-        }else if (std::strcmp(argv[1],"graphic") == 0){
-            return;
         }else{
             DebugStop();
         }
