@@ -395,11 +395,10 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 #ifdef FEMCOMPARISON_TIMER
             auto begin = std::chrono::high_resolution_clock::now();
 #endif
-        //int effNthreads = pConfig.tData.nThreads;
-        //if (effNthreads == 0) effNthreads =1;
-        //an.setNumThreads(effNthreads);
-        mkl_set_num_threads(pConfig.tData.nThreads);
-        //an.Solve();
+        int effNthreads = pConfig.tData.nThreads;
+        if (effNthreads == 0) effNthreads =1;
+        mkl_set_num_threads_local(effNthreads);
+        an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
@@ -444,6 +443,16 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
         
         FlushSpeedUpResults(L2error, energyError,nDof, pConfig);
 #endif
+    }
+
+    if(1){
+        std::cout << "Computing Error " << std::endl;
+        an.SetExact(config.exact.operator*().ExactSolution());
+
+        ////Calculo do erro
+        StockErrors(an,multiCmesh,pConfig.Erro,pConfig.Log,pConfig);
+        std::cout << "DOF = " << multiCmesh->NEquations() << std::endl;
+
     }
     
     if(pConfig.postProcess) {

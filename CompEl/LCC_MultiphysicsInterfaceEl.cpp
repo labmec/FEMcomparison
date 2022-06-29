@@ -208,7 +208,7 @@ void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElemen
     }
     else{
 #ifdef FEMCOMPARISON_DEBUG
-        DebugStop();
+        //DebugStop();
         ComputingCalcStiff(ek,ef);
         if(ek.fMat.Cols() != M.Cols() || ek.fMat.Rows() != M.Rows()){
             DebugStop();
