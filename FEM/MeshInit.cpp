@@ -5,10 +5,10 @@
 #include "MeshInit.h"
 #include "DataStructure.h"
 #include <TPZMultiphysicsCompMesh.h>
-#include "mixedpoisson.h"
+#include "DarcyFlow/TPZMixedDarcyFlow.h"
 #include "LCC_MatLaplacianHybrid.h"
 #include "TPZNullMaterial.h"
-#include "pzbndcond.h"
+#include "TPZBndCondT.h"
 #include "TPZGenGrid2D.h"
 #include "LCC_MixedPoisson.h"
 #include "TPZCompMeshTools.h"
@@ -41,34 +41,36 @@ void InsertMaterialMixed_MultiK(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemCon
     invK(0,0) = invK(1,1) =  1./pConfig.perm_Q2;
     mat2->setPermeabilyTensor(K,invK);
 #endif
-    TPZMixedPoisson *material_Q1 = new TPZMixedPoisson(matID_Q1,dim); //Using standard PermealityTensor = Identity.
-    TPZMixedPoisson *material_Q2 = new TPZMixedPoisson(matID_Q2,dim);
+    
+    TPZMixedDarcyFlow *material_Q1 = new TPZMixedDarcyFlow(matID_Q1,dim); //Using standard PermealityTensor = Identity.
+    TPZMixedDarcyFlow *material_Q2 = new TPZMixedDarcyFlow(matID_Q2,dim);
 #ifndef OPTMIZE_RUN_TIME
-    material_Q1->SetForcingFunction(config.exact.operator*().ForcingFunction());
-    material_Q1->SetExactSol(config.exact.operator*().Exact());
-    material_Q2->SetForcingFunction(config.exact.operator*().ForcingFunction());
-    material_Q2->SetExactSol(config.exact.operator*().Exact());
+    material_Q1->SetForcingFunction(config.exact->ForceFunc(),5);
+    material_Q1->SetExactSol(config.exact->ExactSolution(),5);
+    material_Q2->SetForcingFunction(config.exact->ForceFunc(),5);
+    material_Q2->SetExactSol(config.exact->ExactSolution(),5);
 #endif
     
-    material_Q1->SetPermeability(pConfig.perm_Q1);
-    material_Q2->SetPermeability(pConfig.perm_Q2);
+    material_Q1->SetConstantPermeability(pConfig.perm_Q1);
+    material_Q2->SetConstantPermeability(pConfig.perm_Q2);
 
     cmesh_mixed->InsertMaterialObject(material_Q1);
     cmesh_mixed->InsertMaterialObject(material_Q2);
 
     //Boundary Conditions
-    TPZFMatrix<STATE> val1(2,2,0.), val2(2,1,0.);
+    TPZFMatrix<REAL> val1(2,2,0.);
+    TPZManVector<REAL> val2(2,0.);
 
-    TPZMaterial *BCond0_Q1 = material_Q1->CreateBC(material_Q1, -5, dirichlet, val1, val2);
+    auto *BCond0_Q1 = material_Q1->CreateBC(material_Q1, -5, dirichlet, val1, val2);
 #ifndef OPTMIZE_RUN_TIME
-    BCond0_Q1->SetForcingFunction(config.exact.operator*().Exact());
+    BCond0_Q1->SetForcingFunctionBC(config.exact->ExactSolution(),5);
 #endif
-    TPZMaterial *BCond0_Q2 = material_Q2->CreateBC(material_Q2, -6, dirichlet, val1, val2);
+    auto *BCond0_Q2 = material_Q2->CreateBC(material_Q2, -6, dirichlet, val1, val2);
 #ifndef OPTMIZE_RUN_TIME
-    BCond0_Q2->SetForcingFunction(config.exact.operator*().Exact());
+    BCond0_Q2->SetForcingFunctionBC(config.exact->ExactSolution(),5);
 #endif
-    TPZMaterial *BCond1_Q1 = material_Q1->CreateBC(material_Q1, -8, neumann, val1, val2);
-    TPZMaterial *BCond1_Q2 = material_Q1->CreateBC(material_Q2, -9, neumann, val1, val2);
+    auto *BCond1_Q1 = material_Q1->CreateBC(material_Q1, -8, neumann, val1, val2);
+    auto *BCond1_Q2 = material_Q1->CreateBC(material_Q2, -9, neumann, val1, val2);
 
     cmesh_mixed->InsertMaterialObject(BCond0_Q1);
     cmesh_mixed->InsertMaterialObject(BCond0_Q2);

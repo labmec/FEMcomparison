@@ -6,7 +6,7 @@
 //
 
 #include "LCC_MatLaplacianHybrid.h"
-#include "pzbndcond.h"
+#include "TPZBndCondT.h"
 #include "pzaxestools.h"
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
@@ -32,7 +32,7 @@ static TPZLogger loggerCTB("contributeTimeBoundary");
 #endif
 
 LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid(int matid, int dim)
-: TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian(matid, dim)
+: TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZHybridDarcyFlow(matid, dim)
 {
     
 }

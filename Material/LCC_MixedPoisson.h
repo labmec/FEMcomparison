@@ -3,7 +3,7 @@
 #ifndef LCC_mixedpoisson_h
 #define LCC_mixedpoisson_h
 
-#include "mixedpoisson.h"
+#include "DarcyFlow/TPZMixedDarcyFlow.h"
 
 /**
  * @ingroup material
@@ -21,7 +21,7 @@
  */
 
 
-class LCCMixedPoisson : public TPZMixedPoisson {
+class LCCMixedPoisson : public TPZMixedDarcyFlow {
     
 protected:
   
@@ -33,11 +33,11 @@ public:
     
     virtual ~LCCMixedPoisson();
     
-    LCCMixedPoisson(const TPZMixedPoisson &cp);
+    LCCMixedPoisson(const LCCMixedPoisson &cp);
     
-    LCCMixedPoisson &operator=(const TPZMixedPoisson &copy);
+    LCCMixedPoisson &operator=(const LCCMixedPoisson &copy);
     
-    virtual TPZMaterial * NewMaterial() override{
+    virtual TPZMaterial * NewMaterial() const override{
         return new LCCMixedPoisson(*this);
     }
   
@@ -48,9 +48,9 @@ public:
      * @param ek [out] is the stiffness matrix
      * @param ef [out] is the load vector
      */
-    virtual void Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) override;
+    virtual void Contribute(const TPZVec<TPZMaterialDataT<STATE>> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) override;
     
-    virtual void ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCond &bc) override;
+    virtual void ContributeBC(const TPZVec<TPZMaterialDataT<STATE>> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCondT<STATE> &bc) override;
    
     public:
 virtual int ClassId() const  override;
