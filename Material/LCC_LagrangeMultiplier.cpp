@@ -42,35 +42,6 @@ void LCC_LagrangeMultiplier::Read(TPZStream &buf, void *context)
     
 }
 
-//Contribution of skeletal elements.
-void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
-{
-    int nmesh = datavec.size();
-    if (nmesh!=2) DebugStop();
-
-    TPZFMatrix<REAL>  &phiQ = datavec[0].phi;
-    TPZFMatrix<REAL> &phiP = datavec[1].phi;
-    int phrq = phiQ.Rows();
-    int phrp = phiP.Rows();
-    
-//------- Block of matrix B ------
-    int iq, jp;
-	for(iq = 0; iq<phrq; iq++) {
-		for(jp=0; jp<phrp; jp++) {
-            ek(iq, phrq+jp) += fMultiplier*weight*phiQ(iq,0)*phiP(jp,0);
-		}
-	}
-    
-    
-//------- Block of matrix B^T ------
-    int ip, jq;
-	for(ip=0; ip<phrp; ip++) {
-		for(jq=0; jq<phrq; jq++) {
-			ek(ip + phrq,jq) += fMultiplier*weight*phiP(ip,0)*phiQ(jq,0);
-		}
-	}
-}
-
 /**
  * @brief Computes a contribution to the stiffness matrix and load vector at one integration point to multiphysics simulation
  * @param data [in]
@@ -82,7 +53,7 @@ void LCC_LagrangeMultiplier::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
  * @since June 5, 2012
  */
 
-void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map<int, TPZMaterialData> &dataleft, std::map<int, TPZMaterialData> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
+void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &data, const std::map<int, TPZMaterialDataT<STATE>> &dataleft, const std::map<int, TPZMaterialDataT<STATE>> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
 #ifdef FEMCOMPARISON_TIMER
     auto begin = std::chrono::high_resolution_clock::now();
@@ -114,12 +85,16 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
 //    {
 //        DebugStop();
 //    }
-    TPZFMatrix<REAL> &phiL = dataleft.begin()->second.phi;
-    TPZFMatrix<REAL> &phiR = dataright.begin()->second.phi;
     
-    
-    int nrowl = phiL.Rows();
-    int nrowr = phiR.Rows();
+    //const TPZFMatrix<REAL> *phiL = &(dataleft.begin()->second.phi);
+    TPZFMatrix<REAL> phiLdummy = dataleft.begin()->second.phi;
+    TPZFMatrix<REAL> *phiL = &phiLdummy;
+
+     TPZFMatrix<REAL> phiRdummy = dataright.begin()->second.phi;
+    TPZFMatrix<REAL> *phiR = &phiRdummy;
+
+    int nrowl = phiL->Rows();
+    int nrowr = phiR->Rows();
     static int count  = 0;
 
     if((nrowl+nrowr)*fNStateVariables != ek.Rows() && count < 20)
@@ -130,7 +105,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         count++;
     }
 
-    int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
+    int secondblock = ek.Rows()-phiR->Rows()*fNStateVariables;
     int il,jl,ir,jr;
 
 #ifdef FEMCOMPARISON_USING_MKL
@@ -138,8 +113,8 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         double *A, *B, *C;
         double alpha, beta;
         int m,n,k,phrL,phrR;
-        phrL = phiL.Rows();
-        phrR = phiR.Rows();
+        phrL = phiL->Rows();
+        phrR = phiR->Rows();
         m = phrL;
         n = phrR;
         k = 1;
@@ -147,21 +122,21 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         beta = 1.0;
         int LDA,LDB,LDC;
         LDC = phrL+phrR;
-        LDA = phiL.Rows();
+        LDA = phiL->Rows();
         LDB = 1;
         C = &ek(0,phrL);
-        A = &phiL(0,0);
-        B = &phiR(0,0);
+        A = &phiLdummy(0,0);
+        B = &phiRdummy(0,0);
         //cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,                       m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
         cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
-                       m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
+                    m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
     }
     {
       double *A, *B, *C;
         double alpha, beta;
         int m,n,k,phrL,phrR;
-        phrL = phiL.Rows();
-        phrR = phiR.Rows();
+        phrL = phiL->Rows();
+        phrR = phiR->Rows();
         m = phrR;
         n = phrL;
         k = 1;
@@ -169,11 +144,11 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
         beta = 1.0;
         int LDA,LDB,LDC;
         LDC = phrL+phrR;
-        LDA = phiR.Rows();
+        LDA = phiR->Rows();
         LDB = 1;
         C = &ek(phrL,0);
-        B = &phiL(0,0);
-        A = &phiR(0,0);
+        A = &phiLdummy(0,0);
+        B = &phiRdummy(0,0);
         cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
                        m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
     }
@@ -220,6 +195,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, std::map
  * @param ef [out] is the load vector
  * @since April 16, 2007
  */
+/*
 void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
 //	TPZFMatrix<REAL> &dphiLdAxes = dataleft.dphix;
@@ -264,26 +240,13 @@ void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMater
     
 }
 
-/**
- * @brief It computes a contribution to residual vector at one integration point
- * @param data [in]
- * @param dataleft [in]
- * @param dataright [in]
- * @param weight [in]
- * @param ef [out] is the load vector
- * @since April 16, 2007
- */
 
-void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ef)
-{
-    DebugStop();
-}
-
+*/
 // print the data in human readable form
-void LCC_LagrangeMultiplier::Print(std::ostream &out)
+void LCC_LagrangeMultiplier::Print(std::ostream &out) const
 {
     out << __PRETTY_FUNCTION__ << std::endl;
-    TPZMaterial::Print(out);
+    TPZLagrangeMultiplierCS<STATE>::Print(out);
     out << "NStateVariables " << this->fNStateVariables << std::endl;
     out << "fDimension " << this->fDimension << std::endl;
     out << "fMultiplier " << this->fMultiplier << std::endl;

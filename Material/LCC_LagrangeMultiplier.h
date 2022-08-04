@@ -30,7 +30,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
     public :
 	/** @brief Simple constructor */
     LCC_LagrangeMultiplier() : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZMaterial()
+    TPZLagrangeMultiplierCS<STATE>()
     {
         fStiffnessMatrix.Resize(14);
         for(int iMatrix = 0; iMatrix < 14; iMatrix ++){
@@ -39,7 +39,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
     }
 	/** @brief Constructor with the index of the material object within the vector */
     LCC_LagrangeMultiplier(int nummat, int dimension, int nstate) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZMaterial(nummat), fNStateVariables(nstate), fDimension(dimension), fMultiplier(1.)
+    TPZLagrangeMultiplierCS<STATE>(nummat,dimension,nstate), fDimension(dimension), fMultiplier(1.)
     {
         fStiffnessMatrix.Resize(14);
         for(int iMatrix = 0; iMatrix < 14; iMatrix ++){
@@ -49,7 +49,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
 	
 	/** @brief Copy constructor */
 	LCC_LagrangeMultiplier(const LCC_LagrangeMultiplier &copy) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZMaterial(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
+    TPZLagrangeMultiplierCS<STATE>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
     {
 	    if(fStiffnessMatrix.size() != 14){
 	        DebugStop();
@@ -61,7 +61,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
     
     LCC_LagrangeMultiplier &operator=(const LCC_LagrangeMultiplier &copy)
     {
-        TPZMaterial::operator=(copy);
+        TPZLagrangeMultiplierCS<STATE>::operator=(copy);
         fNStateVariables = copy.fNStateVariables;
         fDimension = copy.fDimension;
         fMultiplier = copy.fMultiplier;
@@ -91,7 +91,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
         return fDimension;
     }
     
-    virtual void SetMultiplier(STATE mult)
+    virtual void SetMultiplier(STATE mult) override
     {
         fMultiplier = mult;
     }
@@ -135,10 +135,10 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
 	 * Here, in base class, all requirements are considered as necessary. \n
 	 * Each derived class may optimize performance by selecting only the necessary data.
 	 */
-	virtual void FillDataRequirementsInterface(TPZMaterialData &data) override
-    {
-        data.SetAllRequirements(false);
-    }
+//	virtual void FillDataRequirementsInterface(TPZMaterialDataT<STATE> &data) const override
+//    {
+//        data.SetAllRequirements(false);
+//    }
     
     /** @brief This method defines which parameters need to be initialized in order to compute the contribution of interface elements */
     virtual void FillDataRequirementsInterface(TPZMaterialDataT<STATE> &data, std::map<int, TPZMaterialDataT<STATE>> &datavec_left, std::map<int, TPZMaterialDataT<STATE>> &datavec_right) override
@@ -175,13 +175,6 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
     virtual void ContributeInterface(TPZMaterialDataT<STATE> &data, TPZMaterialDataT<STATE> &dataleft, TPZMaterialDataT<STATE> &dataright, REAL weight, TPZFMatrix<STATE> &ef);
 	
     
-	
-    virtual void ContributeInterface(TPZMaterialDataT<STATE> &data, std::map<int, TPZMaterialDataT<STATE>> &dataleft, std::map<int, TPZMaterialDataT<STATE>> &dataright, REAL weight, TPZFMatrix<STATE> &ef) override
-    {
-        ContributeInterface(data, dataleft[0], dataright[0], weight, ef);
-    }
-	
-	
 	virtual int NStateVariables() const override
     {
         return fNStateVariables;
