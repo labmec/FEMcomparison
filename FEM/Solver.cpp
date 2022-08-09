@@ -4,7 +4,7 @@
 
 #include "Solver.h"
 #include <TPZMultiphysicsCompMesh.h>
-#include "pzanalysis.h"
+#include "TPZLinearAnalysis.h"
 #include "DataStructure.h"
 #include "MeshInit.h"
 #include "TPZCompMeshTools.h"
@@ -20,7 +20,7 @@
 #include "MeshInit.h"
 #include "TPZTimer.h"
 #include <chrono>
-#include "pzstrmatrixLCC.h"
+//#include "pzstrmatrixLCC.h"
 #include "mkl.h"
 //#include <tbb/parallel_for.h>
 //#include <tbb/task_scheduler_init.h>
@@ -174,10 +174,10 @@ void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct Pr
     
     std::cout << "Solving H1 " << std::endl;
 
-    TPZAnalysis an(cmeshH1);
+    TPZLinearAnalysis an(cmeshH1);
 
 #ifdef FEMCOMPARISON_USING_MKL
-    TPZSymetricSpStructMatrix strmat(cmeshH1);
+    TPZSSpStructMatrix<> strmat(cmeshH1);
     strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
 #else
@@ -332,7 +332,7 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
         VisualMatrix(mat, "arch1.vtk");
     }
     
-    TPZAnalysis an(multiCmesh);
+    TPZLinearAnalysis an(multiCmesh);
     
 //    {
 //        TPZFMatrix<REAL> mat(50,50);
@@ -340,15 +340,16 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 //        VisualMatrix(mat, "arch2.vtk");
 //    }
 #ifdef FEMCOMPARISON_USING_MKL
-    TPZSymetricSpStructMatrix strmat(multiCmesh);
+    TPZSSpStructMatrix<> strmat(multiCmesh);
     strmat.SetNumThreads(pConfig.tData.nThreads);
     
-    TPZSymetricSpStructMatrix *strmatPointer = new TPZSymetricSpStructMatrix(strmat);
+    TPZSSpStructMatrix<> *strmatPointer = new TPZSSpStructMatrix(strmat);
 
 #ifndef USING_LCCMATRIX
-    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
-        DebugStop();
-    }
+//    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
+//        DebugStop();
+//    }
+    DebugStop();
 #endif
 #ifdef USING_LCCMATRIX
     if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){

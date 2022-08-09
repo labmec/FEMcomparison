@@ -15,7 +15,7 @@
 #include "TPZNullMaterial.h"
 #include <memory>
 #include "pzeltype.h"
-
+#include "DarcyFlow/TPZDarcyFlow.h"
 #include "pzcondensedcompel.h"
 #include "pzelementgroup.h"
 
@@ -51,25 +51,30 @@ TPZCompMesh* CreatePressureMesh(const ProblemConfig& problem) {
 TPZCompMesh* CreateFluxHDivMesh(const ProblemConfig& problem) {
     int dim = problem.gmesh->Dimension();
     TPZCompMesh* cmesh = new TPZCompMesh(problem.gmesh);
-    TPZMaterial* mat = NULL;
+    TPZNullMaterial<>* mat = NULL;
     problem.gmesh->ResetReference();
     for (auto matid : problem.materialids) {
-        TPZVecL2* mix = new TPZVecL2(matid);
+        
+
+        TPZNullMaterial<>* mix = new TPZNullMaterial<>(matid);
         mix->SetDimension(dim);
         if (!mat) mat = mix;
         cmesh->InsertMaterialObject(mix);
     }
     for (auto matid : problem.bcmaterialids) {
-        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 1.);
+        TPZFNMatrix<1, REAL> val1(1, 1, 0.);
+        TPZVec<REAL> val2(1, 1.);
+
         int bctype;
         if (matid == -1 || matid == 2) {
             bctype = 0;
         } else {
             bctype = 1;
         }
-        TPZBndCond* bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        TPZBndCondT<STATE>* bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        
 #ifndef OPTMIZE_RUN_TIME
-    bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
+        bc->SetForcingFunctionBC(problem.exact.operator*().ExactSolution(),5);
 #endif
         cmesh->InsertMaterialObject(bc);
     }
@@ -90,7 +95,7 @@ TPZCompMesh* CreateFluxHDivMesh(const ProblemConfig& problem) {
 TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
     
     TPZMultiphysicsCompMesh* cmesh = new TPZMultiphysicsCompMesh(problem.gmesh);
-    TPZMaterial* mat = NULL;
+    TPZMixedDarcyFlow* mat = NULL;
     TPZFMatrix<REAL> K(3, 3, 0), invK(3, 3, 0);
     K.Identity();
     invK.Identity();
@@ -117,12 +122,14 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
 //    invK.Print(std::cout);
     
     for (auto matid : problem.materialids) {
-        TPZMixedPoisson *mix = new TPZMixedPoisson(matid, cmesh->Dimension());
+        TPZMixedDarcyFlow *mix = new TPZMixedDarcyFlow(matid, cmesh->Dimension());
 #ifndef OPTMIZE_RUN_TIME
-    mix->SetForcingFunction(problem.exact.operator*().ForcingFunction());
-        mix->SetExactSol(problem.exact.operator*().Exact());
+        mix->SetForcingFunction(problem.exact->ForceFunc(),5);
+        
+        mix->SetExactSol(problem.exact->ExactSolution(),5);
 #endif
-        mix->SetPermeabilityTensor(K, invK);
+        //mix->SetPermeabilityTensor(K, invK);
+        mix->SetConstantPermeability(1.);
 
         if (!mat) mat = mix;
 
@@ -131,7 +138,8 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
         
     
     for (auto matid : problem.bcmaterialids) {
-        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        TPZFNMatrix<1, REAL> val1(1, 1, 0.);
+        TPZVec<REAL> val2(1, 1.);
         int bctype;
     
         switch (matid) {
@@ -147,16 +155,18 @@ TPZMultiphysicsCompMesh* CreateHDivMesh(const ProblemConfig& problem) {
             break;
             }
             case -3:{
-            bctype = 4;// different from mixed (bctype 2) already implemented on TPZMixedPoisson3d
+            bctype = 4;// different from mixed (bctype 2) already implemented on TPZMixedDarcyFlow3d
             val1(0,0) = Km ;
 
                 
             break;
             }
         }
-        TPZBndCond* bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        
+        TPZBndCondT<STATE>* bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        
 #ifndef OPTMIZE_RUN_TIME
-        bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
+        bc->SetForcingFunctionBC(problem.exact.operator*().ExactSolution(),5);
 #endif
         cmesh->InsertMaterialObject(bc);
     }
@@ -758,7 +768,7 @@ void ComputeError(TPZCompMesh *Hybridmesh, std::ofstream &out,const ProblemConfi
 
 void PlotLagrangeMultiplier(TPZCompMesh* cmesh, const ProblemConfig& problem) {
     
-    TPZAnalysis an(cmesh, false);
+    TPZLinearAnalysis an(cmesh, false);
     TPZStack<std::string> scalnames, vecnames;
     scalnames.Push("State");
     
@@ -784,11 +794,11 @@ void SolveMixedProblem(TPZCompMesh* cmesh_HDiv, const ProblemConfig& config) {
 #endif
     
     
-    TPZAnalysis an(cmesh_HDiv, false);
+    TPZLinearAnalysis an(cmesh_HDiv, false);
 
 
 #ifdef FEMCOMPARISON_USING_MKL
-    TPZSymetricSpStructMatrix strmat(cmesh_HDiv);
+    TPZSSpStructMatrix<> strmat(cmesh_HDiv);
     strmat.SetNumThreads(0);
     //        strmat.SetDecomposeType(ELDLt);
     an.SetStructuralMatrix(strmat);
@@ -907,8 +917,8 @@ TPZGeoMesh* ReadGeometricMesh(struct ProblemConfig& config, bool IsgmeshReader) 
         config.materialids.insert(1);
         config.bcmaterialids.insert(2);
         
+        //gmsh. SetFormatVersion("4.1");
         
-        gmsh.SetFormatVersion("4.1");
         gmesh = gmsh.GeometricGmshMesh(meshfilename);
         gmsh.PrintPartitionSummary(std::cout);
         gmesh->SetDimension(dim);
@@ -1033,26 +1043,28 @@ void DivideLowerDimensionalElements(TPZGeoMesh* gmesh) {
 TPZCompMesh* CMeshH1(ProblemConfig problem) {
     
     TPZCompMesh* cmesh = new TPZCompMesh(problem.gmesh);
-    TPZMaterial* mat = 0;
-    
+    typedef TPZDarcyFlow TPZMatPoisson3d;
+    TPZMatPoisson3d* mat = 0;
     
     for (auto matid : problem.materialids) {
+
         TPZMatPoisson3d *mix = new TPZMatPoisson3d(matid, cmesh->Dimension());
 #ifndef OPTMIZE_RUN_TIME
-        mix->SetExactSol(problem.exact.operator*().Exact());
-    mix->SetForcingFunction(problem.exact.operator*().ForcingFunction());
+    int porder = 5;
+    mix->SetExactSol(problem.exact.operator*().ExactSolution(),porder);
+    mix->SetForcingFunction(problem.exact.operator*().ForceFunc(),porder);
 #endif
         if (!mat) mat = mix;
         cmesh->InsertMaterialObject(mix);
     }
 
     for (auto matid : problem.bcmaterialids) {
-        TPZFNMatrix<1, REAL> val1(1, 1, 0.), val2(1, 1, 0.);
+        TPZFNMatrix<1, REAL> val1(1, 1, 0.);
+        TPZVec<REAL> val2(1, 0.);
         int bctype = 0;
-        val2.Zero();
-        TPZBndCond *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
+        TPZBndCondT<STATE> *bc = mat->CreateBC(mat, matid, bctype, val1, val2);
 #ifndef OPTMIZE_RUN_TIME
-        bc->TPZMaterial::SetForcingFunction(problem.exact.operator*().Exact());
+        bc->SetForcingFunctionBC(problem.exact.operator*().ExactSolution(),5);
 #endif
         cmesh->InsertMaterialObject(bc);
     }

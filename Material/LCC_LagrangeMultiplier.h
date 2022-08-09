@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include "TPZLagrangeMultiplierCS.h"
-
+#include "TPZMaterialDataT.h"
 /// Material which implements a Lagrange Multiplier
 class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
 {

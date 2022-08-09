@@ -15,7 +15,6 @@
 #include "DataStructure.h"
 
 #include "DarcyFlow/TPZMixedDarcyFlow.h"
-//#include "TPZVecL2.h"
 #include "TPZBndCond.h"
 
 #include "pzintel.h"
