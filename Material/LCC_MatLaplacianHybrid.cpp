@@ -38,13 +38,13 @@ LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid(int matid, int dim)
 }
 
 LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid() :
-        TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian()
+        TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZHybridDarcyFlow()
 {
     
 }
 
-LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid(const TPZMatLaplacian &copy) :
-        TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZMatLaplacian(copy)
+LCC_MatLaplacianHybrid::LCC_MatLaplacianHybrid(const LCC_MatLaplacianHybrid &copy) :
+        TPZRegisterClassId(&LCC_MatLaplacianHybrid::ClassId), TPZHybridDarcyFlow(copy)
 {
     
 }
@@ -56,32 +56,32 @@ LCC_MatLaplacianHybrid::~LCC_MatLaplacianHybrid()
 
 LCC_MatLaplacianHybrid &LCC_MatLaplacianHybrid::operator=(const LCC_MatLaplacianHybrid &copy)
 {
-    TPZMatLaplacian::operator=(copy);
+    TPZHybridDarcyFlow::operator=(copy);
     return *this;
 }
 
-TPZMaterial *LCC_MatLaplacianHybrid::NewMaterial()
+TPZMaterial *LCC_MatLaplacianHybrid::NewMaterial() const
 {
     return new LCC_MatLaplacianHybrid(*this);
 }
 
 int LCC_MatLaplacianHybrid::ClassId() const
 {
-    return Hash("LCC_MatLaplacianHybrid") ^ TPZMatLaplacian::ClassId() << 1;
+    return Hash("LCC_MatLaplacianHybrid") ^ TPZHybridDarcyFlow::ClassId() << 1;
 }
 
 
 void LCC_MatLaplacianHybrid::Write(TPZStream &buf, int withclassid) const
 {
-    TPZMatLaplacian::Write(buf,withclassid);
+    TPZHybridDarcyFlow::Write(buf,withclassid);
 }
 
 void LCC_MatLaplacianHybrid::Read(TPZStream &buf, void *context)
 {
-    TPZMatLaplacian::Read(buf,context);
+    TPZHybridDarcyFlow::Read(buf,context);
 }
 
-int LCC_MatLaplacianHybrid::VariableIndex(const std::string &name)
+int LCC_MatLaplacianHybrid::VariableIndex(const std::string &name) const
 {
 
     if(name == "Pressure") return 44;
@@ -95,19 +95,19 @@ int LCC_MatLaplacianHybrid::VariableIndex(const std::string &name)
     return -1;
 }
 
-int LCC_MatLaplacianHybrid::NSolutionVariables(int var){
+int LCC_MatLaplacianHybrid::NSolutionVariables(int var) const {
     if(var == 44 || var==45) return 1;
     if(var == 10 || var==13 || var == 23) return fDim;
     
     else{
         
-        return TPZMatLaplacian::NSolutionVariables(var);
+        return TPZHybridDarcyFlow::NSolutionVariables(var);
         return 0;
         
     }
 }
 
-void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
+void LCC_MatLaplacianHybrid::Contribute(const TPZVec<TPZMaterialDataT<STATE>> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef){
     /**
      datavec[1] L2 mesh (phi's)
      datavec[0] Hdiv mesh,
@@ -143,24 +143,16 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
 
     int phr = phi.Rows();
     
-    STATE fXfLoc = fXf;
+    STATE fXfLoc = 0;
     
     if(fForcingFunction) {            // phi(in, 0) = phi_in
         TPZManVector<STATE,1> res(1);
-        //TPZFMatrix<STATE> dres(Dimension(),1);
-        //fForcingFunction->Execute(x,res,dres);       // dphi(i,j) = dphi_j/dxi
-        fForcingFunction->Execute(x,res);
+        fForcingFunction(x, res);
         fXfLoc = res[0];
     }
     
-    STATE KPerm = fK;
-    if (fPermeabilityFunction) {
-        TPZFNMatrix<9,STATE> perm, invperm;
-        TPZManVector<STATE,3> func;
-        TPZFNMatrix<18,STATE> dfunc(6,3,0.);
-        fPermeabilityFunction->Execute(x, func, dfunc);
-        KPerm = dfunc(0,0);
-    }
+    STATE KPerm = GetPermeability(datavec[0].x);
+    
 #ifdef FEMCOMPARISON_USING_MKL
     {
         double *A, *B, *C;
@@ -254,7 +246,7 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
 #endif
 }
 
-void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ef)
+void LCC_MatLaplacianHybrid::Contribute(const TPZVec<TPZMaterialDataT<STATE>> &datavec, REAL weight, TPZFMatrix<STATE> &ef)
 {
     TPZFMatrix<REAL>  &phi = datavec[1].phi;
     TPZFMatrix<REAL> &dphi = datavec[1].dphix;
@@ -263,38 +255,29 @@ void LCC_MatLaplacianHybrid::Contribute(TPZVec<TPZMaterialData> &datavec, REAL w
     //    TPZFMatrix<REAL> &jacinv = data.jacinv;
     int phr = phi.Rows();
     
-    STATE fXfLoc = fXf;
+    STATE fXfLoc = 0;
     
     if(fForcingFunction) {            // phi(in, 0) = phi_in
         TPZManVector<STATE,1> res(1);
-        //TPZFMatrix<STATE> dres(Dimension(),1);
-        //fForcingFunction->Execute(x,res,dres);       // dphi(i,j) = dphi_j/dxi
-        fForcingFunction->Execute(x,res);
+        fForcingFunction(x, res);
         fXfLoc = res[0];
     }
     
-    STATE KPerm = fK;
-    if (fPermeabilityFunction) {
-        TPZFNMatrix<9,STATE> perm, invperm;
-        TPZManVector<STATE,3> func;
-        TPZFNMatrix<18,STATE> dfunc(6,3,0.);
-        fPermeabilityFunction->Execute(x, func, dfunc);
-        KPerm = dfunc(0,0);
-    }
+    STATE KPerm = GetPermeability(datavec[0].x);
     
     //Equacao de Poisson
     for( int in = 0; in < phr; in++ ) {
         int kd;
         ef(in, 0) +=  (STATE)weight * fXfLoc * (STATE)phi(in,0);
         for(kd=0; kd<fDim; kd++) {
-            ef(in,0) -= (STATE)weight*(fK*(STATE)(dphi(kd,in)*datavec[1].dsol[0](kd,0)));
+            ef(in,0) -= (STATE)weight*(KPerm*(STATE)(dphi(kd,in)*datavec[1].dsol[0](kd,0)));
         }
     }
     ef(phr,0) += weight*(-datavec[1].sol[0][0]+ datavec[3].sol[0][0]);
     ef(phr+1,0) += weight*datavec[2].sol[0][0];
 }
 
-void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef, TPZBndCond &bc)
+void LCC_MatLaplacianHybrid::ContributeBC(const TPZVec<TPZMaterialDataT<STATE>> &datavec, REAL weight, TPZFMatrix<STATE> &ek,TPZFMatrix<STATE> &ef,TPZBndCondT<STATE> &bc)
 {
 #ifdef FEMCOMPARISON_TIMER
     extern bool contributeTest;
@@ -327,12 +310,12 @@ void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
     }
     short in,jn;
     STATE v2[1];
-    v2[0] = bc.Val2()(0,0);
+    v2[0] = bc.Val2()[0];
     
-    if(bc.HasForcingFunction()) {            // phi(in, 0) = phi_in                          // JORGE 2013 01 26
+    if(bc.HasForcingFunctionBC()) {            // phi(in, 0) = phi_in                          // JORGE 2013 01 26
         TPZManVector<STATE> res(1);
         TPZFNMatrix<3,STATE> dres(3,1);
-        bc.ForcingFunction()->Execute(x,res,dres);       // dphi(i,j) = dphi_j/dxi
+        bc.ForcingFunctionBC()(x, res, dres);
         v2[0] = res[0];
     }
     
@@ -341,9 +324,9 @@ void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
         switch (bc.Type()) {
             case 0 :            // Dirichlet condition
                 for(in = 0 ; in < phr_primal; in++) {
-                    ef(in,0) += (STATE)(gBigNumber* phi_u(in,0) * weight) * v2[0];
+                    ef(in,0) += (STATE)(fBigNumber* phi_u(in,0) * weight) * v2[0];
                     for (jn = 0 ; jn < phr_primal; jn++) {
-                        ek(in,jn) += gBigNumber * phi_u(in,0) * phi_u(jn,0) * weight;
+                        ek(in,jn) += fBigNumber * phi_u(in,0) * phi_u(jn,0) * weight;
                     }
                 }
                 break;
@@ -373,9 +356,9 @@ void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
                 break;
             case 1 :            // Neumann condition
                 for(in = 0 ; in < phr_hybrid; in++) {
-                    ef(in,0) += (STATE)(gBigNumber* phi_flux(in,0) * weight) * v2[0];
+                    ef(in,0) += (STATE)(fBigNumber* phi_flux(in,0) * weight) * v2[0];
                     for (jn = 0 ; jn < phr_hybrid; jn++) {
-                        ek(in,jn) += gBigNumber * phi_flux(in,0) * phi_flux(jn,0) * weight;
+                        ek(in,jn) += fBigNumber * phi_flux(in,0) * phi_flux(jn,0) * weight;
                     }
                 }
                 break;
@@ -405,7 +388,7 @@ void LCC_MatLaplacianHybrid::ContributeBC(TPZVec<TPZMaterialData> &datavec, REAL
 }
 
 
-void LCC_MatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var, TPZVec<STATE> &Solout)
+void LCC_MatLaplacianHybrid::Solution(const TPZVec<TPZMaterialDataT<STATE>> &datavec, int var, TPZVec<STATE> &Solout)
 {
     /**
      datavec[1] L2 mesh
@@ -415,20 +398,32 @@ void LCC_MatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var,
      **/
     if(var == 0)
     {
-        TPZMatLaplacian::Solution(datavec[1],var,Solout);
+        TPZHybridDarcyFlow::Solution(datavec,var,Solout);
         return;
     }
     
-    TPZFNMatrix<9,REAL> PermTensor = fTensorK;
-    TPZFNMatrix<9,REAL> InvPermTensor = fInvK;
-    
+    STATE KPerm = GetPermeability(datavec[0].x);
+    STATE invKPerm = 1./KPerm;
+    TPZFNMatrix<9,REAL> PermTensor;
+    TPZFNMatrix<9,REAL> InvPermTensor;
+    for(int i=0; i< fDim; i++){
+        for(int j=0; j<fDim; j++){
+            if(i==j){
+                PermTensor(i,j)=KPerm;
+                InvPermTensor(i,j)= invKPerm;
+            } else{
+                PermTensor(i,j) = 0;
+                InvPermTensor(i,j)= 0;
+            }
+        }
+    }
     
     TPZManVector<STATE,2> pressexact(1,0.);
     TPZFNMatrix<9,STATE> grad(fDim,1,0.), fluxinv(fDim,1),gradu(fDim,1,0);//no TPZAnalytic solution grad é 3x1
     
     if(fExactSol)
     {
-        this->fExactSol->Execute(datavec[1].x, pressexact,grad);
+        this->fExactSol(datavec[1].x, pressexact,grad);
         
         for(int i = 1; i<fDim ; i++){
             
@@ -454,7 +449,7 @@ void LCC_MatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var,
         case 10:
         case 13:
         case 23:
-            TPZMatLaplacian::Solution(datavec[1],var,Solout);
+            TPZHybridDarcyFlow::Solution(datavec,var,Solout);
             break;
         default:
             DebugStop();
@@ -463,7 +458,7 @@ void LCC_MatLaplacianHybrid::Solution(TPZVec<TPZMaterialData> &datavec, int var,
 
 
 
-void LCC_MatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> &errors)
+void LCC_MatLaplacianHybrid::Errors(const TPZVec<TPZMaterialDataT<STATE>> &data, TPZVec<REAL> &errors)
 {
     if(!fExactSol) return;
 
@@ -476,7 +471,7 @@ void LCC_MatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> 
 
     if(this->fExactSol){
 
-        this->fExactSol->Execute(data[1].x,u_exact,du_exact);
+        this->fExactSol(data[1].x,u_exact,du_exact);
     }
 
     REAL pressure = data[1].sol[0][0];
@@ -504,7 +499,18 @@ void LCC_MatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> 
 
     // error[3] Energy norm || u ||_e = a(u,u)= int_K K gradu.gradu dx
 
-    TPZFNMatrix<9,REAL> PermTensor = fTensorK;
+    STATE KPerm = GetPermeability(data[0].x);
+    TPZFNMatrix<9,REAL> PermTensor;
+    for(int i=0; i< fDim; i++){
+        for(int j=0; j<fDim; j++){
+            if(i==j){
+                PermTensor(i,j)=KPerm;
+            } else{
+                PermTensor(i,j) = 0;
+            }
+        }
+    }
+    
     TPZFNMatrix<9,REAL> gradpressure(fDim,1),Kgradu(fDim,1);
     for (int i=0; i<fDim; i++) {
         gradpressure(i,0) = du_exact(i,0);
@@ -521,7 +527,7 @@ void LCC_MatLaplacianHybrid::Errors(TPZVec<TPZMaterialData> &data, TPZVec<REAL> 
     errors[3] = energy;
 }
 
-void LCC_MatLaplacianHybrid::FillDataRequirements(TPZVec<TPZMaterialData > &datavec)
+void LCC_MatLaplacianHybrid::FillDataRequirements(TPZVec<TPZMaterialDataT<STATE>> &datavec) const
 {
     int nref = datavec.size();
     for(int i = 0; i<nref; i++ )

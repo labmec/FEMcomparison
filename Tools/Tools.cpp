@@ -25,7 +25,7 @@ TPZCompMesh* CreatePressureMesh(const ProblemConfig& problem) {
     TPZCompMesh* cmesh = new TPZCompMesh(problem.gmesh);
     TPZMaterial* mat = 0;
     for (auto matid : problem.materialids) {
-        TPZNullMaterial* mix = new TPZNullMaterial(matid);
+        auto mix = new TPZNullMaterial(matid);
         if (!mat) mat = mix;
         cmesh->InsertMaterialObject(mix);
     }

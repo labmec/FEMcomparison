@@ -16,9 +16,9 @@ public:
     /** @brief Default constructor */
     LCC_TPZMultiphysicsInterfaceElement();
 
-    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, int64_t &index, TPZCompElSide left, TPZCompElSide right);
+    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, TPZCompElSide left, TPZCompElSide right);
 
-    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, int64_t &index);
+    LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref);
 
     LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, const LCC_TPZMultiphysicsInterfaceElement &copy);
 
@@ -45,11 +45,12 @@ public:
 /**
      * Compute the stiffness matrix and load vector of the interface element
      */
-    void CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) override;
-
-    void ComputingCalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef);
-
-    void ChoosingOptimizedComputation( TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex);
+    template<class TVar>
+    void CalcStiffT(TPZElementMatrixT<TVar> &ek, TPZElementMatrixT<TVar> &ef);
+    template<class TVar>
+    void ComputingCalcStiff(TPZElementMatrixT<TVar> &ek, TPZElementMatrixT<TVar> &ef);
+    template<class TVar>
+    void ChoosingOptimizedComputation( TPZElementMatrixT<TVar> &ek, TPZElementMatrixT<TVar> &ef, int matrixIndex);
 
 };
 

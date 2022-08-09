@@ -14,9 +14,9 @@
 #include "TPZVTKGeoMesh.h"
 #include "DataStructure.h"
 
-#include "mixedpoisson.h"
-#include "TPZVecL2.h"
-#include "pzbndcond.h"
+#include "DarcyFlow/TPZMixedDarcyFlow.h"
+//#include "TPZVecL2.h"
+#include "TPZBndCond.h"
 
 #include "pzintel.h"
 
@@ -25,7 +25,7 @@
 #include "TPZMultiphysicsInterfaceEl.h"
 #include "TPZHybridizeHDiv.h"
 
-#include "pzanalysis.h"
+#include "TPZLinearAnalysis.h"
 #include "pzstepsolver.h"
 #include "TPZSSpStructMatrix.h"
 #include "TPZParFrontStructMatrix.h"

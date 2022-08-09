@@ -30,14 +30,14 @@ LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(): TPZM
 
 }
 
-LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, int64_t &index, TPZCompElSide left, TPZCompElSide right) :
-TPZMultiphysicsInterfaceElement(mesh, ref, index,  left, right)
+LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, TPZCompElSide left, TPZCompElSide right) :
+TPZMultiphysicsInterfaceElement(mesh, ref, left, right)
 {
 
 }
 
-LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref, int64_t &index):
-TPZMultiphysicsInterfaceElement(mesh, ref, index)
+LCC_TPZMultiphysicsInterfaceElement::LCC_TPZMultiphysicsInterfaceElement(TPZCompMesh &mesh, TPZGeoEl *ref):
+TPZMultiphysicsInterfaceElement(mesh, ref)
 {
 
 }
@@ -55,14 +55,13 @@ TPZMultiphysicsInterfaceElement(mesh, copy, gl2lcConMap,gl2lcElMap)
 {
 
 }
-
-void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) {
+template<class TVar>
+void LCC_TPZMultiphysicsInterfaceElement::CalcStiffT(TPZElementMatrixT<TVar> &ek, TPZElementMatrixT<TVar> &ef) {
 #ifdef FEMCOMPARISON_TIMER
     //extern double interfaceTime;
     //TPZTimer timer;
     //timer.start();
 #endif
-    
     
     if (this->NConnects() == 0) return;//boundary discontinuous elements have this characteristic
     TPZMultiphysicsElement *leftel = dynamic_cast<TPZMultiphysicsElement *> (fLeftElSide.Element());
@@ -183,8 +182,8 @@ void LCC_TPZMultiphysicsInterfaceElement::CalcStiff(TPZElementMatrix &ek, TPZEle
     //interfaceTime+=timer.seconds();
 #endif
 }
-
-void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElementMatrix &ek, TPZElementMatrix &ef, int matrixIndex){
+template<class TVar>
+void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElementMatrixT<TVar> &ek, TPZElementMatrixT<TVar> &ef, int matrixIndex){
 
     TPZMaterial *material = this->Material();
     if (!material) {
@@ -202,7 +201,8 @@ void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElemen
     lagMat->GetStiffnessMatrix(M,matrixIndex);
 
     if(M.Cols() == 0){
-        M.Resize(ek.fMat.Rows(),ek.fMat.Cols());
+        //FIXME: to review
+        M.Resize(ek.fMat.Rows(), ek.fMat.Cols());
         ComputingCalcStiff(ek,ef);
         lagMat->FillStiffnessMatrix(ek.fMat,matrixIndex);
     }
@@ -229,11 +229,19 @@ void LCC_TPZMultiphysicsInterfaceElement::ChoosingOptimizedComputation(TPZElemen
         ek.fMat = M;
     }
 }
-
-void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &ek, TPZElementMatrix &ef) {
+template<class TVar>
+void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrixT<TVar> &ek, TPZElementMatrixT<TVar> &ef) {
 
     TPZMaterial *material = this->Material();
-
+    auto *matInterface =
+        dynamic_cast<TPZMatInterfaceCombinedSpaces<TVar>*>(material);
+     if(!material || !matInterface){
+         PZError << "Error at " << __PRETTY_FUNCTION__ << " this->Material() == NULL\n";
+         ek.Reset();
+         ef.Reset();
+         return;
+     }
+    
     if (this->NConnects() == 0) return;//boundary discontinuous elements have this characteristic
     TPZMultiphysicsElement *leftel = dynamic_cast<TPZMultiphysicsElement *> (fLeftElSide.Element());
     TPZMultiphysicsElement *rightel = dynamic_cast<TPZMultiphysicsElement *>(fRightElSide.Element());
@@ -245,9 +253,11 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
         DebugStop();
     }
 #endif
-    std::map<int,TPZMaterialData> datavecleft;
-    std::map<int,TPZMaterialData> datavecright;
-    TPZMaterialData data;
+    
+    std::map<int,TPZMaterialDataT<TVar>> datavecleft;
+    std::map<int,TPZMaterialDataT<TVar>> datavecright;
+    TPZMaterialDataT<TVar> data;
+    
     InitMaterialData(data, datavecleft, datavecright);
 
     TPZManVector<TPZTransform<REAL>,6> leftcomptr, rightcomptr;
@@ -277,7 +287,7 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
     leftel->PolynomialOrder(intleftorder);
     TPZManVector<int> intrightorder;
     rightel->PolynomialOrder(intrightorder);
-    int integrationorder = material->GetIntegrationOrder(intleftorder, intrightorder);
+    int integrationorder = matInterface->GetIntegrationOrder(intleftorder, intrightorder);
     TPZGeoEl *gel = Reference();
     int dimension = gel->Dimension();
     int thisside = gel->NSides()-1;
@@ -312,7 +322,7 @@ void LCC_TPZMultiphysicsInterfaceElement::ComputingCalcStiff(TPZElementMatrix &e
         rightel->ComputeRequiredData(rightPoint, rightcomptr, datavecright);
 
         data.x = datavecleft.begin()->second.x;
-        material->ContributeInterface(data, datavecleft, datavecright, weight, ek.fMat, ef.fMat);
+        matInterface->ContributeInterface(data, datavecleft, datavecright, weight, ek.fMat, ef.fMat);
     }
 
 #ifdef PZ_LOG
