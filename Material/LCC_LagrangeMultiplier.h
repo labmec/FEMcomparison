@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include "TPZLagrangeMultiplierCS.h"
+#include "pzfmatrix.h"
 #include "TPZMaterialDataT.h"
 /// Material which implements a Lagrange Multiplier
 class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
@@ -164,15 +165,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
 //    }
 	
 	
-    void ContributeInterface(const TPZMaterialDataT<STATE> &data,
-                                 const std::map<int, TPZMaterialDataT<STATE>> &dataleft,
-                                 const std::map<int, TPZMaterialDataT<STATE>> &dataright,
-                                 REAL weight,
-                                 TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) override;
-    
-	
-	
-    virtual void ContributeInterface(TPZMaterialDataT<STATE> &data, TPZMaterialDataT<STATE> &dataleft, TPZMaterialDataT<STATE> &dataright, REAL weight, TPZFMatrix<STATE> &ef);
+    void ContributeInterface(const TPZMaterialDataT<STATE> &data, const std::map<int, TPZMaterialDataT<STATE>> &dataleft, const std::map<int, TPZMaterialDataT<STATE>> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) override;
 	
     
 	virtual int NStateVariables() const override

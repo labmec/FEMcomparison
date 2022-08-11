@@ -502,7 +502,8 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
         LCC_MatLaplacianHybrid *material = new LCC_MatLaplacianHybrid(matID, dim);
         material->SetConstantPermeability(1.);
         cmesh_H1Hybrid->InsertMaterialObject(material);
-        
+        cmesh_H1Hybrid->SetAllCreateFunctionsMultiphysicElem();
+
 #ifndef OPTMIZE_RUN_TIME
             material->SetForcingFunction(config.exact->ForceFunc(),5);
             material->SetExactSol(config.exact->ExactSolution(),5);
