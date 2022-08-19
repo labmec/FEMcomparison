@@ -153,6 +153,27 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
 
     InsertMaterialHybrid(cmesh_H1Hybrid, config,pConfig);
     createspace.InsertPeriferalMaterialObjects(cmesh_H1Hybrid);
+    
+    {
+    std::vector<std::ofstream*> output;
+    std::string foldername="PrintMesh";
+    std::string command = "mkdir -p " + foldername;
+    system(command.c_str());
+    for(int ii=0;ii<5;ii++){
+        std::stringstream name;
+        name << foldername <<"/meshB4" << ii << ".txt";
+        std::string oname = name.str();
+        std::ofstream* x = new std::ofstream(oname);
+        output.push_back(x);
+        if(ii==0){
+            cmesh_H1Hybrid->Print(*output[ii]);
+        }else{
+            meshvec[ii-1]->Print(*output[ii]);
+            //cmesh_H1Hybrid->MeshVector()[ii-1]->Print(*output[ii]);
+        }
+    }
+    }
+    
     cmesh_H1Hybrid->BuildMultiphysicsSpace(meshvec);
     createspace.InsertLagranceMaterialObjects(cmesh_H1Hybrid);
 
@@ -163,7 +184,25 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
     cmesh_H1Hybrid->ComputeNodElCon();
 
     interFaceMatID = createspace.fH1Hybrid.fLagrangeMatid.first;
-
+    {
+    std::vector<std::ofstream*> output;
+    std::string foldername="PrintMesh";
+    std::string command = "mkdir -p " + foldername;
+    system(command.c_str());
+    for(int ii=0;ii<5;ii++){
+        std::stringstream name;
+        name << foldername <<"/mesh" << ii << ".txt";
+        std::string oname = name.str();
+        std::ofstream* x = new std::ofstream(oname);
+        output.push_back(x);
+        if(ii==0){
+            cmesh_H1Hybrid->Print(*output[ii]);
+        }else{
+            cmesh_H1Hybrid->MeshVector()[ii-1]->Print(*output[ii]);
+        }
+    }
+    }
+    
 }
 
 void SolveH1Problem(TPZCompMesh *cmeshH1,struct ProblemConfig &config, struct PreConfig &pConfig){
@@ -345,12 +384,12 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     
     TPZSSpStructMatrix<> *strmatPointer = new TPZSSpStructMatrix(strmat);
 
-#ifndef USING_LCCMATRIX
+//#ifndef USING_LCCMATRIX
 //    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
 //        DebugStop();
 //    }
-    DebugStop();
-#endif
+    //DebugStop();
+//#endif
 #ifdef USING_LCCMATRIX
     if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
         strmat.SetShouldColor(pConfig.shouldColor);

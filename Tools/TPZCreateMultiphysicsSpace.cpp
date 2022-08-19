@@ -13,6 +13,7 @@
 #include "pzelementgroup.h"
 #include "pzcondensedcompel.h"
 #include "TPZNullMaterial.h"
+#include "TPZNullMaterialCS.h"
 #include "LCC_LagrangeMultiplier.h"
 #include "TPZMultiphysicsCompMesh.h"
 #include "LCC_MultiphysicsInterfaceEl.h"
@@ -706,7 +707,7 @@ static void InsertNullMaterial(int matid, int dim, int nstate, TPZCompMesh *cmes
 {
     TPZMaterial *mat = cmesh->FindMaterial(matid);
     if(mat) return;
-    auto nullmat = new TPZNullMaterial(matid);
+    auto nullmat = new TPZNullMaterialCS(matid);
     nullmat->SetDimension(dim);
     nullmat->SetNStateVariables(nstate);
     cmesh->InsertMaterialObject(nullmat);
