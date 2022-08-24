@@ -121,8 +121,8 @@ void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &
         LDA = phiR->Rows();
         LDB = 1;
         C = &ek(phrL,0);
-        A = &phiLdummy(0,0);
-        B = &phiRdummy(0,0);
+        B = &phiLdummy(0,0);
+        A = &phiRdummy(0,0);
         cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
                        m, n, k,alpha , A, LDA, B, LDB, beta, C, LDC);
     }
