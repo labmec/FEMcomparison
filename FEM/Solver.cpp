@@ -20,8 +20,12 @@
 #include "MeshInit.h"
 #include "TPZTimer.h"
 #include <chrono>
+#include "TPZFrontSym.h"
 //#include "pzstrmatrixLCC.h"
+#ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
+#endif
+
 //#include <tbb/parallel_for.h>
 //#include <tbb/task_scheduler_init.h>
 //#include "omp.h"
@@ -343,20 +347,20 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, std::ofstream &
     //std::cout<<"nnnnnnnn"<<std::endl;
     //for(int i=0;i<Errors.size();i++)
         //std::cout<<Errors[i]<<std::endl;
-    if ((*Log)[0] != -1) {
-        for (int j = 0; j < 3; j++) {
-            (*pConfig.rate)[j] =
-                    (log10(Errors[j]) - log10((*Log)[j])) /
-                    (log10(pConfig.h) - log10(pConfig.hLog));
-            Erro << "rate " << j << ": " << (*pConfig.rate)[j] << std::endl;
-        }
-    }
+//    if ((*Log)[0] != -1) {
+//        for (int j = 0; j < 3; j++) {
+//            (*pConfig.rate)[j] =
+//                    (log10(Errors[j]) - log10((*Log)[j])) /
+//                    (log10(pConfig.h) - log10(pConfig.hLog));
+//            Erro << "rate " << j << ": " << (*pConfig.rate)[j] << std::endl;
+//        }
+//    }
 
-    Erro << "h = " << pConfig.h << std::endl;
-    Erro << "DOF = " << cmesh->NEquations() << std::endl;
-    for (int i = 0; i < pConfig.numErrors; i++)
-        (*Log)[i] = Errors[i];
-    Errors.clear();
+//    Erro << "h = " << pConfig.h << std::endl;
+//    Erro << "DOF = " << cmesh->NEquations() << std::endl;
+//    for (int i = 0; i < pConfig.numErrors; i++)
+//        (*Log)[i] = Errors[i];
+//    Errors.clear();
 }
 
 void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId, struct ProblemConfig config,struct PreConfig &pConfig, bool isHybridH1){
@@ -398,7 +402,7 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 #endif
 #else
     //TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
-    TPZSymetricSpStructMatrix strmat(multiCmesh);
+    TPZSSpStructMatrix<> strmat(multiCmesh);
     strmat.SetNumThreads(0);
 #endif
     
@@ -437,7 +441,9 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 #endif
         int effNthreads = pConfig.tData.nThreads;
         if (effNthreads == 0) effNthreads =1;
-        mkl_set_num_threads_local(effNthreads);
+#ifdef FEMCOMPARISON_USING_MKL
+    mkl_set_num_threads_local(effNthreads);
+#endif
         an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();

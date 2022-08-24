@@ -5,7 +5,7 @@
 //  Created by Philippe Devloo on 5/2/14.
 //
 //
-
+#include "fstream"
 #include "LCC_LagrangeMultiplier.h"
 #include "pzaxestools.h"
 #ifdef FEMCOMPARISON_USING_MKL
@@ -55,37 +55,11 @@ void LCC_LagrangeMultiplier::Read(TPZStream &buf, void *context)
 
 void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &data, const std::map<int, TPZMaterialDataT<STATE>> &dataleft, const std::map<int, TPZMaterialDataT<STATE>> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
 {
-#ifdef FEMCOMPARISON_TIMER
-    auto begin = std::chrono::high_resolution_clock::now();
-//    extern bool contributeTest;
-//    TPZTimer timer;
-//    if(contributeTest){
-//        timer.start();
-//    }
-#endif
     
 #ifdef FEMCOMPARISON_DEBUG
     if(dataleft.size() != 1 || dataright.size() != 1) DebugStop();
 #endif
-//    TPZFMatrix<REAL> *phiLPtr = 0, *phiRPtr = 0;
-//    for (int i=0; i<dataleft.size(); i++) {
-//        if (dataleft[i].phi.Rows() != 0) {
-//            phiLPtr = &dataleft[i].phi;
-//            break;
-//        }
-//    }
-//    for (int i=0; i<dataright.size(); i++) {
-//        if (dataright[i].phi.Rows() != 0) {
-//            phiRPtr = &dataright[i].phi;
-//            break;
-//        }
-//    }
-//
-//    if(!phiLPtr || !phiRPtr)
-//    {
-//        DebugStop();
-//    }
-    
+
     //const TPZFMatrix<REAL> *phiL = &(dataleft.begin()->second.phi);
     TPZFMatrix<REAL> phiLdummy = dataleft.begin()->second.phi;
     TPZFMatrix<REAL> *phiL = &phiLdummy;
@@ -101,7 +75,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &
     {
         std::cout<<"ek.Rows() "<< ek.Rows()<<
         " nrowl " << nrowl <<
-        " nrowr " << nrowr << " may give wrong result " << std::endl;
+        " nrowr " << nrowr << " may give wrong result "<< "fNStateVariables\t"<< fNStateVariables << "count " << count  << std::endl;
         count++;
     }
 
@@ -185,63 +159,6 @@ void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &
 
 }
 
-/**
- * @brief It computes a contribution to stiffness matrix and load vector at one integration point
- * @param data [in]
- * @param dataleft [in]
- * @param dataright [in]
- * @param weight [in]
- * @param ek [out] is the stiffness matrix
- * @param ef [out] is the load vector
- * @since April 16, 2007
- */
-/*
-void LCC_LagrangeMultiplier::ContributeInterface(TPZMaterialData &data, TPZMaterialData &dataleft, TPZMaterialData &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
-{
-//	TPZFMatrix<REAL> &dphiLdAxes = dataleft.dphix;
-//	TPZFMatrix<REAL> &dphiRdAxes = dataright.dphix;
-	TPZFMatrix<REAL> &phiL = dataleft.phi;
-	TPZFMatrix<REAL> &phiR = dataright.phi;
-	
-//	TPZFNMatrix<660> dphiL, dphiR;
-//	TPZAxesTools<REAL>::Axes2XYZ(dphiLdAxes, dphiL, dataleft.axes);
-//	TPZAxesTools<REAL>::Axes2XYZ(dphiRdAxes, dphiR, dataright.axes);
-	
-
-	int nrowl = phiL.Rows();
-	int nrowr = phiR.Rows();
-#ifdef FEMCOMPARISON_DEBUG
-    if(phiL.Rows()*fNStateVariables+phiR.Rows()*fNStateVariables != ek.Rows())
-    {
-        DebugStop();
-    }
-#endif
-    int secondblock = ek.Rows()-phiR.Rows()*fNStateVariables;
-	int il,jl,ir,jr;
-    
-    
-	// 3) phi_I_left, phi_J_right
-	for(il=0; il<nrowl; il++) {
-		for(jr=0; jr<nrowr; jr++) {
-            for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * (phiL(il) * phiR(jr));
-            }
-		}
-	}
-	
-    //	// 4) phi_I_right, phi_J_left
-	for(ir=0; ir<nrowr; ir++) {
-		for(jl=0; jl<nrowl; jl++) {
-            for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phiR(ir) * phiL(jl));
-            }
-		}
-	}
-    
-}
-
-
-*/
 // print the data in human readable form
 void LCC_LagrangeMultiplier::Print(std::ostream &out) const
 {

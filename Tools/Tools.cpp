@@ -18,6 +18,7 @@
 #include "DarcyFlow/TPZDarcyFlow.h"
 #include "pzcondensedcompel.h"
 #include "pzelementgroup.h"
+#include "TPZFrontSym.h"
 
 using namespace std;
 
