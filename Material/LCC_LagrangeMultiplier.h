@@ -19,14 +19,6 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
 
     /** @brief Pointer to a blocked matrix object*/
     TPZManVector<TPZFNMatrix<1000, STATE>,8> fStiffnessMatrix;
-
-    /// Number of state variables
-    int fNStateVariables;
-    
-    /// Dimensiona associated with the material
-    int fDimension;
-    
-    STATE fMultiplier;
     
     public :
 	/** @brief Simple constructor */
@@ -40,7 +32,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
     }
 	/** @brief Constructor with the index of the material object within the vector */
     LCC_LagrangeMultiplier(int nummat, int dimension, int nstate) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZLagrangeMultiplierCS<STATE>(nummat,dimension,nstate), fDimension(dimension), fMultiplier(1.)
+    TPZLagrangeMultiplierCS<STATE>(nummat,dimension,nstate)
     {
         fStiffnessMatrix.Resize(14);
         for(int iMatrix = 0; iMatrix < 14; iMatrix ++){
@@ -50,7 +42,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
 	
 	/** @brief Copy constructor */
 	LCC_LagrangeMultiplier(const LCC_LagrangeMultiplier &copy) : TPZRegisterClassId(&LCC_LagrangeMultiplier::ClassId),
-    TPZLagrangeMultiplierCS<STATE>(copy), fNStateVariables(copy.fNStateVariables), fDimension(copy.fDimension), fMultiplier(copy.fMultiplier)
+    TPZLagrangeMultiplierCS<STATE>(copy)
     {
 	    if(fStiffnessMatrix.size() != 14){
 	        DebugStop();

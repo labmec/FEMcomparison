@@ -500,27 +500,21 @@ void LCC_MatLaplacianHybrid::Errors(const TPZVec<TPZMaterialDataT<STATE>> &data,
     // error[3] Energy norm || u ||_e = a(u,u)= int_K K gradu.gradu dx
 
     STATE KPerm = GetPermeability(data[0].x);
-    TPZFNMatrix<9,REAL> PermTensor;
-    for(int i=0; i< fDim; i++){
-        for(int j=0; j<fDim; j++){
-            if(i==j){
-                PermTensor(i,j)=KPerm;
-            } else{
-                PermTensor(i,j) = 0;
-            }
-        }
-    }
+    
     
     TPZFNMatrix<9,REAL> gradpressure(fDim,1),Kgradu(fDim,1);
     for (int i=0; i<fDim; i++) {
         gradpressure(i,0) = du_exact(i,0);
+        Kgradu(i,0) = gradpressure(0)*KPerm;
     }
-    PermTensor.Multiply(gradpressure,Kgradu);
-
+        
     REAL energy = 0.;
     for (int i=0; i<fDim; i++) {
         for (int j=0; j<fDim; j++) {
-            energy += PermTensor(i,j)*fabs(flux(j,0) - du_exact(j,0))*fabs(flux(i,0) - du_exact(i,0));
+            double cperm =0.;
+            if(i==j)
+                cperm = KPerm;
+            energy += cperm*fabs(flux(j,0) - du_exact(j,0))*fabs(flux(i,0) - du_exact(i,0));
         }
     }
 

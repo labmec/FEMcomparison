@@ -64,7 +64,7 @@ void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &
     TPZFMatrix<REAL> phiLdummy = dataleft.begin()->second.phi;
     TPZFMatrix<REAL> *phiL = &phiLdummy;
 
-     TPZFMatrix<REAL> phiRdummy = dataright.begin()->second.phi;
+    TPZFMatrix<REAL> phiRdummy = dataright.begin()->second.phi;
     TPZFMatrix<REAL> *phiR = &phiRdummy;
 
     int nrowl = phiL->Rows();
@@ -133,7 +133,9 @@ void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &
     for(il=0; il<nrowl; il++) {
         for(jr=0; jr<nrowr; jr++) {
             for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * (phiL(il) * phiR(jr));
+                double L = *(&phiLdummy(0,0)+il);
+                double R = *(&phiRdummy(0,0)+jr);
+                ek(fNStateVariables*il+ist,fNStateVariables*jr+ist+secondblock) += weight * fMultiplier * L * R;
             }
         }
     }
@@ -142,7 +144,10 @@ void LCC_LagrangeMultiplier::ContributeInterface(const TPZMaterialDataT<STATE> &
     for(ir=0; ir<nrowr; ir++) {
         for(jl=0; jl<nrowl; jl++) {
             for (int ist=0; ist<fNStateVariables; ist++) {
-                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (phiR(ir) * phiL(jl));
+                double L = *(&phiLdummy(0,0)+jl);
+                double R = *(&phiRdummy(0,0)+ir);
+                ek(ir*fNStateVariables+ist+secondblock,jl*fNStateVariables+ist) += weight * fMultiplier * (R * L);
+
             }
         }
     }
