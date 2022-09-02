@@ -69,8 +69,7 @@ void ReadEntry(ProblemConfig &config, PreConfig &preConfig){
             preConfig.h*=2;
             break;
         case 3:
-            //config.exact.operator*().fExact = TLaplaceExample1::ESteepWave;
-            DebugStop();
+            config.exact.operator*().fExact = TLaplaceExample1::ESteepWave;
             break;
         default:
             DebugStop();

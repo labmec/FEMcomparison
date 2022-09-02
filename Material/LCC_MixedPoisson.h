@@ -24,8 +24,7 @@
 class LCCMixedPoisson : public TPZMixedDarcyFlow {
     
 protected:
-  
-    
+
 public:
     LCCMixedPoisson();
     

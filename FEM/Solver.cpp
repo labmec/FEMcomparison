@@ -21,7 +21,7 @@
 #include "TPZTimer.h"
 #include <chrono>
 #include "TPZFrontSym.h"
-//#include "pzstrmatrixLCC.h"
+#include "TPZStructMatrixOMPorTBB.h"
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
@@ -383,23 +383,17 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
 //        VisualMatrix(mat, "arch2.vtk");
 //    }
 #ifdef FEMCOMPARISON_USING_MKL
-    TPZSSpStructMatrix<> strmat(multiCmesh);
+    TPZSSpStructMatrix<STATE,TPZStructMatrixOMPorTBB<STATE>> strmat(multiCmesh);
     strmat.SetNumThreads(pConfig.tData.nThreads);
     
-    TPZSSpStructMatrix<> *strmatPointer = new TPZSSpStructMatrix(strmat);
+    auto *strmatPointer = new TPZSSpStructMatrix(strmat);
 
-//#ifndef USING_LCCMATRIX
-//    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
-//        DebugStop();
-//    }
-    //DebugStop();
-//#endif
-#ifdef USING_LCCMATRIX
-    if(dynamic_cast<TPZStructMatrixLCC*>(strmatPointer)){
-        strmat.SetShouldColor(pConfig.shouldColor);
-        strmat.SetTBBorOMP(pConfig.isTBB);
-    } else DebugStop();
-#endif
+auto myParInterface = dynamic_cast<TPZStructMatrixOMPorTBB<STATE>*>(strmatPointer);
+if(myParInterface){
+    myParInterface->SetShouldColor(pConfig.shouldColor);
+    myParInterface->SetTBBorOMP(pConfig.isTBB);
+}
+
 #else
     //TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
     TPZSSpStructMatrix<> strmat(multiCmesh);

@@ -463,7 +463,13 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
             material->SetForcingFunction(config.exact->ForceFunc(),5);
             material->SetExactSol(config.exact->ExactSolution(),5);
 #else
-            material->SetInternalFlux(1.);
+
+        std::function<void (const TPZVec<REAL> &loc, TPZVec<STATE> &result)> sourceFunc = [](const TPZVec<REAL> &loc,TPZVec<STATE> &result)
+        {
+            for(auto &it:result) it = 1.;
+        };
+
+            material->SetForcingFunction(sourceFunc,0);
 #endif
         cmesh_mixed->InsertMaterialObject(material);
 
@@ -508,7 +514,7 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
             material->SetForcingFunction(config.exact->ForceFunc(),5);
             material->SetExactSol(config.exact->ExactSolution(),5);
 #else
-            material->SetParameters(1.,1.);
+            material->SetConstantPermeability(1.);
 #endif
         // Inserts boundary conditions
         TPZFMatrix<STATE> val1(1, 1, 0.);
