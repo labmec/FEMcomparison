@@ -219,8 +219,8 @@ void LCC_MatLaplacianHybrid::Contribute(const TPZVec<TPZMaterialDataT<STATE>> &d
     ek(phr+1,phr) -= weight;
     
 #ifdef FEMCOMPARISON_DEBUG
-    if (this->IsSymetric()){
-        if ( !ek.VerifySymmetry(1.e-10) ) std::cout << __PRETTY_FUNCTION__ << "\nMATRIZ NAO SIMETRICA" << std::endl;
+    if ( !ek.VerifySymmetry(1.e-10) ) {
+        std::cout << __PRETTY_FUNCTION__ << "\nMATRIZ NAO SIMETRICA" << std::endl;
     }
 #endif
 #ifdef LOG4CXX

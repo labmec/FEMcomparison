@@ -274,11 +274,11 @@ void LCCMixedPoisson::ContributeBC(const TPZVec<TPZMaterialDataT<STATE>> &datave
                 PermTensor.Diagonal(perm);
                 InvPermTensor.Diagonal(1./perm);
         
-        for(int i=0; i<3; i++)
+        for(int i=0; i<dim; i++)
         {
             for(int j=0; j<dim; j++)
             {
-                normflux += datavec[0].normal[i]*PermTensor(i,j)*gradu(j,0);
+                normflux += datavec[0].normal[i]*perm*gradu(j,0);
             }
         }
         
