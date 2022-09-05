@@ -10,7 +10,6 @@
 #include "TPZNullMaterial.h"
 #include "TPZBndCondT.h"
 #include "TPZGenGrid2D.h"
-#include "LCC_MixedPoisson.h"
 #include "TPZCompMeshTools.h"
 #include "TPZCompElDisc.h"
 
@@ -457,8 +456,8 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
         cmesh_mixed->SetDimModel(dim);
         cmesh_mixed->SetAllCreateFunctionsMultiphysicElem();
 
-        LCCMixedPoisson *material = new LCCMixedPoisson(matID, dim); //Using standard PermealityTensor = Identity.
-        
+        TPZMixedDarcyFlow *material = new TPZMixedDarcyFlow(matID, dim); //Using standard PermealityTensor = Identity.
+
 #ifndef OPTMIZE_RUN_TIME
             material->SetForcingFunction(config.exact->ForceFunc(),5);
             material->SetExactSol(config.exact->ExactSolution(),5);
