@@ -7,6 +7,7 @@
 #include <TPZMultiphysicsCompMesh.h>
 #include "DarcyFlow/TPZMixedDarcyFlow.h"
 #include "LCC_MatLaplacianHybrid.h"
+#include "DarcyFlow/TPZHybridDarcyFlow.h"
 #include "TPZNullMaterial.h"
 #include "TPZBndCondT.h"
 #include "TPZGenGrid2D.h"
@@ -101,8 +102,8 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, Proble
     invK(0,0) = invK(1,1) =  1./pConfig.perm_Q2;
     mat2->setPermeabilyTensor(K,invK);
 #endif
-    LCC_MatLaplacianHybrid *material_Q1 = new LCC_MatLaplacianHybrid(matID_Q1, dim);
-    LCC_MatLaplacianHybrid *material_Q2 = new LCC_MatLaplacianHybrid(matID_Q2, dim);
+    TPZHybridDarcyFlow *material_Q1 = new TPZHybridDarcyFlow(matID_Q1, dim);
+    TPZHybridDarcyFlow *material_Q2 = new TPZHybridDarcyFlow(matID_Q2, dim);
 
     material_Q1->SetConstantPermeability(pConfig.perm_Q1);
     material_Q2->SetConstantPermeability(pConfig.perm_Q2);
@@ -505,7 +506,7 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
 
     // Creates Poisson material
     if(pConfig.type != 2) {
-        LCC_MatLaplacianHybrid *material = new LCC_MatLaplacianHybrid(matID, dim);
+        TPZHybridDarcyFlow *material = new TPZHybridDarcyFlow(matID, dim);
         material->SetConstantPermeability(1.);
         cmesh_H1Hybrid->InsertMaterialObject(material);
         cmesh_H1Hybrid->SetAllCreateFunctionsMultiphysicElem();

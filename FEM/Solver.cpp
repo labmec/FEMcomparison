@@ -73,12 +73,6 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
                 timer.start();
 #endif
             SolveMixedProblem(multiCmesh, config, preConfig);
-#ifdef PZ_LOG
-                if(loggerST.isDebugEnabled()){
-                timer.stop();
-                solveTime+=timer.seconds();
-                }
-#endif
             }
             break;
             default:
@@ -340,10 +334,11 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, std::ofstream &
     
     std::cout << "Errors =(";
     for (int i = 0; i < Errors.size(); i++){
-        std::cout << Errors[i] << ", ";
+        std::cout << Errors[i];
+        if(i<Errors.size()-1) std::cout << ", ";
     }
     
-    std::cout << std::endl;
+    std::cout << ")" << std::endl;
     //std::cout<<"nnnnnnnn"<<std::endl;
     //for(int i=0;i<Errors.size();i++)
         //std::cout<<Errors[i]<<std::endl;
@@ -509,7 +504,7 @@ if(myParInterface){
         
         if (isHybridH1){
             scalnames.Push("Pressure");
-            scalnames.Push("PressureExact");
+            scalnames.Push("ExactPressure");
             vecnames.Push("Flux");
         }else {
             scalnames.Push("Pressure");
