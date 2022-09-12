@@ -10,6 +10,7 @@
 #include "TPZNullMaterialCS.h"
 #include "TPZLagrangeMultiplierCS.h"
 #include "DarcyFlow/TPZMixedDarcyFlow.h"
+#include <sstream>
 
 
 TPZCreateHybridizedMixedSpaces::TPZCreateHybridizedMixedSpaces(TPZGeoMesh *gmesh, std::set<int> &matids, std::set<int> &bcmatIds){
@@ -273,9 +274,58 @@ void TPZCreateHybridizedMixedSpaces::ComputePeriferalMaterialIds(int base)
     int remain = max_matid % base;
     int matid_base = max_matid-remain + base;
 
-    fLagrangeId = matid_base;
-    fWrapId = matid_base+base;
-    fInterfaceId = matid_base + 2*base;
+    fLagrangeId = matid_base+2*base;
+    fWrapId = matid_base;
+    fInterfaceId = matid_base + base;
+}
+
+void TPZCreateHybridizedMixedSpaces::Print(std::ostream &ofs){
+    std::stringstream ss;
+    ss << "\n";
+    int numStars = 70;
+    for(int istar = 0; istar < numStars ; istar++)
+        ss <<"*";
+    ss <<"\n";
+    ss << __PRETTY_FUNCTION__ << "\nHybridized Mixed approximation space creation set up:\n\n";
+    ss << "fSpaceType:\t" <<SpaceTypeName() << "\nNormal Flux Order: " << fNormalFluxOrder;
+    ss << "\nPressure Order:\t" << fPressureOrder << "\nfHybridizeBC: " << fHybridizeBC;
+    ss << "\n\nmatids:\n\t{";
+    for(auto it : fMaterialIds){
+        ss << it <<", ";
+    }
+    ss.seekp(-2,ss.cur); //return stringstream head by two positions, as consequence, this data will be erased.
+    ss << "}\n";
+
+    ss << "bcmatids:\n\t{";
+    for(auto it : fBCMaterialIds){
+        ss << it <<", ";
+    }
+    ss.seekp(-2,ss.cur); //return stringstream head by two positions, as consequence, this data will be erased.
+    ss << "}\n";
+
+    ss << "peripheralMatids:\n";
+    ss << "\twrapid = " << fWrapId;
+    ss << "\n\tinterfaceid = " << fInterfaceId;
+    ss << "\n\tlagrangeid = " << fLagrangeId <<"\n";
+
+    for(int istar = 0; istar < numStars ; istar++)
+        ss <<"*";
+    ss <<"\n";
+
+    ofs << ss.str();
+}
+
+std::string TPZCreateHybridizedMixedSpaces::SpaceTypeName(){
+    std::string spaceName;
+    switch (fSpaceType) {
+        case 0:
+            spaceName = "ENone";
+            break;
+        case 1:
+            spaceName = "EHybridizedMixed";
+            break;
+    }
+    return spaceName;
 }
 
 TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
@@ -291,6 +341,7 @@ TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
         mcmesh->ApproxSpace().SetAllCreateFunctionsMultiphysicElem();
 
         AddMaterials(mcmesh);
+        Print(std::cout);
         mcmesh->BuildMultiphysicsSpace(meshvec);
 
         AddPeripherals(mcmesh);

@@ -6,11 +6,13 @@
 #define FEMCOMPARISON_TPZCREATEHYBRIDIZEDMIXEDSPACES_H
 
 #include "TPZMultiphysicsCompMesh.h"
+#include <fstream>
+#include <ios>
 
 class TPZCreateHybridizedMixedSpaces {
 public:
     /// types of spaces this class can create
-    enum MSpaceType {Enone, EHybridizedMixed};
+    enum MSpaceType {ENone, EHybridizedMixed};
 
 private:
     /// the type of space this object will generate
@@ -84,6 +86,8 @@ public:
 
     TPZMultiphysicsCompMesh* GenerateMesh();
 
+    void Print(std::ostream &out = std::cout);
+
 protected:
     void ConditioningGeomesh();
 
@@ -96,6 +100,8 @@ protected:
     void AddMaterials(TPZMultiphysicsCompMesh *mcmesh);
 
     void AddPeripherals(TPZMultiphysicsCompMesh *mcmesh);
+
+    std::string SpaceTypeName();
 };
 
 
