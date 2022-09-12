@@ -77,4 +77,5 @@ add_subdirectory(CompEl)
 add_subdirectory(Tools)
 add_subdirectory(Material)
 add_subdirectory(FEM)
+add_subdirectory(CreateApproxSpace)
 

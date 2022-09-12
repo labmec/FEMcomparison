@@ -1,14 +1,3 @@
-
-add_pz_target(
-  NAME HybridH1vsMixed
-SOURCES main_HybridH1vsMixed.cpp
-)
-
-
-# Project to apply error estimation for hybrid H1 approximations
-#add_executable(HybridH1vsMixed main_HybridH1vsMixed.cpp)
-target_link_libraries(HybridH1vsMixed PRIVATE Methods Tools)
-
 #find_package(OpenMP REQUIRED)
 #include_directories(/usr/local/include)
 #link_directories(/usr/local/lib)
@@ -37,6 +26,12 @@ add_pz_target(
 SOURCES main_ErrorMeasurement.cpp)
 #add_executable(ErrorMeasurement main_ErrorMeasurement.cpp)
 target_link_libraries(ErrorMeasurement PRIVATE Methods Tools)
+
+add_pz_target(
+        NAME HybridizedMixed
+        SOURCES main_HybridizedMixed.cpp)
+
+target_link_libraries(HybridizedMixed PRIVATE Methods Tools)
 
 # Project to apply error estimation for hybrid H1 approximations
 add_pz_target(

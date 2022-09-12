@@ -1,8 +1,6 @@
 #This file creates a library with tools
 target_sources(Tools PUBLIC
     DataStructure.h
-    TPZCreateMultiphysicsSpace.cpp
-    TPZCreateMultiphysicsSpace.h
     Tools.h
     Tools.cpp
     computStatist.h

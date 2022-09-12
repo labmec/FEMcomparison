@@ -700,7 +700,6 @@ void TPZCreateMultiphysicsSpace::ComputePeriferalMaterialIds(int base)
     fH1Hybrid.fLagrangeMatid.second = matid_base + 2*base+1;
     fH1Hybrid.fSecondLagrangeMatid = matid_base + 3*base;
     fH1Hybrid.fInterfacePressure = matid_base + 4*base;
-    
 }
 
 static void InsertNullMaterial(int matid, int dim, int nstate, TPZCompMesh *cmesh)
