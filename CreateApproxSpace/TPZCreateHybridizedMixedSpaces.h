@@ -51,6 +51,8 @@ private:
 
     void ComputePeriferalMaterialIds(int base =10);
 
+    std::string SpaceTypeName();
+
 public:
 
     /// All parameters needed for creating a hybrid H1 space
@@ -99,9 +101,13 @@ protected:
 
     void AddMaterials(TPZMultiphysicsCompMesh *mcmesh);
 
-    void AddPeripherals(TPZMultiphysicsCompMesh *mcmesh);
+    void AddInterfaceMaterial(TPZMultiphysicsCompMesh *mcmesh);
 
-    std::string SpaceTypeName();
+    void AddInterfaceComputationalElements(TPZMultiphysicsCompMesh *mcmesh);
+
+    void GroupandCondenseElements(TPZMultiphysicsCompMesh *cmesh);
+
+    void AssociateElements(TPZCompMesh *cmesh, TPZVec<int64_t> &elementgroup);
 };
 
 

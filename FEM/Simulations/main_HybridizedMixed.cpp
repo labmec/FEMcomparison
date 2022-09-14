@@ -70,11 +70,6 @@ int main(int argc, char *argv[]) {
     TPZCreateHybridizedMixedSpaces createHMixed(config.gmesh,matids,bcmatids);
     TPZMultiphysicsCompMesh* hybridizedMixed = createHMixed.GenerateMesh();
 
-    cout<<"Number of assembly threads: "<<pConfig.tData.nThreads<<endl;
-    cout<<"*********** Statistics for the assembly time *****"<<endl;
-    cout<<"Time(seconds): "<<pConfig.tData.assembleTime*1E-9<<endl;
-    cout<<"*********** Statistics for the linear system solve time *****"<<endl;
-    cout<<"Time(seconds): "<<pConfig.tData.solveTime*1E-9<<endl;
 
     return 0;
 }

@@ -11,6 +11,8 @@
 #include "TPZLagrangeMultiplierCS.h"
 #include "DarcyFlow/TPZMixedDarcyFlow.h"
 #include <sstream>
+#include "pzelementgroup.h"
+#include "pzcondensedcompel.h"
 
 
 TPZCreateHybridizedMixedSpaces::TPZCreateHybridizedMixedSpaces(TPZGeoMesh *gmesh, std::set<int> &matids, std::set<int> &bcmatIds){
@@ -217,18 +219,24 @@ void TPZCreateHybridizedMixedSpaces::AddMaterials(TPZMultiphysicsCompMesh *mcmes
     }
 
     {
-        TPZLagrangeMultiplierCS<STATE> *mat = new TPZLagrangeMultiplierCS<STATE>(fInterfaceId, meshDim - 1);
-        mcmesh->InsertMaterialObject(mat);
-    }
-
-    {
         TPZNullMaterialCS<STATE> *mat = new TPZNullMaterialCS<STATE>(fWrapId, meshDim - 1,1);
         mcmesh->InsertMaterialObject(mat);
     }
     return;
 }
 
-void TPZCreateHybridizedMixedSpaces::AddPeripherals(TPZMultiphysicsCompMesh *mcmesh){
+void TPZCreateHybridizedMixedSpaces::AddInterfaceMaterial(TPZMultiphysicsCompMesh *mcmesh){
+
+    int meshDim = mcmesh->Dimension();
+
+    {
+        TPZLagrangeMultiplierCS<STATE> *mat = new TPZLagrangeMultiplierCS<STATE>(fInterfaceId, meshDim - 1);
+        mcmesh->InsertMaterialObject(mat);
+    }
+}
+
+
+void TPZCreateHybridizedMixedSpaces::AddInterfaceComputationalElements(TPZMultiphysicsCompMesh *mcmesh){
     int numEl = mcmesh->NElements();
 
     auto fGeoMesh = mcmesh->Reference();
@@ -344,7 +352,8 @@ TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
         Print(std::cout);
         mcmesh->BuildMultiphysicsSpace(meshvec);
 
-        AddPeripherals(mcmesh);
+        AddInterfaceMaterial(mcmesh);
+        AddInterfaceComputationalElements(mcmesh);
 
         mcmesh->LoadReferences();
         mcmesh->InitializeBlock();
@@ -369,3 +378,119 @@ TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
         // Opção de hibridizar contorno
     }
 }
+/*
+void TPZCreateHybridizedMixedSpaces::GroupandCondenseElements(TPZMultiphysicsCompMesh *cmesh)
+{
+    /// same procedure as hybridize hdiv
+    int64_t nel = cmesh->NElements();
+    TPZVec<int64_t> groupnumber(nel,-1);
+    /// compute a groupnumber associated with each element
+    AssociateElements(cmesh, groupnumber);
+    std::map<int64_t, TPZElementGroup *> groupmap;
+    //    std::cout << "Groups of connects " << groupindex << std::endl;
+    for (int64_t el = 0; el<nel; el++) {
+        int64_t groupnum = groupnumber[el];
+        if(groupnum == -1) continue;
+        auto iter = groupmap.find(groupnum);
+        if (groupmap.find(groupnum) == groupmap.end()) {
+            int64_t index;
+            TPZElementGroup *elgr = new TPZElementGroup(*cmesh);
+            groupmap[groupnum] = elgr;
+            elgr->AddElement(cmesh->Element(el));
+        }
+        else
+        {
+            iter->second->AddElement(cmesh->Element(el));
+        }
+        //        std::cout << std::endl;
+    }
+    cmesh->ComputeNodElCon();
+    if(fSpaceType == EH1Hybrid)
+    {
+        int64_t nconnects = cmesh->NConnects();
+        for (int64_t ic = 0; ic<nconnects; ic++) {
+            TPZConnect &c = cmesh->ConnectVec()[ic];
+            if(c.LagrangeMultiplier() == 5) c.IncrementElConnected();
+        }
+    }
+    nel = cmesh->NElements();
+    for (int64_t el = 0; el < nel; el++) {
+        TPZCompEl *cel = cmesh->Element(el);
+        TPZElementGroup *elgr = dynamic_cast<TPZElementGroup *> (cel);
+        if (elgr) {
+            TPZCondensedCompEl *cond = new TPZCondensedCompEl(elgr);
+            cond->SetKeepMatrix(false);
+        }
+    }
+}
+
+void TPZCreateHybridizedMixedSpaces::AssociateElements(TPZCompMesh *cmesh, TPZVec<int64_t> &elementgroup){
+    int64_t nel = cmesh->NElements();
+    elementgroup.Resize(nel, -1);
+    elementgroup.Fill(-1);
+    int64_t nconnects = cmesh->NConnects();
+    TPZVec<int64_t> groupindex(nconnects, -1);
+    int dim = cmesh->Dimension();
+    for (TPZCompEl *cel : cmesh->ElementVec()) {
+        if (!cel || !cel->Reference() || cel->Reference()->Dimension() != dim) {
+            continue;
+        }
+        elementgroup[cel->Index()] = cel->Index();
+        TPZStack<int64_t> connectlist;
+        cel->BuildConnectList(connectlist);
+        for (auto cindex : connectlist) {
+#ifdef FEMCOMPARISON_DEBUG
+            if (groupindex[cindex] != -1) {
+                DebugStop();
+            }
+#endif
+            groupindex[cindex] = cel->Index();
+        }
+    }
+//    std::cout << "Groups of connects " << groupindex << std::endl;
+    int numloops = 1;
+    if(fSpaceType == EH1HybridSquared) numloops = 2;
+    // this loop will associate a first layer of interface elements to the group
+    // this loop will associate the wrap elements with the group
+    // if HybridSquared the connects of interface elements with matid fLagrangeMatId will be added to the group
+    // in the second pass :
+    // incorporate the flux elements in the group
+    // incorporate the interface elements to the pressure lagrange DOFs in the group
+    for (int iloop = 0; iloop < numloops; iloop++) for (TPZCompEl *cel : cmesh->ElementVec())
+        {
+            if (!cel || !cel->Reference()) {
+                continue;
+            }
+            TPZStack<int64_t> connectlist;
+            cel->BuildConnectList(connectlist);
+            int matid = cel->Reference()->MaterialId();
+            int64_t celindex = cel->Index();
+
+            TPZVec<int> connectgroup(connectlist.size());
+            for(int i=0; i<connectlist.size(); i++) connectgroup[i] = groupindex[connectlist[i]];
+
+            int64_t groupfound = -1;
+            for (auto cindex : connectlist) {
+                if (groupindex[cindex] != -1) {
+                    elementgroup[celindex] = groupindex[cindex];
+                    if(groupfound != -1 && groupfound != groupindex[cindex])
+                    {
+                        DebugStop();
+                    }
+
+                    groupfound = groupindex[cindex];
+                }
+            }
+            if(fSpaceType == EH1HybridSquared && matid == fH1Hybrid.fLagrangeMatid.first)
+            {
+//            std::cout << "Changing connect indexes group for element " << celindex;
+                for(auto cindex : connectlist)
+                {
+//                std::cout << " cindex " << cindex << " from " << groupindex[cindex] << " to " << groupfound << std::endl;
+                    groupindex[cindex] = groupfound;
+                }
+            }
+//        std::cout << std::endl;
+        }
+}
+ */
