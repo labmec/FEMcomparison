@@ -18,11 +18,11 @@ private:
     /// the type of space this object will generate
     MSpaceType fSpaceType = EHybridizedMixed;
 
-    int fWrapId;
+    int fWrapMatId;
 
-    int fInterfaceId;
+    int fInterfaceMatId;
 
-    int fLagrangeId;
+    int fLagrangeMatId;
 
     /// the materialids which will be used to create the atomic meshes
     std::set<int> fMaterialIds;

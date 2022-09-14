@@ -26,9 +26,9 @@ DefaultConstructor(gmesh,matids,fBCmatIds);
 }
 
 void TPZCreateHybridizedMixedSpaces::SetPeripheralsids( int wrapId,int interfaceId,int lagrangeId){
-    fWrapId = wrapId;
-    fInterfaceId = interfaceId;
-    fLagrangeId = lagrangeId;
+    fWrapMatId = wrapId;
+    fInterfaceMatId = interfaceId;
+    fLagrangeMatId = lagrangeId;
 }
 
 void TPZCreateHybridizedMixedSpaces::DefaultConstructor(TPZGeoMesh *gmesh, std::set<int> &matids, std::set<int> &bcmatIds){
@@ -56,26 +56,26 @@ void TPZCreateHybridizedMixedSpaces::ConditioningGeomesh(){
             if(gelside.HasNeighbour(fBCMaterialIds)){
                 continue;
             }
-            if(!gelside.HasNeighbour(fLagrangeId)){
-                TPZGeoElBC gelbc(gelside,fLagrangeId);
+            if(!gelside.HasNeighbour(fLagrangeMatId)){
+                TPZGeoElBC gelbc(gelside,fLagrangeMatId);
             }
-            TPZGeoElBC gelbcInt(gelside,fInterfaceId);
-            TPZGeoElBC gelbcWrap(gelside,fWrapId);
+            TPZGeoElBC gelbcInt(gelside,fInterfaceMatId);
+            TPZGeoElBC gelbcWrap(gelside,fWrapMatId);
 #ifdef PZDEBUG
             {
                 auto neighbour = gelside.Neighbour();
-                if(neighbour.Element()->MaterialId() !=fWrapId){
+                if(neighbour.Element()->MaterialId() !=fWrapMatId){
                     DebugStop();
                 }
                 auto neighneigh = neighbour.Neighbour();
-                if(neighneigh.Element()->MaterialId() != fInterfaceId){
+                if(neighneigh.Element()->MaterialId() != fInterfaceMatId){
                     DebugStop();
                 }
-                auto neighneighneigh = neighneigh.HasNeighbour(fLagrangeId);
+                auto neighneighneigh = neighneigh.HasNeighbour(fLagrangeMatId);
                 if(!neighneighneigh){
                     DebugStop();
                 }
-                if(neighneighneigh.Element()->MaterialId() != fLagrangeId){
+                if(neighneighneigh.Element()->MaterialId() != fLagrangeMatId){
                     DebugStop();
                 }
             };
@@ -109,7 +109,7 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateDiscHDivMesh(){
     }
 
     {
-        TPZNullMaterial<STATE> *mat = new TPZNullMaterial<STATE>(fWrapId, meshDim - 1);
+        TPZNullMaterial<STATE> *mat = new TPZNullMaterial<STATE>(fWrapMatId, meshDim - 1);
         hdivMesh->InsertMaterialObject(mat);
     }
 
@@ -143,6 +143,7 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateDiscHDivMesh(){
     for(int icon = 0; icon < nc; icon++){
         hdivMesh->ConnectVec()[icon].SetLagrangeMultiplier(fConfigHybridizedMixed.lagHDiv);
     }
+    hdivMesh->ExpandSolution();
     return hdivMesh;
 }
 
@@ -158,20 +159,21 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateL2Mesh(){
     }
 
     {
-        TPZNullMaterial<STATE> *mat = new TPZNullMaterial<STATE>(fLagrangeId, meshDim - 1);
+        TPZNullMaterial<STATE> *mat = new TPZNullMaterial<STATE>(fLagrangeMatId, meshDim - 1);
         L2Mesh->InsertMaterialObject(mat);
     }
 
     L2Mesh->AutoBuild(fMaterialIds);
 
     L2Mesh->SetDimModel(meshDim-1);
-    std::set<int> ids = {fLagrangeId};
+    std::set<int> ids = {fLagrangeMatId};
     L2Mesh->AutoBuild(ids);
 
     int64_t nc = L2Mesh->NConnects();
     for(int icon = 0; icon < nc; icon++){
         L2Mesh->ConnectVec()[icon].SetLagrangeMultiplier(fConfigHybridizedMixed.lagL2);
     }
+    L2Mesh->ExpandSolution();
     return L2Mesh;
 }
 
@@ -214,12 +216,12 @@ void TPZCreateHybridizedMixedSpaces::AddMaterials(TPZMultiphysicsCompMesh *mcmes
     }
 
     {
-        TPZNullMaterialCS<STATE> *mat = new TPZNullMaterialCS<STATE>(fLagrangeId, meshDim - 1,1);
+        TPZNullMaterialCS<STATE> *mat = new TPZNullMaterialCS<STATE>(fLagrangeMatId, meshDim - 1,1);
         mcmesh->InsertMaterialObject(mat);
     }
 
     {
-        TPZNullMaterialCS<STATE> *mat = new TPZNullMaterialCS<STATE>(fWrapId, meshDim - 1,1);
+        TPZNullMaterialCS<STATE> *mat = new TPZNullMaterialCS<STATE>(fWrapMatId, meshDim - 1,1);
         mcmesh->InsertMaterialObject(mat);
     }
     return;
@@ -230,7 +232,7 @@ void TPZCreateHybridizedMixedSpaces::AddInterfaceMaterial(TPZMultiphysicsCompMes
     int meshDim = mcmesh->Dimension();
 
     {
-        TPZLagrangeMultiplierCS<STATE> *mat = new TPZLagrangeMultiplierCS<STATE>(fInterfaceId, meshDim - 1);
+        TPZLagrangeMultiplierCS<STATE> *mat = new TPZLagrangeMultiplierCS<STATE>(fInterfaceMatId, meshDim - 1);
         mcmesh->InsertMaterialObject(mat);
     }
 }
@@ -250,11 +252,11 @@ void TPZCreateHybridizedMixedSpaces::AddInterfaceComputationalElements(TPZMultip
         }
         TPZGeoEl *gel = cel->Reference();
         int matid = gel->MaterialId();
-        if(matid != fWrapId){
+        if(matid != fWrapMatId){
             continue;
         }
         TPZGeoElSide gelside(gel);
-        TPZGeoElSide neighLag = gelside.HasNeighbour(fLagrangeId);
+        TPZGeoElSide neighLag = gelside.HasNeighbour(fLagrangeMatId);
         if(!neighLag){
             DebugStop();
         }
@@ -262,7 +264,7 @@ void TPZCreateHybridizedMixedSpaces::AddInterfaceComputationalElements(TPZMultip
         TPZCompElSide cneigh = neighLag.Reference();
 
         TPZGeoElSide ginterface = gelside.Neighbour();
-        if(ginterface.Element()->MaterialId() != fInterfaceId){
+        if(ginterface.Element()->MaterialId() != fInterfaceMatId){
             DebugStop();
         }
         TPZMultiphysicsInterfaceElement *interface = new TPZMultiphysicsInterfaceElement(*mcmesh,ginterface.Element(),celside,cneigh);
@@ -282,9 +284,9 @@ void TPZCreateHybridizedMixedSpaces::ComputePeriferalMaterialIds(int base)
     int remain = max_matid % base;
     int matid_base = max_matid-remain + base;
 
-    fLagrangeId = matid_base+2*base;
-    fWrapId = matid_base;
-    fInterfaceId = matid_base + base;
+    fLagrangeMatId = matid_base+2*base;
+    fWrapMatId = matid_base;
+    fInterfaceMatId = matid_base + base;
 }
 
 void TPZCreateHybridizedMixedSpaces::Print(std::ostream &ofs){
@@ -312,9 +314,9 @@ void TPZCreateHybridizedMixedSpaces::Print(std::ostream &ofs){
     ss << "}\n";
 
     ss << "peripheralMatids:\n";
-    ss << "\twrapid = " << fWrapId;
-    ss << "\n\tinterfaceid = " << fInterfaceId;
-    ss << "\n\tlagrangeid = " << fLagrangeId <<"\n";
+    ss << "\twrapid = " << fWrapMatId;
+    ss << "\n\tinterfaceid = " << fInterfaceMatId;
+    ss << "\n\tlagrangeid = " << fLagrangeMatId <<"\n";
 
     for(int istar = 0; istar < numStars ; istar++)
         ss <<"*";
@@ -376,11 +378,6 @@ TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
         }
 
         return mcmesh;
-        //Agroupar e condensar
-        //percorrer vizinhos, colocar em grupo e condensar
-        //Agroupar wrap com interface
-        // teremos malha hdiv hibridizada
-        // Opção de hibridizar contorno
     }
 }
 
@@ -397,8 +394,8 @@ void TPZCreateHybridizedMixedSpaces::GroupandCondenseElements(TPZMultiphysicsCom
     TPZCompEl *celTarget;
 
     std::set<int64_t> targetMatIds;
-    targetMatIds.insert(fWrapId);
-    targetMatIds.insert(fInterfaceId);
+    targetMatIds.insert(fWrapMatId);
+    targetMatIds.insert(fInterfaceMatId);
     for(auto it : fBCMaterialIds){
         targetMatIds.insert(it);
     }
@@ -438,7 +435,7 @@ void TPZCreateHybridizedMixedSpaces::GroupandCondenseElements(TPZMultiphysicsCom
                 }
             } else{
                 neigh = gelside->Neighbour();
-                std::vector<int> targetMatIds= {fWrapId,fInterfaceId};
+                std::vector<int> targetMatIds= {fWrapMatId,fInterfaceMatId};
                 for (int ineigh = 0; ineigh < 2; ineigh++) {
                     if (neigh.Element()->MaterialId() != targetMatIds[ineigh]) {
                         DebugStop();
