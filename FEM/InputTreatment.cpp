@@ -136,6 +136,11 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
                 << config.k << "_n-" << config.n;
             pConfig.plotfile = out.str();
             break;
+        case 3: // HybridizedMixed
+            out << "HybridizedMixed_" <<  pConfig.topologyFileName << "_" << config.problemname << "_k-"
+                << config.k << "_n-" << config.n;
+            pConfig.plotfile = out.str();
+            break;
         default:
             std::cout << "Invalid mode number";
             DebugStop();
@@ -211,6 +216,10 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             pConfig.mode = 2;
             if(pConfig.n < 0) DebugStop();
         }
+        else if(std::strcmp(argv[2], "HybridizedMixed") == 0) {
+            pConfig.mode = 3;
+            if(pConfig.n < 0) DebugStop();
+        }
         else DebugStop();
 
         if(std::strcmp(argv[1], "ESinSin") == 0) {
@@ -261,6 +270,7 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         if (pConfig.approx == "H1") pConfig.mode = 0;
         else if (pConfig.approx == "Hybrid")  pConfig.mode = 1;
         else if (pConfig.approx == "Mixed") pConfig.mode = 2;
+        else if (pConfig.approx == "HybridizedMixed") pConfig.mode = 3;
         else DebugStop();
 
         if (pConfig.problem== "ESinSin") pConfig.type= 0;

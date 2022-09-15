@@ -22,6 +22,7 @@
 #include <chrono>
 #include "TPZFrontSym.h"
 #include "TPZStructMatrixOMPorTBB.h"
+#include "TPZCreateHybridizedMixedSpaces.h"
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
@@ -66,18 +67,22 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
-            {
-#ifdef PZ_LOG
-                TPZTimer timer;
-                if(loggerST.isDebugEnabled())
-                timer.start();
-#endif
             SolveMixedProblem(multiCmesh, config, preConfig);
-            }
             break;
-            default:
+        case 3: //HybridizedMixed
+        {
+            TPZCreateHybridizedMixedSpaces createHMspace(config.gmesh, config.materialids, config.bcmaterialids);
+            createHMspace.SetNormalFluxOrder(config.k);
+            createHMspace.SetPOrder(config.k + config.n);
+            multiCmesh = createHMspace.GenerateMesh();
+        }
+#ifndef OPTMIZE_RUN_TIME
+            config.exact.operator*().fSignConvention = 1;
+#endif
+            NonConformAssemblage(multiCmesh,-999,config,preConfig,0);
+            break;
+        default:
             DebugStop();
-            break;
     }
     FlushTime(preConfig,start);
 
@@ -167,7 +172,6 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
             cmesh_H1Hybrid->Print(*output[ii]);
         }else{
             meshvec[ii-1]->Print(*output[ii]);
-            //cmesh_H1Hybrid->MeshVector()[ii-1]->Print(*output[ii]);
         }
     }
     }

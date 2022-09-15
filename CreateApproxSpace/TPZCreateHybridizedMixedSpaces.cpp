@@ -13,6 +13,7 @@
 #include <sstream>
 #include "pzelementgroup.h"
 #include "pzcondensedcompel.h"
+#include "TPZCompMeshTools.h"
 
 
 TPZCreateHybridizedMixedSpaces::TPZCreateHybridizedMixedSpaces(TPZGeoMesh *gmesh, std::set<int> &matids, std::set<int> &bcmatIds){
@@ -143,6 +144,10 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateDiscHDivMesh(){
     for(int icon = 0; icon < nc; icon++){
         hdivMesh->ConnectVec()[icon].SetLagrangeMultiplier(fConfigHybridizedMixed.lagHDiv);
     }
+
+    hdivMesh->SetDefaultOrder(fNormalFluxOrder);
+    int orderplus = fPressureOrder - fNormalFluxOrder;
+    TPZCompMeshTools::AdjustFluxPolynomialOrders(hdivMesh, orderplus);
     hdivMesh->ExpandSolution();
     return hdivMesh;
 }
@@ -151,6 +156,7 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateL2Mesh(){
     TPZCompMesh *L2Mesh = new TPZCompMesh(fGeoMesh);
     L2Mesh->SetAllCreateFunctionsContinuous();
     L2Mesh->ApproxSpace().CreateDisconnectedElements(true);
+    L2Mesh->SetDefaultOrder(fPressureOrder);
 
     int meshDim = fGeoMesh->Dimension();
     for(auto it : fMaterialIds){
