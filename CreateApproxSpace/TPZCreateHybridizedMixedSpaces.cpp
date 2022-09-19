@@ -14,6 +14,7 @@
 #include "pzelementgroup.h"
 #include "pzcondensedcompel.h"
 #include "TPZCompMeshTools.h"
+#include "pzintel.h"
 
 
 TPZCreateHybridizedMixedSpaces::TPZCreateHybridizedMixedSpaces(TPZGeoMesh *gmesh, std::set<int> &matids, std::set<int> &bcmatIds){
@@ -97,6 +98,7 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateDiscHDivMesh(){
     TPZCompMesh *hdivMesh = new TPZCompMesh(fGeoMesh);
     hdivMesh->SetAllCreateFunctionsHDiv();
     hdivMesh->ApproxSpace().CreateDisconnectedElements(true);
+    hdivMesh->SetDefaultOrder(fNormalFluxOrder);
 
     int meshDim = fGeoMesh->Dimension();
     for(auto it : fMaterialIds){
@@ -118,6 +120,7 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateDiscHDivMesh(){
     int numEl = hdivMesh->NElements();
     for(int iel = 0; iel < numEl; iel++){
         auto *cel = hdivMesh->Element(iel);
+        auto *intel = dynamic_cast<TPZInterpolatedElement*>(cel);
         auto *gel = cel->Reference();
         if(!cel){
             DebugStop();
@@ -129,13 +132,19 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateDiscHDivMesh(){
             auto neigh = gelside.HasNeighbour(fBCMaterialIds);
             if(neigh){
                 hdivMesh->ApproxSpace().CreateCompEl(neigh.Element(),*hdivMesh);
+                auto *targetcel = hdivMesh->ApproxSpace().CreateCompEl(neigh.Element(),*hdivMesh);
+                auto *targetintel = dynamic_cast<TPZInterpolatedElement*>(targetcel);
+                targetintel->SetSideOrient(neigh.Side(),1);
                 neigh.Element()->ResetReference();
             }
             else{
                 neigh = gelside.Neighbour();
-                hdivMesh->ApproxSpace().CreateCompEl(neigh.Element(),*hdivMesh);
+                auto *targetcel = hdivMesh->ApproxSpace().CreateCompEl(neigh.Element(),*hdivMesh);
+                auto *targetintel = dynamic_cast<TPZInterpolatedElement*>(targetcel);
+                targetintel->SetSideOrient(neigh.Side(),1);
                 neigh.Element()->ResetReference();
             }
+            intel->SetSideOrient(iside,1);
         }
         gel->ResetReference();
     }
@@ -145,9 +154,8 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateDiscHDivMesh(){
         hdivMesh->ConnectVec()[icon].SetLagrangeMultiplier(fConfigHybridizedMixed.lagHDiv);
     }
 
-    hdivMesh->SetDefaultOrder(fNormalFluxOrder);
     int orderplus = fPressureOrder - fNormalFluxOrder;
-    TPZCompMeshTools::AdjustFluxPolynomialOrders(hdivMesh, orderplus);
+    TPZCompMeshTools::AdjustFluxPolynomialOrders(hdivMesh, orderplus); //Increases internal flux order by "hdivmais"
     hdivMesh->ExpandSolution();
     return hdivMesh;
 }
@@ -173,7 +181,9 @@ TPZCompMesh* TPZCreateHybridizedMixedSpaces::CreateL2Mesh(){
 
     L2Mesh->SetDimModel(meshDim-1);
     std::set<int> ids = {fLagrangeMatId};
+    L2Mesh->SetDefaultOrder(fNormalFluxOrder);
     L2Mesh->AutoBuild(ids);
+    L2Mesh->SetDefaultOrder(fPressureOrder);
 
     int64_t nc = L2Mesh->NConnects();
     for(int icon = 0; icon < nc; icon++){
@@ -212,13 +222,24 @@ void TPZCreateHybridizedMixedSpaces::AddMaterials(TPZMultiphysicsCompMesh *mcmes
         TPZMixedDarcyFlow *mat = new TPZMixedDarcyFlow(it,meshDim);
         mcmesh->InsertMaterialObject(mat);
         refmat = mat;
+#ifndef OPTMIZE_RUN_TIME
+        mat->SetForcingFunction(fAnalyticSolution->ForceFunc(),5);
+        mat->SetExactSol(fAnalyticSolution->ExactSolution(),5);
+#else
+        mat->SetConstantPermeability(1.);
+#endif
     }
 
     for(auto it : fBCMaterialIds){
-        TPZFMatrix<STATE> val1(1,1,0);
-        TPZVec<STATE> val2(1,0);
+        TPZFMatrix<STATE> val1(1,1,1);
+        TPZVec<STATE> val2(1,1);
         auto *mat = refmat->CreateBC(refmat,it,0,val1,val2);
         mcmesh->InsertMaterialObject(mat);
+#ifndef OPTMIZE_RUN_TIME
+        if (fAnalyticSolution.operator*().fExact != TLaplaceExample1::ENone) {
+            mat->SetForcingFunctionBC(fAnalyticSolution->ExactSolution(),5);
+        }
+#endif
     }
 
     {
@@ -349,6 +370,7 @@ TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
         ConditioningGeomesh();
         TPZCompMesh *hdivMesh = CreateDiscHDivMesh();
         TPZCompMesh *L2Mesh = CreateL2Mesh();
+        TPZCompMeshTools::SetPressureOrders(hdivMesh, L2Mesh);
         TPZCompMesh *gspace   =   CreateConstantMesh(fConfigHybridizedMixed.lagg);
         TPZCompMesh *avgspace = CreateConstantMesh(fConfigHybridizedMixed.lagavg);
 
@@ -365,29 +387,16 @@ TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
 
         mcmesh->InitializeBlock();
 
-        std::ofstream ofsmulti("beforeCondensation.txt");
-        mcmesh->Print(ofsmulti);
-        GroupandCondenseElements(mcmesh);
-        std::ofstream ofsmulti2("afterCondensation.txt");
-        mcmesh->Print(ofsmulti2);
-
-        {
-            std::ofstream ofs1("hdiv.txt"),ofs2("L2.txt"),ofs3("g.txt"),ofs4("avg.txt");
-            std::ofstream ofsmulti("multi.txt");
-
-            hdivMesh->Print(ofs1);
-            L2Mesh->Print(ofs2);
-            gspace->Print(ofs3);
-            avgspace->Print(ofs4);
-
-            mcmesh->Print(ofsmulti);
+        if(fShouldCondense) {
+            GroupAndCondenseElements(mcmesh);
         }
+        mcmesh->CleanUpUnconnectedNodes();
 
         return mcmesh;
     }
 }
 
-void TPZCreateHybridizedMixedSpaces::GroupandCondenseElements(TPZMultiphysicsCompMesh *cmesh)
+void TPZCreateHybridizedMixedSpaces::GroupAndCondenseElements(TPZMultiphysicsCompMesh *cmesh)
 {
     /// same procedure as hybridize hdiv
     int64_t nel = cmesh->NElements();
@@ -455,14 +464,14 @@ void TPZCreateHybridizedMixedSpaces::GroupandCondenseElements(TPZMultiphysicsCom
         }
     }
     cmesh->ComputeNodElCon();
-    if(fSpaceType == EHybridizedMixed)
+    /*if(fSpaceType == EHybridizedMixed)
     {
         int64_t nconnects = cmesh->NConnects();
         for (int64_t ic = 0; ic<nconnects; ic++) {
             TPZConnect &c = cmesh->ConnectVec()[ic];
             if(c.LagrangeMultiplier() == fConfigHybridizedMixed.lagavg) c.IncrementElConnected();
         }
-    }
+    }*/
     int neoNel = cmesh->NElements();
     for (int64_t el = nel; el < neoNel; el++) {
         TPZCompEl *cel = cmesh->Element(el);

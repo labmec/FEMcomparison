@@ -8,6 +8,7 @@
 #include "TPZMultiphysicsCompMesh.h"
 #include <fstream>
 #include <ios>
+#include "TPZAnalyticSolution.h"
 
 class TPZCreateHybridizedMixedSpaces {
 public:
@@ -39,11 +40,15 @@ private:
     /// the dimension of the geometric elements that will be used to generate computational elements
     int fDimension = -1;
 
+    int fShouldCondense = 1;
+
     /// the geometric mesh which will generate the computational mesh
     TPZGeoMesh *fGeoMesh = 0;
 
     /// indicated whether the boundary conditions should be hybridized as well
     bool fHybridizeBC = 0;
+
+    TPZAutoPointer<TLaplaceExample1> fAnalyticSolution;
 
     void SetPeripheralsids( int wrapId,int interfaceid,int lagrangeId);
 
@@ -86,9 +91,17 @@ public:
         fNormalFluxOrder = order;
     }
 
+    void ShouldCondense( bool isCondensed){
+        fShouldCondense = isCondensed;
+    }
+
     TPZMultiphysicsCompMesh* GenerateMesh();
 
     void Print(std::ostream &out = std::cout);
+
+    void SetAnalyticSolution(TPZAutoPointer<TLaplaceExample1> analyticSolution){
+        fAnalyticSolution = analyticSolution;
+    }
 
 protected:
     void ConditioningGeomesh();
@@ -105,9 +118,7 @@ protected:
 
     void AddInterfaceComputationalElements(TPZMultiphysicsCompMesh *mcmesh);
 
-    void GroupandCondenseElements(TPZMultiphysicsCompMesh *cmesh);
-
-    void AssociateElements(TPZCompMesh *cmesh, TPZVec<int64_t> &elementgroup);
+    void GroupAndCondenseElements(TPZMultiphysicsCompMesh *cmesh);
 };
 
 
