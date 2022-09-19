@@ -1,11 +1,11 @@
 //
-//  TPZCreateMultiphysicsSpace.cpp
+//  TPZCreateHybridizedH1Spaces.cpp
 //  ErrorEstimation
 //
 //  Created by Philippe Devloo on 13/07/19.
 //
 
-#include "TPZCreateMultiphysicsSpace.h"
+#include "TPZCreateHybridizedH1Spaces.h"
 #include "pzgmesh.h"
 #include "pzcmesh.h"
 #include "pzgeoelbc.h"
@@ -27,45 +27,45 @@ static LoggerPtr logger(Logger::getLogger("CreateMultiphysicsSpace"));
 #endif
 
 
-TPZCreateMultiphysicsSpace::TPZCreateMultiphysicsSpace(TPZGeoMesh *gmesh, MSpaceType spacetype) :
+TPZCreateHybridizedH1Spaces::TPZCreateHybridizedH1Spaces(TPZGeoMesh *gmesh, MSpaceType spacetype) :
             fSpaceType(spacetype), fGeoMesh(gmesh) {
     fDimension = gmesh->Dimension();
 }
 
 /// copy constructor
-TPZCreateMultiphysicsSpace::TConfigH1Hybrid::TConfigH1Hybrid(const TConfigH1Hybrid &copy)
+TPZCreateHybridizedH1Spaces::TConfigH1Hybrid::TConfigH1Hybrid(const TConfigH1Hybrid &copy)
 {
     
 }
 
 /// copy operator
-TPZCreateMultiphysicsSpace::TConfigH1Hybrid &TPZCreateMultiphysicsSpace::TConfigH1Hybrid::operator=(const TConfigH1Hybrid &copy)
+TPZCreateHybridizedH1Spaces::TConfigH1Hybrid &TPZCreateHybridizedH1Spaces::TConfigH1Hybrid::operator=(const TConfigH1Hybrid &copy)
 {
     return *this;
 }
 
 
 /// copy constructor
-TPZCreateMultiphysicsSpace::TPZCreateMultiphysicsSpace(const TPZCreateMultiphysicsSpace &copy)
+TPZCreateHybridizedH1Spaces::TPZCreateHybridizedH1Spaces(const TPZCreateHybridizedH1Spaces &copy)
 {
     
 }
 
 /// = operator
-TPZCreateMultiphysicsSpace & TPZCreateMultiphysicsSpace::operator=(const TPZCreateMultiphysicsSpace &copy)
+TPZCreateHybridizedH1Spaces & TPZCreateHybridizedH1Spaces::operator=(const TPZCreateHybridizedH1Spaces &copy)
 {
     return *this;
 }
 
 /// Indicate to create Hybridized H1 meshes
-void TPZCreateMultiphysicsSpace::SetH1Hybridized(const TConfigH1Hybrid &config)
+void TPZCreateHybridizedH1Spaces::SetH1Hybridized(const TConfigH1Hybrid &config)
 {
     fSpaceType = EH1Hybrid;
     fH1Hybrid = config;
 }
 
 /// create meshes and elements for all geometric elements
-void TPZCreateMultiphysicsSpace::CreateAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, int pressureOrder, int lagrangeorder)
+void TPZCreateHybridizedH1Spaces::CreateAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, int pressureOrder, int lagrangeorder)
 {
     AddGeometricWrapElements();
     SetPOrder(pressureOrder);
@@ -117,7 +117,7 @@ void TPZCreateMultiphysicsSpace::CreateAtomicMeshes(TPZVec<TPZCompMesh *> &meshv
 
 
 /// if there a neighbouring element with matid == lagrangematid -> return true
-bool TPZCreateMultiphysicsSpace::ShouldCreateFluxElement(TPZGeoElSide &gelside, int lagrangematid)
+bool TPZCreateHybridizedH1Spaces::ShouldCreateFluxElement(TPZGeoElSide &gelside, int lagrangematid)
 {
     TPZGeoElSide neighbour(gelside.Neighbour());
     while(neighbour != gelside)
@@ -132,7 +132,7 @@ bool TPZCreateMultiphysicsSpace::ShouldCreateFluxElement(TPZGeoElSide &gelside, 
 }
 /// create the geometric elements for the lagrange multipliers
 // these elements will go with the largest H1 element
-void TPZCreateMultiphysicsSpace::CreateLagrangeGeometricElements(TPZCompMesh *pressure)
+void TPZCreateHybridizedH1Spaces::CreateLagrangeGeometricElements(TPZCompMesh *pressure)
 {
     // this method shouldn t be called anymore. All geometric elements are created in
     // AddGeometricWrapElements
@@ -204,7 +204,7 @@ static TPZGeoElSide HasBCNeighbour(const TPZGeoElSide &gelside, const std::set<i
 }
 
 /// create the pressure boundary elements if the boundary is not hybridized
-void TPZCreateMultiphysicsSpace::CreatePressureBoundaryElements(TPZCompMesh *pressure)
+void TPZCreateHybridizedH1Spaces::CreatePressureBoundaryElements(TPZCompMesh *pressure)
 {
     if (fSpaceType != EH1Hybrid && fSpaceType != EH1HybridSquared) {
         DebugStop();
@@ -322,7 +322,7 @@ void TPZCreateMultiphysicsSpace::CreatePressureBoundaryElements(TPZCompMesh *pre
 }
 
 /// insert the pressure material ids
-void TPZCreateMultiphysicsSpace::InsertPressureMaterialIds(TPZCompMesh *pressure)
+void TPZCreateHybridizedH1Spaces::InsertPressureMaterialIds(TPZCompMesh *pressure)
 {
     for (auto matid:fMaterialIds) {
         auto nullmat = new TPZNullMaterial(matid);
@@ -356,7 +356,7 @@ void TPZCreateMultiphysicsSpace::InsertPressureMaterialIds(TPZCompMesh *pressure
 }
 
 /// insert flux material ids
-void TPZCreateMultiphysicsSpace::InsertFluxMaterialIds(TPZCompMesh *fluxmesh)
+void TPZCreateHybridizedH1Spaces::InsertFluxMaterialIds(TPZCompMesh *fluxmesh)
 {
     if (fSpaceType == EH1Hybrid || fSpaceType == EH1HybridSquared) {
         int matid = fH1Hybrid.fFluxMatId;
@@ -381,7 +381,7 @@ void TPZCreateMultiphysicsSpace::InsertFluxMaterialIds(TPZCompMesh *fluxmesh)
 }
 
 /// insert materialids for the null space
-void TPZCreateMultiphysicsSpace::InsertNullSpaceMaterialIds(TPZCompMesh *nullspace)
+void TPZCreateHybridizedH1Spaces::InsertNullSpaceMaterialIds(TPZCompMesh *nullspace)
 {
     for (auto matid:fMaterialIds) {
         auto nullmat = new TPZNullMaterial(matid);
@@ -392,7 +392,7 @@ void TPZCreateMultiphysicsSpace::InsertNullSpaceMaterialIds(TPZCompMesh *nullspa
 }
 
 /// Create the pressure mesh
-TPZCompMesh *TPZCreateMultiphysicsSpace::CreatePressureMesh()
+TPZCompMesh *TPZCreateHybridizedH1Spaces::CreatePressureMesh()
 {
     
     // create the pressure mesh
@@ -453,7 +453,7 @@ TPZCompMesh *TPZCreateMultiphysicsSpace::CreatePressureMesh()
 }
 
 /// Create the flux mesh for 1D-elements
-TPZCompMesh *TPZCreateMultiphysicsSpace::CreateBoundaryFluxMesh()
+TPZCompMesh *TPZCreateHybridizedH1Spaces::CreateBoundaryFluxMesh()
 {
     TPZCompMesh *fluxmesh = new TPZCompMesh(fGeoMesh);
     InsertFluxMaterialIds(fluxmesh);
@@ -470,7 +470,7 @@ TPZCompMesh *TPZCreateMultiphysicsSpace::CreateBoundaryFluxMesh()
 }
 
 /// add interface elements to the multiphysics space
-void TPZCreateMultiphysicsSpace::AddInterfaceElements(TPZMultiphysicsCompMesh *mphys)
+void TPZCreateHybridizedH1Spaces::AddInterfaceElements(TPZMultiphysicsCompMesh *mphys)
 {
 #ifdef LOG4CXX
     std::map<int,int> numcreated;
@@ -584,7 +584,7 @@ void TPZCreateMultiphysicsSpace::AddInterfaceElements(TPZMultiphysicsCompMesh *m
 }
 
 /// group and condense the elements
-void TPZCreateMultiphysicsSpace::GroupandCondenseElements(TPZMultiphysicsCompMesh *cmesh)
+void TPZCreateHybridizedH1Spaces::GroupandCondenseElements(TPZMultiphysicsCompMesh *cmesh)
 {
     /// same procedure as hybridize hdiv
     int64_t nel = cmesh->NElements();
@@ -630,7 +630,7 @@ void TPZCreateMultiphysicsSpace::GroupandCondenseElements(TPZMultiphysicsCompMes
 }
 
 /// Find the neighbouring flux element
-TPZCompEl *TPZCreateMultiphysicsSpace::FindFluxElement(TPZCompEl *wrapelement)
+TPZCompEl *TPZCreateHybridizedH1Spaces::FindFluxElement(TPZCompEl *wrapelement)
 {
     TPZGeoEl *gel = wrapelement->Reference();
     int nsides = gel->NSides();
@@ -680,7 +680,7 @@ TPZCompEl *TPZCreateMultiphysicsSpace::FindFluxElement(TPZCompEl *wrapelement)
 
 /// Compute Periferal Material ids
 // the material ids will be computed from a number whose modulus by base is zero
-void TPZCreateMultiphysicsSpace::ComputePeriferalMaterialIds(int base)
+void TPZCreateHybridizedH1Spaces::ComputePeriferalMaterialIds(int base)
 {
     if(base < 2) base = 2;
     int max_matid = 0;
@@ -713,7 +713,7 @@ static void InsertNullMaterial(int matid, int dim, int nstate, TPZCompMesh *cmes
     
 }
 /// Insert the periferal material objects (for wrapmatid, fluxmatid and lagrange matid
-void TPZCreateMultiphysicsSpace::InsertPeriferalMaterialObjects(TPZMultiphysicsCompMesh *mphys)
+void TPZCreateHybridizedH1Spaces::InsertPeriferalMaterialObjects(TPZMultiphysicsCompMesh *mphys)
 {
     if(fSpaceType == EH1Hybrid)
     {
@@ -731,7 +731,7 @@ void TPZCreateMultiphysicsSpace::InsertPeriferalMaterialObjects(TPZMultiphysicsC
 
 }
 
-void TPZCreateMultiphysicsSpace::InsertLagranceMaterialObjects(TPZMultiphysicsCompMesh *mphys)
+void TPZCreateHybridizedH1Spaces::InsertLagranceMaterialObjects(TPZMultiphysicsCompMesh *mphys)
 {
     if(fSpaceType == EH1Hybrid)
     {
@@ -755,7 +755,7 @@ void TPZCreateMultiphysicsSpace::InsertLagranceMaterialObjects(TPZMultiphysicsCo
 }
 
 /// Create geometric elements needed for the computational elements
-void TPZCreateMultiphysicsSpace::AddGeometricWrapElements()
+void TPZCreateHybridizedH1Spaces::AddGeometricWrapElements()
 {
 #ifdef LOG4CXX
     std::map<int,int> numcreated;
@@ -928,7 +928,7 @@ void TPZCreateMultiphysicsSpace::AddGeometricWrapElements()
 /// Associate elements with a volumetric element
 // elementgroup[el] = index of the element with which the element should be grouped
 // this method only gives effective result for hybridized hdiv meshes
-void TPZCreateMultiphysicsSpace::AssociateElements(TPZCompMesh *cmesh, TPZVec<int64_t> &elementgroup)
+void TPZCreateHybridizedH1Spaces::AssociateElements(TPZCompMesh *cmesh, TPZVec<int64_t> &elementgroup)
 {
     int64_t nel = cmesh->NElements();
     elementgroup.Resize(nel, -1);

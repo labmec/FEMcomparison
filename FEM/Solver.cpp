@@ -8,7 +8,7 @@
 #include "DataStructure.h"
 #include "MeshInit.h"
 #include "TPZCompMeshTools.h"
-#include "TPZCreateMultiphysicsSpace.h"
+#include "TPZCreateHybridizedH1Spaces.h"
 #include "TPZSSpStructMatrix.h"
 #include "TPZSSpStructMatrix.h"
 #include "TPZParFrontStructMatrix.h"
@@ -74,6 +74,7 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             TPZCreateHybridizedMixedSpaces createHMspace(config.gmesh, config.materialids, config.bcmaterialids);
             createHMspace.SetNormalFluxOrder(config.k);
             createHMspace.SetPOrder(config.k + config.n);
+            createHMspace.SetAnalyticSolution(config.exact);
             multiCmesh = createHMspace.GenerateMesh();
         }
 #ifndef OPTMIZE_RUN_TIME
@@ -133,16 +134,16 @@ void CreateCondensedMixedElements(TPZMultiphysicsCompMesh *cmesh_Mixed){
 }
 
 void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int &interFaceMatID , PreConfig &pConfig, ProblemConfig &config,int hybridLevel){
-    auto spaceType = TPZCreateMultiphysicsSpace::EH1Hybrid;
+    auto spaceType = TPZCreateHybridizedH1Spaces::EH1Hybrid;
     if(hybridLevel == 2) {
-        spaceType = TPZCreateMultiphysicsSpace::EH1HybridSquared;
+        spaceType = TPZCreateHybridizedH1Spaces::EH1HybridSquared;
     }
     else if(hybridLevel != 1) {
         DebugStop();
     }
 
-    TPZCreateMultiphysicsSpace createspace(config.gmesh, spaceType);
-    //TPZCreateMultiphysicsSpace createspace(config.gmesh);
+    TPZCreateHybridizedH1Spaces createspace(config.gmesh, spaceType);
+    //TPZCreateHybridizedH1Spaces createspace(config.gmesh);
     std::cout << cmesh_H1Hybrid->NEquations();
 
     createspace.SetMaterialIds({1,2,3}, {-6,-5,-2,-1});
@@ -411,7 +412,12 @@ if(myParInterface){
     an.SetStructuralMatrix(strmat);
 
     TPZStepSolver<STATE>* direct = new TPZStepSolver<STATE>;
-    direct->SetDirect(ELDLt);
+    if(pConfig.mode ==3){
+        direct->SetDirect(ECholesky);
+    }
+    else{
+        direct->SetDirect(ELDLt);
+    }
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
@@ -421,9 +427,11 @@ if(myParInterface){
 #endif
         
         an.Assemble();
+        *(an.MatrixSolver<STATE>().Matrix().operator->())*=-1;
+        TPZFMatrix<STATE> &frhs = an.Rhs();
+        frhs*=-1;
         
 #ifdef FEMCOMPARISON_TIMER
-        
         auto endAss = std::chrono::high_resolution_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
         pConfig.tData.assembleTime = static_cast<unsigned long int>(elapsed.count());
