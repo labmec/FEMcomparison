@@ -70,9 +70,6 @@ public:
         /// indicated whether the boundary conditions should be hybridized as well
         int fHybridizeBCLevel = 0;
         
-        bool fHybridSquared = false;
-        /// indicates whether a second hybridizations will be applied
-        
         /// default constructor
         TConfigH1Hybrid(){}
         

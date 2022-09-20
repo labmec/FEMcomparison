@@ -61,6 +61,8 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             //cmesh->Print(outTXT2);
             SolveH1Problem(cmesh, config, preConfig);
             break;
+        case 4: //Hybrid2
+            hybridLevel = 2;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig);
@@ -187,24 +189,6 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
     cmesh_H1Hybrid->ComputeNodElCon();
 
     interFaceMatID = createspace.fH1Hybrid.fLagrangeMatid.first;
-    {
-    std::vector<std::ofstream*> output;
-    std::string foldername="PrintMesh";
-    std::string command = "mkdir -p " + foldername;
-    system(command.c_str());
-    for(int ii=0;ii<5;ii++){
-        std::stringstream name;
-        name << foldername <<"/mesh" << ii << ".txt";
-        std::string oname = name.str();
-        std::ofstream* x = new std::ofstream(oname);
-        output.push_back(x);
-        if(ii==0){
-            cmesh_H1Hybrid->Print(*output[ii]);
-        }else{
-            cmesh_H1Hybrid->MeshVector()[ii-1]->Print(*output[ii]);
-        }
-    }
-    }
     
 }
 

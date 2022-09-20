@@ -220,6 +220,9 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
             pConfig.mode = 3;
             if(pConfig.n < 0) DebugStop();
         }
+        else if(std::strcmp(argv[2], "Hybrid2") == 0) {
+            pConfig.mode = 4;
+        }
         else DebugStop();
 
         if(std::strcmp(argv[1], "ESinSin") == 0) {
@@ -271,6 +274,7 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
         else if (pConfig.approx == "Hybrid")  pConfig.mode = 1;
         else if (pConfig.approx == "Mixed") pConfig.mode = 2;
         else if (pConfig.approx == "HybridizedMixed") pConfig.mode = 3;
+        else if (pConfig.approx == "Hybrid2") pConfig.mode = 4;
         else DebugStop();
 
         if (pConfig.problem== "ESinSin") pConfig.type= 0;
@@ -291,11 +295,11 @@ void EvaluateEntry(int argc, char *argv[],PreConfig &pConfig){
     if(pConfig.topologyMode < 3) pConfig.dim = 2;
     else pConfig.dim = 3;
     
-    if (pConfig.topologyMode < 3 && pConfig.mode ==1 && pConfig.n < 2){
+    if (pConfig.topologyMode < 3 && (pConfig.mode ==1 || pConfig.mode == 4)&& pConfig.n < 2){
         DebugStop();
     }
     
-    if (pConfig.topologyMode > 2 && pConfig.mode ==1 && pConfig.n < 3){
+    if (pConfig.topologyMode > 2 && (pConfig.mode ==1 || pConfig.mode == 4) && pConfig.n < 3){
         DebugStop();
     }
 }
