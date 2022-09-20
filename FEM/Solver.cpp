@@ -369,6 +369,8 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     unsigned long int solveDuration;
     
     std::cout << "Solving " << pConfig.approx << " " << pConfig.topology << " ref " << pConfig.refLevel << " nThreads " << pConfig.tData.nThreads << " isColoring " << pConfig.shouldColor << " isTBB " << pConfig.isTBB << std::endl;
+    
+    if(pConfig.postProcess)
     {
         TPZFMatrix<REAL> mat(50,50);
         multiCmesh->ComputeFillIn(50, mat);
@@ -377,11 +379,13 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     
     TPZLinearAnalysis an(multiCmesh);
     
-//    {
-//        TPZFMatrix<REAL> mat(50,50);
-//        multiCmesh->ComputeFillIn(50, mat);
-//        VisualMatrix(mat, "arch2.vtk");
-//    }
+    if(pConfig.postProcess)
+    {
+        TPZFMatrix<REAL> mat(50,50);
+        multiCmesh->ComputeFillIn(50, mat);
+        VisualMatrix(mat, "arch2.vtk");
+    }
+    
 #ifdef FEMCOMPARISON_USING_MKL
     TPZSSpStructMatrix<STATE,TPZStructMatrixOMPorTBB<STATE>> strmat(multiCmesh);
     strmat.SetNumThreads(pConfig.tData.nThreads);
@@ -492,7 +496,7 @@ if(myParInterface){
 #endif
     }
 
-    if(1){
+    if(0){
         std::cout << "Computing Error " << std::endl;
         an.SetExact(config.exact.operator*().ExactSolution());
 

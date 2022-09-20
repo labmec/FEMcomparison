@@ -379,7 +379,6 @@ TPZMultiphysicsCompMesh* TPZCreateHybridizedMixedSpaces::GenerateMesh(){
         mcmesh->ApproxSpace().SetAllCreateFunctionsMultiphysicElem();
 
         AddMaterials(mcmesh);
-        Print(std::cout);
         mcmesh->BuildMultiphysicsSpace(meshvec);
 
         AddInterfaceMaterial(mcmesh);

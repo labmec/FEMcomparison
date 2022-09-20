@@ -16,7 +16,7 @@ void Generate(PreConfig &pConfig){
     
     OfstreamPath(pConfig);
     
-    for (int approxMethod=0; approxMethod < 3; approxMethod++){
+    for (int approxMethod=0; approxMethod < 4; approxMethod++){
         for (int topologyType=1; topologyType < 4; topologyType += 2){
             switch (topologyType) {
                 case 0:
@@ -60,6 +60,10 @@ void Generate(PreConfig &pConfig){
                     } else{
                         pConfig.n=3;
                     }
+                    break;
+                case 3:
+                    pConfig.approx = "HybridizedMixed";
+                    pConfig.n=1;
                     break;
                 default:
                     DebugStop();
