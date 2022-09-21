@@ -120,32 +120,32 @@ void InitializeOutstream(PreConfig &pConfig, char *argv[]){
             break;
     }
 
+    std::string aproxName;
     switch(pConfig.mode) {
         case 0: //H1
-            out << "H1_" <<  pConfig.topologyFileName << "_" << config.problemname << "_k-"
-                << config.k;
-            pConfig.plotfile = out.str();
+            aproxName = "H1_";
             break;
         case 1: //Hybrid
-            out << "Hybrid_" <<   pConfig.topologyFileName << "_" << config.problemname  << "_k-"
-                << config.k << "_n-" << config.n;
-            pConfig.plotfile = out.str();
+            aproxName = "Hybrid_";
             break;
         case 2: // Mixed
-            out << "Mixed_" <<  pConfig.topologyFileName << "_" << config.problemname << "_k-"
-                << config.k << "_n-" << config.n;
-            pConfig.plotfile = out.str();
+            aproxName = "Mixed_";
             break;
         case 3: // HybridizedMixed
-            out << "HybridizedMixed_" <<  pConfig.topologyFileName << "_" << config.problemname << "_k-"
-                << config.k << "_n-" << config.n;
-            pConfig.plotfile = out.str();
+            aproxName = "HybridizedMixed_";
+            break;
+        case 4: // Hybrid2
+            aproxName = "Hybrid2_";
             break;
         default:
             std::cout << "Invalid mode number";
             DebugStop();
             break;
     }
+    
+    out << pConfig.topologyFileName << "_" << config.problemname << "_k-" << config.k;
+    pConfig.plotfile = out.str();
+            
     std::string command = "mkdir -p " + pConfig.plotfile;
     system(command.c_str());
 

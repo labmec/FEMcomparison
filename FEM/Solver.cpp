@@ -160,25 +160,6 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
     InsertMaterialHybrid(cmesh_H1Hybrid, config,pConfig);
     createspace.InsertPeriferalMaterialObjects(cmesh_H1Hybrid);
     
-    {
-    std::vector<std::ofstream*> output;
-    std::string foldername="PrintMesh";
-    std::string command = "mkdir -p " + foldername;
-    system(command.c_str());
-    for(int ii=0;ii<5;ii++){
-        std::stringstream name;
-        name << foldername <<"/meshB4" << ii << ".txt";
-        std::string oname = name.str();
-        std::ofstream* x = new std::ofstream(oname);
-        output.push_back(x);
-        if(ii==0){
-            cmesh_H1Hybrid->Print(*output[ii]);
-        }else{
-            meshvec[ii-1]->Print(*output[ii]);
-        }
-    }
-    }
-    
     cmesh_H1Hybrid->BuildMultiphysicsSpace(meshvec);
     createspace.InsertLagranceMaterialObjects(cmesh_H1Hybrid);
 
@@ -400,7 +381,7 @@ if(myParInterface){
     an.SetStructuralMatrix(strmat);
 
     TPZStepSolver<STATE>* direct = new TPZStepSolver<STATE>;
-    if(pConfig.mode ==3){
+    if(pConfig.mode ==3 || pConfig.mode ==4){
         direct->SetDirect(ECholesky);
     }
     else{
@@ -409,31 +390,39 @@ if(myParInterface){
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
+    
+    std::cout << "Start Assembling\n";
+    
 #ifdef FEMCOMPARISON_TIMER
         auto beginAss = std::chrono::high_resolution_clock::now();
 
 #endif
         
-        an.Assemble();
+    an.Assemble();
+    
+    if(pConfig.mode ==3){
         *(an.MatrixSolver<STATE>().Matrix().operator->())*=-1;
         TPZFMatrix<STATE> &frhs = an.Rhs();
         frhs*=-1;
+    }
         
 #ifdef FEMCOMPARISON_TIMER
-        auto endAss = std::chrono::high_resolution_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
-        pConfig.tData.assembleTime = static_cast<unsigned long int>(elapsed.count());
+    auto endAss = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
+    pConfig.tData.assembleTime = static_cast<unsigned long int>(elapsed.count());
 #endif
+
+    std::cout << "Start Solving\n";
     
 #ifdef FEMCOMPARISON_TIMER
-            auto begin = std::chrono::high_resolution_clock::now();
+    auto begin = std::chrono::high_resolution_clock::now();
 #endif
         int effNthreads = pConfig.tData.nThreads;
         if (effNthreads == 0) effNthreads =1;
 #ifdef FEMCOMPARISON_USING_MKL
     mkl_set_num_threads_local(effNthreads);
 #endif
-        an.Solve();
+    an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);

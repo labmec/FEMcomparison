@@ -10,6 +10,7 @@
 #include "TPZNullMaterialCS.h"
 #include "TPZLagrangeMultiplierCS.h"
 #include "DarcyFlow/TPZMixedDarcyFlow.h"
+#include "LCC_MultiphysicsInterfaceEl.h"
 #include <sstream>
 #include "pzelementgroup.h"
 #include "pzcondensedcompel.h"
