@@ -443,9 +443,9 @@ if(myParInterface){
         TPZManVector<REAL,6> Errors;
         Errors.resize(pConfig.numErrors);
         
-        if(pConfig.mode == 1){
+        if(pConfig.mode == 1 || pConfig.mode == 4 ){
             pConfig.numErrors = 4 ;
-        } else if (pConfig.mode == 2){
+        } else if (pConfig.mode == 2 || pConfig.mode == 3){
             pConfig.numErrors = 5;
         } else DebugStop();
 
@@ -457,10 +457,10 @@ if(myParInterface){
         
         double L2error, energyError;
         int nDof = multiCmesh->NEquations();
-        if(pConfig.mode == 1){
+        if(pConfig.mode == 1 || pConfig.mode == 4){
             L2error = Errors[0];
             energyError = Errors[3];
-        } else if (pConfig.mode == 2){
+        } else if (pConfig.mode == 2 || pConfig.mode == 3){
             L2error = Errors[0];
             energyError = Errors[1];
         }

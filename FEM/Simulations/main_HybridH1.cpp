@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
     
     PreConfig pConfig;
     pConfig.k = 1;//
-    pConfig.n = 1;
+    pConfig.n = 3;
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst", "ESteepWave"}
-    pConfig.approx = "HybridizedMixed";          //// {"H1","Hybrid", "Mixed", "HybridizedMixed","Hybrid2"}
+    pConfig.approx = "Hybrid2";          //// {"H1","Hybrid", "Mixed", "HybridizedMixed","Hybrid2"}
     pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
     pConfig.refLevel =5;                     //// How many refinements
     pConfig.postProcess = false;                  //// Print geometric and computational mesh
