@@ -145,7 +145,13 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
         for(auto &it : datavec_right)
         {
             it.second.SetAllRequirements(false);
-        }        
+        }
+        for(auto it = datavec_left.begin() ; it != datavec_left.end() ; it++){
+            it->second.fNeedsSol = true;
+        }
+        for(auto it = datavec_right.begin() ; it != datavec_right.end() ; it++){
+            it->second.fNeedsSol = true;
+        }
     }
 	
     
