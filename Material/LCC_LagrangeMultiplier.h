@@ -153,19 +153,7 @@ class LCC_LagrangeMultiplier : public TPZLagrangeMultiplierCS<STATE>
             it->second.fNeedsSol = true;
         }
     }
-	
-    
-    
-//    virtual void ContributeInterface(TPZVec<TPZMaterialData> &datavec, TPZVec<TPZMaterialData> &dataleftvec, TPZVec<TPZMaterialData> &datarightvec,
-//                                     REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef)
-//    {
-//        DebugStop();
-//    }
-	
-	
-    void ContributeInterface(const TPZMaterialDataT<STATE> &data, const std::map<int, TPZMaterialDataT<STATE>> &dataleft, const std::map<int, TPZMaterialDataT<STATE>> &dataright, REAL weight, TPZFMatrix<STATE> &ek, TPZFMatrix<STATE> &ef) override;
-	
-    
+
 	virtual int NStateVariables() const override
     {
         return fNStateVariables;

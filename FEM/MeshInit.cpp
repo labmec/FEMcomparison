@@ -6,7 +6,7 @@
 #include "DataStructure.h"
 #include <TPZMultiphysicsCompMesh.h>
 #include "DarcyFlow/TPZMixedDarcyFlow.h"
-#include "LCC_MatLaplacianHybrid.h"
+#include "DarcyFlow/TPZHybridDarcyFlow.h"
 #include "TPZNullMaterial.h"
 #include "TPZBndCondT.h"
 #include "TPZGenGrid2D.h"
@@ -100,8 +100,8 @@ void InsertMaterialHybrid_MultiK(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, Proble
     invK(0,0) = invK(1,1) =  1./pConfig.perm_Q2;
     mat2->setPermeabilyTensor(K,invK);
 #endif
-    LCC_MatLaplacianHybrid *material_Q1 = new LCC_MatLaplacianHybrid(matID_Q1, dim);
-    LCC_MatLaplacianHybrid *material_Q2 = new LCC_MatLaplacianHybrid(matID_Q2, dim);
+    TPZHybridDarcyFlow *material_Q1 = new TPZHybridDarcyFlow(matID_Q1, dim);
+    TPZHybridDarcyFlow *material_Q2 = new TPZHybridDarcyFlow(matID_Q2, dim);
 
     material_Q1->SetConstantPermeability(pConfig.perm_Q1);
     material_Q2->SetConstantPermeability(pConfig.perm_Q2);
@@ -298,14 +298,14 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
                     DebugStop();
                 }
                 for(int ic = 0 ; ic < nSides; ic ++){
-                    cel->Connect(ic).SetLagrangeMultiplier(3);
+                    cel->Connect(ic).SetLagrangeMultiplier(0);
                 }
             }
             if(dimgel == dimgrid-1){
                 if(nconnects != nSides){
                     DebugStop();
                 }
-                cel->Connect(0).SetLagrangeMultiplier(3);
+                cel->Connect(0).SetLagrangeMultiplier(0);
             }
             if (dimgel > dimgrid || dimgel < dimgrid - 1){
                 DebugStop();
@@ -347,7 +347,7 @@ void CreateMixedAtomicMeshes(TPZVec<TPZCompMesh *> &meshvec, PreConfig &eData, P
         average->SetDefaultOrder(0);
         average->AutoBuild();
         int64_t nconnects = average->NConnects();
-        for (int ic = 0; ic<nconnects; ic++) {            average->ConnectVec()[ic].SetLagrangeMultiplier(4);
+        for (int ic = 0; ic<nconnects; ic++) {            average->ConnectVec()[ic].SetLagrangeMultiplier(3);
         }
         int64_t nel = average->NElements();
         for (int64_t el = 0; el<nel; el++) {
@@ -457,7 +457,7 @@ void InsertMaterialMixed(TPZMultiphysicsCompMesh *cmesh_mixed, ProblemConfig con
         cmesh_mixed->SetAllCreateFunctionsMultiphysicElem();
 
         TPZMixedDarcyFlow *material = new TPZMixedDarcyFlow(matID, dim); //Using standard PermealityTensor = Identity.
-
+        
 #ifndef OPTMIZE_RUN_TIME
             material->SetForcingFunction(config.exact->ForceFunc(),5);
             material->SetExactSol(config.exact->ExactSolution(),5);
@@ -504,7 +504,7 @@ void InsertMaterialHybrid(TPZMultiphysicsCompMesh *cmesh_H1Hybrid, ProblemConfig
 
     // Creates Poisson material
     if(pConfig.type != 2) {
-        LCC_MatLaplacianHybrid *material = new LCC_MatLaplacianHybrid(matID, dim);
+        TPZHybridDarcyFlow *material = new TPZHybridDarcyFlow(matID, dim);
         material->SetConstantPermeability(1.);
         cmesh_H1Hybrid->InsertMaterialObject(material);
         cmesh_H1Hybrid->SetAllCreateFunctionsMultiphysicElem();

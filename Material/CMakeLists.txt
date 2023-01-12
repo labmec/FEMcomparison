@@ -1,7 +1,5 @@
 # Adds materials to ErrorEstimationLib
 target_sources(Tools PUBLIC
-    LCC_MatLaplacianHybrid.cpp
-    LCC_MatLaplacianHybrid.h
     LCC_LagrangeMultiplier.h
     LCC_LagrangeMultiplier.cpp
 )

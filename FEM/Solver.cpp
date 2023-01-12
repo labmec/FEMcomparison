@@ -8,7 +8,7 @@
 #include "DataStructure.h"
 #include "MeshInit.h"
 #include "TPZCompMeshTools.h"
-#include "TPZCreateMultiphysicsSpace.h"
+#include "TPZCreateHybridizedH1Spaces.h"
 #include "TPZSSpStructMatrix.h"
 #include "TPZSSpStructMatrix.h"
 #include "TPZParFrontStructMatrix.h"
@@ -22,6 +22,7 @@
 #include <chrono>
 #include "TPZFrontSym.h"
 #include "TPZStructMatrixOMPorTBB.h"
+#include "TPZCreateHybridizedMixedSpaces.h"
 #ifdef FEMCOMPARISON_USING_MKL
 #include "mkl.h"
 #endif
@@ -60,30 +61,31 @@ void Solve(ProblemConfig &config, PreConfig &preConfig){
             //cmesh->Print(outTXT2);
             SolveH1Problem(cmesh, config, preConfig);
             break;
+        case 4: //Hybrid2
+            hybridLevel = 2;
         case 1: //Hybrid
             CreateHybridH1ComputationalMesh(multiCmesh, interfaceMatID,preConfig, config,hybridLevel);
             SolveHybridH1Problem(multiCmesh, interfaceMatID, config, preConfig);
             break;
         case 2: //Mixed
             CreateMixedComputationalMesh(multiCmesh, preConfig, config);
-            {
-#ifdef PZ_LOG
-                TPZTimer timer;
-                if(loggerST.isDebugEnabled())
-                timer.start();
-#endif
             SolveMixedProblem(multiCmesh, config, preConfig);
-#ifdef PZ_LOG
-                if(loggerST.isDebugEnabled()){
-                timer.stop();
-                solveTime+=timer.seconds();
-                }
+            break;
+        case 3: //HybridizedMixed
+        {
+            TPZCreateHybridizedMixedSpaces createHMspace(config.gmesh, config.materialids, config.bcmaterialids);
+            createHMspace.SetNormalFluxOrder(config.k);
+            createHMspace.SetPOrder(config.k + config.n);
+            createHMspace.SetAnalyticSolution(config.exact);
+            multiCmesh = createHMspace.GenerateMesh();
+        }
+#ifndef OPTMIZE_RUN_TIME
+            config.exact.operator*().fSignConvention = 1;
 #endif
-            }
+            NonConformAssemblage(multiCmesh,-999,config,preConfig,0);
             break;
-            default:
+        default:
             DebugStop();
-            break;
     }
     FlushTime(preConfig,start);
 
@@ -134,16 +136,16 @@ void CreateCondensedMixedElements(TPZMultiphysicsCompMesh *cmesh_Mixed){
 }
 
 void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int &interFaceMatID , PreConfig &pConfig, ProblemConfig &config,int hybridLevel){
-    auto spaceType = TPZCreateMultiphysicsSpace::EH1Hybrid;
+    auto spaceType = TPZCreateHybridizedH1Spaces::EH1Hybrid;
     if(hybridLevel == 2) {
-        spaceType = TPZCreateMultiphysicsSpace::EH1HybridSquared;
+        spaceType = TPZCreateHybridizedH1Spaces::EH1HybridSquared;
     }
     else if(hybridLevel != 1) {
         DebugStop();
     }
 
-    TPZCreateMultiphysicsSpace createspace(config.gmesh, spaceType);
-    //TPZCreateMultiphysicsSpace createspace(config.gmesh);
+    TPZCreateHybridizedH1Spaces createspace(config.gmesh, spaceType);
+    //TPZCreateHybridizedH1Spaces createspace(config.gmesh);
     std::cout << cmesh_H1Hybrid->NEquations();
 
     createspace.SetMaterialIds({1,2,3}, {-6,-5,-2,-1});
@@ -158,26 +160,6 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
     InsertMaterialHybrid(cmesh_H1Hybrid, config,pConfig);
     createspace.InsertPeriferalMaterialObjects(cmesh_H1Hybrid);
     
-    {
-    std::vector<std::ofstream*> output;
-    std::string foldername="PrintMesh";
-    std::string command = "mkdir -p " + foldername;
-    system(command.c_str());
-    for(int ii=0;ii<5;ii++){
-        std::stringstream name;
-        name << foldername <<"/meshB4" << ii << ".txt";
-        std::string oname = name.str();
-        std::ofstream* x = new std::ofstream(oname);
-        output.push_back(x);
-        if(ii==0){
-            cmesh_H1Hybrid->Print(*output[ii]);
-        }else{
-            meshvec[ii-1]->Print(*output[ii]);
-            //cmesh_H1Hybrid->MeshVector()[ii-1]->Print(*output[ii]);
-        }
-    }
-    }
-    
     cmesh_H1Hybrid->BuildMultiphysicsSpace(meshvec);
     createspace.InsertLagranceMaterialObjects(cmesh_H1Hybrid);
 
@@ -188,24 +170,6 @@ void CreateHybridH1ComputationalMesh(TPZMultiphysicsCompMesh *cmesh_H1Hybrid,int
     cmesh_H1Hybrid->ComputeNodElCon();
 
     interFaceMatID = createspace.fH1Hybrid.fLagrangeMatid.first;
-    {
-    std::vector<std::ofstream*> output;
-    std::string foldername="PrintMesh";
-    std::string command = "mkdir -p " + foldername;
-    system(command.c_str());
-    for(int ii=0;ii<5;ii++){
-        std::stringstream name;
-        name << foldername <<"/mesh" << ii << ".txt";
-        std::string oname = name.str();
-        std::ofstream* x = new std::ofstream(oname);
-        output.push_back(x);
-        if(ii==0){
-            cmesh_H1Hybrid->Print(*output[ii]);
-        }else{
-            cmesh_H1Hybrid->MeshVector()[ii-1]->Print(*output[ii]);
-        }
-    }
-    }
     
 }
 
@@ -340,10 +304,11 @@ void StockErrors(TPZAnalysis &an,TPZMultiphysicsCompMesh *cmesh, std::ofstream &
     
     std::cout << "Errors =(";
     for (int i = 0; i < Errors.size(); i++){
-        std::cout << Errors[i] << ", ";
+        std::cout << Errors[i];
+        if(i<Errors.size()-1) std::cout << ", ";
     }
     
-    std::cout << std::endl;
+    std::cout << ")" << std::endl;
     //std::cout<<"nnnnnnnn"<<std::endl;
     //for(int i=0;i<Errors.size();i++)
         //std::cout<<Errors[i]<<std::endl;
@@ -369,6 +334,8 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     unsigned long int solveDuration;
     
     std::cout << "Solving " << pConfig.approx << " " << pConfig.topology << " ref " << pConfig.refLevel << " nThreads " << pConfig.tData.nThreads << " isColoring " << pConfig.shouldColor << " isTBB " << pConfig.isTBB << std::endl;
+    
+    if(pConfig.postProcess)
     {
         TPZFMatrix<REAL> mat(50,50);
         multiCmesh->ComputeFillIn(50, mat);
@@ -377,11 +344,13 @@ void NonConformAssemblage(TPZMultiphysicsCompMesh *multiCmesh,int InterfaceMatId
     
     TPZLinearAnalysis an(multiCmesh);
     
-//    {
-//        TPZFMatrix<REAL> mat(50,50);
-//        multiCmesh->ComputeFillIn(50, mat);
-//        VisualMatrix(mat, "arch2.vtk");
-//    }
+    if(pConfig.postProcess)
+    {
+        TPZFMatrix<REAL> mat(50,50);
+        multiCmesh->ComputeFillIn(50, mat);
+        VisualMatrix(mat, "arch2.vtk");
+    }
+    
 #ifdef FEMCOMPARISON_USING_MKL
     TPZSSpStructMatrix<STATE,TPZStructMatrixOMPorTBB<STATE>> strmat(multiCmesh);
     strmat.SetNumThreads(pConfig.tData.nThreads);
@@ -412,33 +381,48 @@ if(myParInterface){
     an.SetStructuralMatrix(strmat);
 
     TPZStepSolver<STATE>* direct = new TPZStepSolver<STATE>;
-    direct->SetDirect(ELDLt);
+    if(pConfig.mode ==3 || pConfig.mode ==4){
+        direct->SetDirect(ECholesky);
+    }
+    else{
+        direct->SetDirect(ELDLt);
+    }
     an.SetSolver(*direct);
     delete direct;
     direct = 0;
+    
+    std::cout << "Start Assembling\n";
+    
 #ifdef FEMCOMPARISON_TIMER
         auto beginAss = std::chrono::high_resolution_clock::now();
 
 #endif
         
-        an.Assemble();
+    an.Assemble();
+    
+    if(pConfig.mode ==3){
+        *(an.MatrixSolver<STATE>().Matrix().operator->())*=-1;
+        TPZFMatrix<STATE> &frhs = an.Rhs();
+        frhs*=-1;
+    }
         
 #ifdef FEMCOMPARISON_TIMER
-        
-        auto endAss = std::chrono::high_resolution_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
-        pConfig.tData.assembleTime = static_cast<unsigned long int>(elapsed.count());
+    auto endAss = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endAss - beginAss);
+    pConfig.tData.assembleTime = static_cast<unsigned long int>(elapsed.count());
 #endif
+
+    std::cout << "Start Solving\n";
     
 #ifdef FEMCOMPARISON_TIMER
-            auto begin = std::chrono::high_resolution_clock::now();
+    auto begin = std::chrono::high_resolution_clock::now();
 #endif
         int effNthreads = pConfig.tData.nThreads;
         if (effNthreads == 0) effNthreads =1;
 #ifdef FEMCOMPARISON_USING_MKL
     mkl_set_num_threads_local(effNthreads);
 #endif
-        an.Solve();
+    an.Solve();
 #ifdef FEMCOMPARISON_TIMER
         auto end = std::chrono::high_resolution_clock::now();
         auto elapsedSolve = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
@@ -459,9 +443,9 @@ if(myParInterface){
         TPZManVector<REAL,6> Errors;
         Errors.resize(pConfig.numErrors);
         
-        if(pConfig.mode == 1){
+        if(pConfig.mode == 1 || pConfig.mode == 4 ){
             pConfig.numErrors = 4 ;
-        } else if (pConfig.mode == 2){
+        } else if (pConfig.mode == 2 || pConfig.mode == 3){
             pConfig.numErrors = 5;
         } else DebugStop();
 
@@ -473,10 +457,10 @@ if(myParInterface){
         
         double L2error, energyError;
         int nDof = multiCmesh->NEquations();
-        if(pConfig.mode == 1){
+        if(pConfig.mode == 1 || pConfig.mode == 4){
             L2error = Errors[0];
             energyError = Errors[3];
-        } else if (pConfig.mode == 2){
+        } else if (pConfig.mode == 2 || pConfig.mode == 3){
             L2error = Errors[0];
             energyError = Errors[1];
         }
@@ -485,7 +469,7 @@ if(myParInterface){
 #endif
     }
 
-    if(1){
+    if(0){
         std::cout << "Computing Error " << std::endl;
         an.SetExact(config.exact.operator*().ExactSolution());
 
@@ -509,7 +493,7 @@ if(myParInterface){
         
         if (isHybridH1){
             scalnames.Push("Pressure");
-            scalnames.Push("PressureExact");
+            scalnames.Push("ExactPressure");
             vecnames.Push("Flux");
         }else {
             scalnames.Push("Pressure");
