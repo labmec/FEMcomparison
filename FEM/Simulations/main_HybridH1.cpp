@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     pConfig.problem = "ESinSin";              //// {"ESinSin","EArcTan",ESteklovNonConst", "ESteepWave"}
     pConfig.approx = "Hybrid2";          //// {"H1","Hybrid", "Mixed", "HybridizedMixed","Hybrid2"}
     pConfig.topology = "Hexahedral";       //// Triangular, Quadrilateral, Tetrahedral, Hexahedral, Prism
-    pConfig.refLevel =5;                     //// How many refinements
+    pConfig.refLevel =1;                     //// How many refinements
     pConfig.postProcess = false;                  //// Print geometric and computational mesh
     pConfig.shouldColor =false;
     pConfig.isTBB = false;
