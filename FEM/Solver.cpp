@@ -395,8 +395,8 @@ if(myParInterface){
 }
 
 #else
-    //TPZSkylineStructMatrix strmat(cmesh_H1Hybrid);
-    TPZSSpStructMatrix<> strmat(multiCmesh);
+    TPZSkylineStructMatrix<> strmat(multiCmesh);
+//    TPZSSpStructMatrix<> strmat(multiCmesh);
     strmat.SetNumThreads(0);
 #endif
     
